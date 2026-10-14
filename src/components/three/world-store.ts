@@ -7,13 +7,16 @@
 type Listener = () => void;
 
 export const world = {
-  /** Float chapter index: 0 = hero … 5 = contact. Driven by ScrollTrigger. */
+  /** Float chapter index: 0 = hero … 5 = contact. Driven by the scroll engine. */
   chapter: 0,
   /** True while an opaque editorial section fully covers the viewport. */
   paused: false,
   /** Label of the survey node under the pointer, for the cursor. */
   hovered: null as string | null,
 };
+
+/** The single DOM label for survey nodes; lives outside the canvas, positioned by the scene. */
+export const nodeLabel = { el: null as HTMLDivElement | null };
 
 const pauseListeners = new Set<Listener>();
 

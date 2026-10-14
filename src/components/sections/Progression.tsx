@@ -1,11 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
+import { useEffect, useRef } from "react";
+import { prefersReducedMotion, track } from "@/components/motion/scroll-engine";
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 /**
  * Unknown → … → Build. A dashed, fragmented line becomes one continuous
@@ -15,31 +13,35 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 export function Progression({ steps }: { steps: string[] }) {
   const root = useRef<HTMLDivElement>(null);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: root.current, start: "top 85%", end: "bottom 45%", scrub: 0.8 },
+  useEffect(() => {
+    const el = root.current;
+    if (!el || prefersReducedMotion()) return;
+    const solid = el.querySelector<HTMLElement>("[data-solid]");
+    const items = Array.from(el.querySelectorAll<HTMLElement>("[data-step]"));
+    const dots = items.map((i) => i.querySelector<HTMLElement>("[data-dot]"));
+
+    return track(
+      el,
+      (p) => {
+        if (solid) solid.style.transform = `scaleX(${p})`;
+        items.forEach((item, i) => {
+          const k = clamp01((p - (i / (items.length - 1)) * 0.92) / 0.08);
+          item.style.opacity = String(0.28 + 0.72 * k);
+          const dot = dots[i];
+          if (dot) dot.style.transform = `scale(${0.4 + 0.6 * k})`;
         });
-        tl.fromTo("[data-solid]", { scaleX: 0 }, { scaleX: 1, ease: "none", duration: 1 }, 0);
-        gsap.utils.toArray<HTMLElement>("[data-step]").forEach((el, i, all) => {
-          const at = i / (all.length - 1);
-          tl.fromTo(el, { opacity: 0.28 }, { opacity: 1, duration: 0.08, ease: "none" }, at * 0.92);
-          tl.fromTo(el.querySelector("[data-dot]"), { scale: 0.4 }, { scale: 1, duration: 0.08 }, at * 0.92);
-        });
-      });
-    },
-    { scope: root },
-  );
+      },
+      { start: { el: 0, vp: 0.85 }, end: { el: 1, vp: 0.45 }, scrub: 0.8 },
+    );
+  }, []);
 
   return (
     <div ref={root} className="reveal" role="group" aria-label="From unknown to built">
       <div className="relative">
         {/* fragmented baseline */}
-        <div aria-hidden className="absolute top-[5px] right-0 left-0 h-px max-sm:hidden bg-[repeating-linear-gradient(90deg,var(--color-line)_0_10px,transparent_10px_22px)]" />
+        <div aria-hidden className="absolute top-[5px] right-0 left-0 h-px bg-[repeating-linear-gradient(90deg,var(--color-line)_0_10px,transparent_10px_22px)] max-sm:hidden" />
         {/* continuous mapped line */}
-        <div aria-hidden data-solid className="absolute max-sm:hidden top-[5px] right-0 left-0 h-px origin-left bg-[color:var(--color-cyan)]" />
+        <div aria-hidden data-solid className="absolute top-[5px] right-0 left-0 h-px origin-left bg-[color:var(--color-cyan)] max-sm:hidden" />
         <ol className="relative grid grid-cols-3 gap-y-8 sm:grid-cols-6">
           {steps.map((s, i) => (
             <li key={s} data-step className="flex flex-col gap-4 pr-2">

@@ -2,11 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Billboard, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { NODES, type SurveyNode } from "./landmarks";
 import { glowFragment, glowVertex, hexToVec3 } from "./shaders";
-import { world } from "./world-store";
+import { nodeLabel, world } from "./world-store";
 import { frame } from "./frame-state";
 
 const CYAN = hexToVec3("#65e4e8");
@@ -14,6 +13,20 @@ const LIME = hexToVec3("#c7f36b");
 
 export function SurveyNodes() {
   const [active, setActive] = useState<string | null>(null);
+
+  // Fill or hide the shared DOM label when the active node changes.
+  useEffect(() => {
+    const el = nodeLabel.el;
+    if (!el) return;
+    const n = NODES.find((x) => x.id === active);
+    if (!n?.label) {
+      el.dataset.on = "false";
+      return;
+    }
+    el.querySelector("[data-name]")!.textContent = n.label;
+    el.querySelector("[data-coords]")!.textContent = `${n.x.toFixed(1)}, ${n.z.toFixed(1)}`;
+    el.dataset.on = "true";
+  }, [active]);
 
   // Tapping empty space on touch devices clears the label.
   useEffect(() => {
@@ -78,6 +91,7 @@ function Node({
   const pole = useRef<THREE.Mesh>(null);
   const haloGroup = useRef<THREE.Group>(null);
   const emphasis = useRef(0);
+  const projected = useRef(new THREE.Vector3());
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;
@@ -98,7 +112,18 @@ function Node({
     c.set(CYAN[0] + (LIME[0] - CYAN[0]) * e, CYAN[1] + (LIME[1] - CYAN[1]) * e, CYAN[2] + (LIME[2] - CYAN[2]) * e);
 
     const scale = 1 + e * 0.6 + s * 0.25;
-    haloGroup.current?.scale.setScalar(scale);
+    if (haloGroup.current) {
+      haloGroup.current.scale.setScalar(scale);
+      haloGroup.current.quaternion.copy(state.camera.quaternion); // billboard
+    }
+
+    // The active node pins the shared DOM label to its marker.
+    if (activeRef.current && nodeLabel.el) {
+      const v = projected.current.set(node.x, node.y + (labelled ? 1.1 : 0.12), node.z).project(state.camera);
+      const x = (v.x * 0.5 + 0.5) * state.size.width;
+      const y = (-v.y * 0.5 + 0.5) * state.size.height;
+      nodeLabel.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    }
     core.current?.scale.setScalar(0.6 + s * 0.5 + e * 0.5);
     if (pole.current) (pole.current.material as THREE.MeshBasicMaterial).opacity = 0.18 + s * 0.4 + e * 0.4;
   });
@@ -135,13 +160,11 @@ function Node({
         <sphereGeometry args={[0.07, 12, 12]} />
         <meshBasicMaterial color={active ? "#c7f36b" : "#65e4e8"} toneMapped={false} />
       </mesh>
-      <Billboard position={[0, labelled ? 1.1 : 0.12, 0]}>
-        <group ref={haloGroup}>
-          <mesh ref={haloMesh} material={halo}>
-            <planeGeometry args={[1.5, 1.5]} />
-          </mesh>
-        </group>
-      </Billboard>
+      <group ref={haloGroup} position={[0, labelled ? 1.1 : 0.12, 0]}>
+        <mesh ref={haloMesh} material={halo}>
+          <planeGeometry args={[1.5, 1.5]} />
+        </mesh>
+      </group>
 
       {interactive && (
         <mesh position={[0, 0.7, 0]} {...handlers}>
@@ -150,23 +173,6 @@ function Node({
         </mesh>
       )}
 
-      {labelled && (
-        <Html position={[0, 1.1, 0]} zIndexRange={[5, 0]} style={{ pointerEvents: "none" }}>
-          <div
-            aria-hidden
-            className="pointer-events-none -translate-y-1/2 pl-4 whitespace-nowrap transition-[opacity,transform] duration-300 ease-[var(--ease-out-expo)]"
-            style={{ opacity: active ? 1 : 0, transform: `translate(${active ? 0 : -6}px, -50%)` }}
-          >
-            <div className="flex items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/85 px-2.5 py-1.5 backdrop-blur-sm">
-              <span className="h-1 w-1 bg-[color:var(--color-lime)]" />
-              <span className="label text-[color:var(--color-fg)]">{node.label}</span>
-              <span className="label text-[color:var(--color-fg-3)]">
-                {node.x.toFixed(1)}, {node.z.toFixed(1)}
-              </span>
-            </div>
-          </div>
-        </Html>
-      )}
     </group>
   );
 }

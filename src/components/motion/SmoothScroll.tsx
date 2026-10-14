@@ -2,8 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef } from "react";
 import Lenis from "lenis";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 /** Stable getter — Lenis is created after mount and lives outside React state. */
 const LenisContext = createContext<() => Lenis | null>(() => null);
@@ -40,7 +38,6 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
   const getLenis = useCallback(() => lenisRef.current, []);
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reduce.matches) return;
 
@@ -49,15 +46,11 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       wheelMultiplier: 0.95,
       // Touch keeps the platform's native momentum — it already feels right.
       syncTouch: false,
+      autoRaf: true,
     });
-    instance.on("scroll", ScrollTrigger.update);
-    const tick = (time: number) => instance.raf(time * 1000);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
     lenisRef.current = instance;
 
     return () => {
-      gsap.ticker.remove(tick);
       instance.destroy();
       lenisRef.current = null;
     };

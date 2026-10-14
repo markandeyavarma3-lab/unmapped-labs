@@ -3,35 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { Logo } from "@/components/brand/Logo";
 import { useLenis } from "@/components/motion/SmoothScroll";
 import { nav, site, type NavId } from "@/config/site";
 
 const SECTION_IDS: NavId[] = [...nav.map((n) => n.id), "contact"];
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 function useActiveSection(enabled: boolean) {
   const [active, setActive] = useState<NavId | null>(null);
   useEffect(() => {
     if (!enabled) return;
+    // Watch every section; ones without a nav entry (hero, intro, philosophy) clear the highlight.
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setActive(e.target.id as NavId);
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const id = e.target.id as NavId;
+          setActive(SECTION_IDS.includes(id) ? id : null);
+        }
       },
       { rootMargin: "-45% 0px -50% 0px" },
     );
-    const hero = document.getElementById("top");
-    const els = SECTION_IDS.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
-    els.forEach((el) => io.observe(el));
-    const heroIo = new IntersectionObserver(([e]) => e.isIntersecting && setActive(null), {
-      rootMargin: "-45% 0px -50% 0px",
-    });
-    if (hero) heroIo.observe(hero);
-    return () => {
-      io.disconnect();
-      heroIo.disconnect();
-    };
+    document.querySelectorAll<HTMLElement>("main section[id]").forEach((el) => io.observe(el));
+    return () => io.disconnect();
   }, [enabled]);
   return enabled ? active : null;
 }
@@ -41,6 +35,7 @@ export function SiteHeader() {
   const isHome = pathname === "/";
   const getLenis = useLenis();
   const [scrolled, setScrolled] = useState(false);
+  const [onPaper, setOnPaper] = useState(false);
   // The menu belongs to the page it was opened on, so a route change closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
@@ -51,11 +46,20 @@ export function SiteHeader() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      const probe = 36; // vertical centre of the header bar
+      setOnPaper(
+        Array.from(document.querySelectorAll<HTMLElement>("main .surface-paper, main.surface-paper")).some((el) => {
+          const r = el.getBoundingClientRect();
+          return r.top <= probe && r.bottom >= probe;
+        }),
+      );
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [pathname]);
 
   // Menu: lock scroll, trap focus, close on Escape, restore focus on close.
   useEffect(() => {
@@ -64,11 +68,12 @@ export function SiteHeader() {
     lenis?.stop();
     document.documentElement.style.overflow = "hidden";
     const panel = panelRef.current;
-    const focusables = () =>
-      Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? []).concat(
-        toggleRef.current ? [toggleRef.current] : [],
-      );
-    window.requestAnimationFrame(() => focusables()[0]?.focus());
+    // DOM order: the toggle sits before the panel, so it leads the cycle.
+    const focusables = () => [
+      ...(toggleRef.current ? [toggleRef.current] : []),
+      ...Array.from(panel?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? []),
+    ];
+    window.requestAnimationFrame(() => focusables()[1]?.focus());
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") return setOpenOn(null);
       if (e.key !== "Tab") return;
@@ -94,18 +99,26 @@ export function SiteHeader() {
 
   const href = (id: string) => (isHome ? `#${id}` : `/#${id}`);
   const solid = scrolled || open || !isHome;
+  const light = onPaper && !open;
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[var(--z-header)]">
+    <header
+      data-tone={light ? "paper" : "ink"}
+      className={`group/header fixed inset-x-0 top-0 z-[var(--z-header)] transition-colors duration-[var(--duration-nav)] ${
+        light ? "[--h-fg:var(--color-paper-fg)] [--h-fg-2:var(--color-paper-fg-2)] [--h-line:var(--color-paper-line)] [--logo-accent:var(--color-teal)] [--h-signal:var(--color-teal)]" : "[--h-fg:var(--color-fg)] [--h-fg-2:var(--color-fg-2)] [--h-line:var(--color-line)]"
+      }`}
+    >
       <div
         className={`absolute inset-0 border-b transition-[background-color,border-color,backdrop-filter] duration-[var(--duration-nav)] ease-[var(--ease-out-quart)] ${
-          solid
-            ? "border-[color:var(--color-line)]/70 bg-[color:var(--color-ink)]/72 backdrop-blur-xl backdrop-saturate-150"
-            : "border-transparent bg-transparent"
+          !solid
+            ? "border-transparent bg-transparent"
+            : light
+              ? "border-[color:var(--color-paper-line)] bg-[color:var(--color-paper)]/85 backdrop-blur-xl"
+              : "border-[color:var(--color-line)]/70 bg-[color:var(--color-ink)]/72 backdrop-blur-xl backdrop-saturate-150"
         }`}
       />
       <div className="container-site relative flex h-[var(--header-h)] items-center justify-between gap-6">
-        <Link href="/" className="-m-2 p-2 text-[color:var(--color-fg)]" aria-label={`${site.name} — home`}>
+        <Link href="/" className="-m-2 p-2 text-[color:var(--h-fg)]" aria-label={`${site.name} — home`}>
           <Logo />
         </Link>
 
@@ -119,12 +132,12 @@ export function SiteHeader() {
                     href={href(item.id)}
                     aria-current={isActive ? "location" : undefined}
                     className={`group relative flex items-center gap-2 px-3 py-2 text-[13.5px] transition-colors duration-[var(--duration-hover)] ${
-                      isActive ? "text-[color:var(--color-fg)]" : "text-[color:var(--color-fg-2)] hover:text-[color:var(--color-fg)]"
+                      isActive ? "text-[color:var(--h-fg)]" : "text-[color:var(--h-fg-2)] hover:text-[color:var(--h-fg)]"
                     }`}
                   >
                     <span
                       aria-hidden
-                      className={`h-1 w-1 rounded-full bg-[color:var(--color-cyan)] transition-[opacity,transform] duration-[var(--duration-hover)] ${
+                      className={`h-1 w-1 rounded-full bg-[color:var(--logo-accent,var(--color-cyan))] transition-[opacity,transform] duration-[var(--duration-hover)] ${
                         isActive ? "scale-100 opacity-100" : "scale-0 opacity-0"
                       }`}
                     />
@@ -140,9 +153,9 @@ export function SiteHeader() {
           <a
             href={href("contact")}
             aria-current={active === "contact" ? "location" : undefined}
-            className="group hidden items-center gap-2.5 border border-[color:var(--color-line)] px-4 py-2.5 text-[13px] text-[color:var(--color-fg)] transition-[border-color,background-color] duration-[var(--duration-hover)] hover:border-[color:var(--color-lime)]/60 hover:bg-[color:var(--color-lime)]/[0.06] sm:inline-flex"
+            className="group hidden items-center gap-2.5 border border-[color:var(--h-line)] px-4 py-2.5 text-[13px] text-[color:var(--h-fg)] transition-[border-color,background-color] duration-[var(--duration-hover)] hover:border-[color:var(--h-fg-2)] sm:inline-flex"
           >
-            <span aria-hidden className="h-1.5 w-1.5 bg-[color:var(--color-lime)] transition-transform duration-[var(--duration-hover)] group-hover:rotate-45" />
+            <span aria-hidden className="h-1.5 w-1.5 bg-[color:var(--h-signal,var(--color-lime))] transition-transform duration-[var(--duration-hover)] group-hover:rotate-45" />
             Start a conversation
           </a>
 
@@ -157,13 +170,13 @@ export function SiteHeader() {
           >
             <span
               aria-hidden
-              className={`absolute h-px w-5 bg-[color:var(--color-fg)] transition-transform duration-[var(--duration-nav)] ease-[var(--ease-out-expo)] ${
+              className={`absolute h-px w-5 bg-[color:var(--h-fg)] transition-transform duration-[var(--duration-nav)] ease-[var(--ease-out-expo)] ${
                 open ? "rotate-45" : "-translate-y-[4px]"
               }`}
             />
             <span
               aria-hidden
-              className={`absolute h-px w-5 bg-[color:var(--color-fg)] transition-transform duration-[var(--duration-nav)] ease-[var(--ease-out-expo)] ${
+              className={`absolute h-px w-5 bg-[color:var(--h-fg)] transition-transform duration-[var(--duration-nav)] ease-[var(--ease-out-expo)] ${
                 open ? "-rotate-45" : "translate-y-[4px]"
               }`}
             />
@@ -171,29 +184,23 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={panelRef}
-            id="mobile-menu"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Site menu"
-            className="fixed inset-x-0 top-[var(--header-h)] bottom-0 z-[var(--z-menu)] flex flex-col overflow-y-auto bg-[color:var(--color-ink)] md:hidden"
-            initial={{ clipPath: "inset(0 0 100% 0)" }}
-            animate={{ clipPath: "inset(0 0 0% 0)" }}
-            exit={{ clipPath: "inset(0 0 100% 0)" }}
-            transition={{ duration: 0.5, ease: EASE }}
-          >
+      <div
+        ref={panelRef}
+        id="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Site menu"
+        inert={!open}
+        data-open={open || undefined}
+        className="mobile-panel fixed inset-x-0 top-[var(--header-h)] bottom-0 z-[var(--z-menu)] flex flex-col overflow-y-auto bg-[color:var(--color-ink)] md:hidden"
+      >
             <nav aria-label="Mobile" className="container-site flex flex-1 flex-col justify-between py-8">
               <ul className="flex flex-col">
                 {[...nav, { id: "contact" as const, label: "Contact" }].map((item, i) => (
-                  <motion.li
+                  <li
                     key={item.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: EASE, delay: 0.08 + i * 0.05 }}
-                    className="border-b border-[color:var(--color-line)]"
+                    className="mobile-item border-b border-[color:var(--color-line)]"
+                    style={{ "--i": i } as React.CSSProperties}
                   >
                     <a
                       href={href(item.id)}
@@ -204,7 +211,7 @@ export function SiteHeader() {
                       <span className="label text-[color:var(--color-fg-3)]">0{i + 1}</span>
                       {item.label}
                     </a>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
               <div className="mt-10 flex flex-col gap-2">
@@ -215,9 +222,7 @@ export function SiteHeader() {
                 <p className="label mt-6 text-[color:var(--color-fg-3)]">{site.tagline}</p>
               </div>
             </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </header>
   );
 }

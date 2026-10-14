@@ -1,11 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
+import { useEffect, useRef } from "react";
+import { prefersReducedMotion, track } from "@/components/motion/scroll-engine";
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
 type Layer = { title: string; body: string };
 
@@ -17,23 +15,28 @@ type Layer = { title: string; body: string };
 export function LayerDiagram({ layers }: { layers: Layer[] }) {
   const root = useRef<HTMLDivElement>(null);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        const tl = gsap.timeline({
-          scrollTrigger: { trigger: root.current, start: "top 75%", end: "bottom 55%", scrub: 0.7 },
+  useEffect(() => {
+    const el = root.current;
+    if (!el || prefersReducedMotion()) return;
+    const probe = el.querySelector<HTMLElement>("[data-probe]");
+    const items = Array.from(el.querySelectorAll<HTMLElement>("[data-layer]"));
+    const plates = items.map((i) => i.querySelector<HTMLElement>("[data-plate]"));
+    // The diagram is sticky, so measure its (static) column instead of itself.
+    return track(
+      el.parentElement ?? el,
+      (p) => {
+        if (probe) probe.style.transform = `scaleY(${p})`;
+        items.forEach((item, i) => {
+          const at = (i / items.length) * 0.95 + 0.04;
+          const k = clamp01((p - at) / 0.12);
+          item.style.opacity = String(0.35 + 0.65 * k);
+          const plate = plates[i];
+          if (plate) plate.style.transform = `translateY(${(1 - clamp01((p - at + 0.04) / 0.2)) * 10}px)`;
         });
-        tl.fromTo("[data-probe]", { scaleY: 0 }, { scaleY: 1, ease: "none", duration: 1 }, 0);
-        gsap.utils.toArray<HTMLElement>("[data-layer]").forEach((el, i, all) => {
-          const at = (i / all.length) * 0.95 + 0.04;
-          tl.fromTo(el, { opacity: 0.35 }, { opacity: 1, duration: 0.12, ease: "none" }, at);
-          tl.fromTo(el.querySelector("[data-plate]"), { y: 10 }, { y: 0, duration: 0.2, ease: "none" }, at - 0.04);
-        });
-      });
-    },
-    { scope: root },
-  );
+      },
+      { start: { el: 0, vp: 0.7 }, end: { el: 1, vp: 0.9 }, scrub: 0.7 },
+    );
+  }, []);
 
   return (
     <div ref={root} className="relative lg:sticky lg:top-[calc(var(--header-h)+3rem)]">

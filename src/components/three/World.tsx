@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
 import { Scene, type Tier } from "./Scene";
 import { onWorldPauseChange, world } from "./world-store";
 
@@ -31,6 +30,34 @@ function ReadySignal({ onReady }: { onReady: () => void }) {
   return null;
 }
 
+/**
+ * Adaptive resolution: samples frame time in 1.5s windows and steps the
+ * device-pixel-ratio down when the GPU struggles, back up when it has headroom.
+ */
+function AdaptiveDpr({ max }: { max: number }) {
+  const setDpr = useThree((s) => s.setDpr);
+  const sample = useRef({ frames: 0, time: 0, dpr: Math.min(window.devicePixelRatio || 1, max), good: 0 });
+  useFrame((_, delta) => {
+    const s = sample.current;
+    s.frames++;
+    s.time += delta;
+    if (s.time < 1.5) return;
+    const fps = s.frames / s.time;
+    s.frames = 0;
+    s.time = 0;
+    if (fps < 45 && s.dpr > 1) {
+      s.dpr = Math.max(1, s.dpr - 0.25);
+      s.good = 0;
+      setDpr(s.dpr);
+    } else if (fps > 57 && s.dpr < max && ++s.good >= 3) {
+      s.dpr = Math.min(max, s.dpr + 0.25);
+      s.good = 0;
+      setDpr(s.dpr);
+    }
+  });
+  return null;
+}
+
 export default function World({
   tier,
   introDelay,
@@ -41,7 +68,7 @@ export default function World({
   onReady: () => void;
 }) {
   const maxDpr = tier === "high" ? 1.75 : 1.25;
-  const [dpr, setDpr] = useState(() => Math.min(window.devicePixelRatio || 1, maxDpr));
+  const [dpr] = useState(() => Math.min(window.devicePixelRatio || 1, maxDpr));
 
   return (
     <Canvas
@@ -54,11 +81,7 @@ export default function World({
       onCreated={({ gl }) => gl.setClearColor("#080b0e")}
     >
       <PauseController />
-      <PerformanceMonitor
-        onDecline={() => setDpr((d) => Math.max(1, d - 0.35))}
-        onIncline={() => setDpr((d) => Math.min(maxDpr, d + 0.25))}
-        flipflops={3}
-      />
+      <AdaptiveDpr max={maxDpr} />
       <Scene tier={tier} introDelay={introDelay} />
       <ReadySignal onReady={onReady} />
     </Canvas>

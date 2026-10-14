@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { contactSchema, HONEYPOT_FIELD, STARTED_FIELD } from "@/lib/contact-schema";
+import { validateContact, HONEYPOT_FIELD, STARTED_FIELD } from "@/lib/contact-schema";
 import { site } from "@/config/site";
 
 /**
@@ -46,15 +46,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "invalid" }, { status: 400 });
   }
 
-  const parsed = contactSchema.safeParse(body);
-  if (!parsed.success) {
-    const fields: Record<string, string> = {};
-    for (const issue of parsed.error.issues) {
-      const key = String(issue.path[0]);
-      fields[key] ??= issue.message;
-    }
-    return Response.json({ error: "invalid", fields }, { status: 400 });
-  }
+  const parsed = validateContact(body);
+  if (!parsed.ok) return Response.json({ error: "invalid", fields: parsed.errors }, { status: 400 });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (rateLimited(ip)) return Response.json({ error: "rate_limited" }, { status: 429 });

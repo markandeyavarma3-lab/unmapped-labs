@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { contact } from "@/content/site-content";
 import { site } from "@/config/site";
-import { contactSchema, HONEYPOT_FIELD, STARTED_FIELD, type ContactField } from "@/lib/contact-schema";
+import { CONTACT_FIELDS as FIELDS, HONEYPOT_FIELD, STARTED_FIELD, validateContact, type ContactErrors, type ContactField } from "@/lib/contact-schema";
 
 type Status =
   | { kind: "idle" }
   | { kind: "sending" }
   | { kind: "sent" }
   | { kind: "error"; message: string };
-
-const FIELDS: ContactField[] = ["name", "organisation", "email", "area", "message"];
 
 const SERVER_MESSAGES: Record<string, string> = {
   not_configured: `The contact form isn't connected yet, so nothing was sent. Please email ${site.email} directly.`,
@@ -24,7 +21,7 @@ const SERVER_MESSAGES: Record<string, string> = {
 export function ContactForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const startedAt = useRef(0);
-  const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
+  const [errors, setErrors] = useState<ContactErrors>({});
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const uid = useId();
   const fid = (f: string) => `${uid}-${f}`;
@@ -40,9 +37,8 @@ export function ContactForm() {
 
   const validateField = (field: ContactField) => {
     if (!formRef.current) return;
-    const result = contactSchema.safeParse(read());
-    const issue = result.success ? undefined : result.error.issues.find((i) => i.path[0] === field);
-    setErrors((e) => ({ ...e, [field]: issue?.message }));
+    const result = validateContact(read());
+    setErrors((e) => ({ ...e, [field]: result.ok ? undefined : result.errors[field] }));
   };
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -50,10 +46,9 @@ export function ContactForm() {
     if (status.kind === "sending") return;
 
     const values = read();
-    const parsed = contactSchema.safeParse(values);
-    if (!parsed.success) {
-      const next: Partial<Record<ContactField, string>> = {};
-      for (const i of parsed.error.issues) next[i.path[0] as ContactField] ??= i.message;
+    const parsed = validateContact(values);
+    if (!parsed.ok) {
+      const next = parsed.errors;
       setErrors(next);
       setStatus({ kind: "error", message: SERVER_MESSAGES.invalid });
       const first = FIELDS.find((f) => next[f]);
@@ -80,7 +75,7 @@ export function ContactForm() {
         formRef.current?.reset();
         return;
       }
-      if (data.fields) setErrors(data.fields as Partial<Record<ContactField, string>>);
+      if (data.fields) setErrors(data.fields as ContactErrors);
       setStatus({ kind: "error", message: SERVER_MESSAGES[data.error ?? ""] ?? SERVER_MESSAGES.send_failed });
     } catch {
       setStatus({
@@ -117,15 +112,10 @@ export function ContactForm() {
 
   return (
     <div className="relative">
-      <AnimatePresence mode="wait" initial={false}>
-        {status.kind === "sent" ? (
-          <motion.div
+      {status.kind === "sent" ? (
+          <div
             key="sent"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="flex min-h-[28rem] flex-col justify-center gap-5 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-8 backdrop-blur-md lg:p-12"
+            className="animate-[swap-in_0.5s_var(--ease-out-expo)_both] flex min-h-[28rem] flex-col justify-center gap-5 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-8 backdrop-blur-md lg:p-12"
             role="status"
           >
             <span aria-hidden className="block h-3 w-3 rotate-45 bg-[color:var(--color-lime)]" />
@@ -136,9 +126,9 @@ export function ContactForm() {
             <button type="button" onClick={() => setStatus({ kind: "idle" })} className="link-underline label self-start pb-0.5 text-[color:var(--color-fg)]">
               Send another message
             </button>
-          </motion.div>
+          </div>
         ) : (
-          <motion.form
+          <form
             key="form"
             ref={formRef}
             noValidate
@@ -147,10 +137,6 @@ export function ContactForm() {
               const name = (e.target as unknown as { name?: string }).name as ContactField;
               if (FIELDS.includes(name)) validateField(name);
             }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
             className="grid gap-x-8 gap-y-4 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-6 backdrop-blur-md sm:grid-cols-2 sm:p-8 lg:p-10"
             aria-describedby={`${uid}-status`}
           >
@@ -199,9 +185,8 @@ export function ContactForm() {
                 )}
               </button>
             </div>
-          </motion.form>
+          </form>
         )}
-      </AnimatePresence>
     </div>
   );
 }

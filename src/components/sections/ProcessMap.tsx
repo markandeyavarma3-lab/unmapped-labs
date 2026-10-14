@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 import type { Stage } from "@/content/site-content";
-
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import { prefersReducedMotion, track } from "@/components/motion/scroll-engine";
 
 /** Node positions on a 400×280 survey sheet (percent-based for the HTML buttons). */
 const POINTS: [number, number][] = [
@@ -48,23 +44,17 @@ export function ProcessMap({ stages }: { stages: Stage[] }) {
     return () => io.disconnect();
   }, []);
 
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.fromTo(
-          "[data-route]",
-          { strokeDashoffset: 1 },
-          {
-            strokeDashoffset: 0,
-            ease: "none",
-            scrollTrigger: { trigger: "[data-stages]", start: "top 70%", end: "bottom 60%", scrub: 0.6 },
-          },
-        );
-      });
-    },
-    { scope: root },
-  );
+  // The route draws itself as the stage list scrolls past.
+  useEffect(() => {
+    const route = root.current?.querySelector<SVGPathElement>("[data-route]");
+    const list = root.current?.querySelector<HTMLElement>("[data-stages]");
+    if (!route || !list || prefersReducedMotion()) return;
+    return track(list, (p) => route.style.setProperty("stroke-dashoffset", String(1 - p)), {
+      start: { el: 0, vp: 0.7 },
+      end: { el: 1, vp: 0.6 },
+      scrub: 0.6,
+    });
+  }, []);
 
   return (
     <div ref={root} className="mt-16 grid gap-10 lg:mt-24 lg:grid-cols-12 lg:gap-8">

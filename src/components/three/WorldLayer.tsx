@@ -2,9 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { setWorldPaused, world } from "./world-store";
+import { onScroll } from "@/components/motion/scroll-engine";
+import { nodeLabel, setWorldPaused, world } from "./world-store";
 import type { Tier } from "./Scene";
 
 const World = dynamic(() => import("./World"), { ssr: false });
@@ -38,60 +37,45 @@ function detectMode(): Mode {
 function useChapterScroll(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
-    gsap.registerPlugin(ScrollTrigger);
 
     let anchors: { y: number; c: number }[] = [];
+    let covers: { top: number; bottom: number }[] = [];
+
     const measure = () => {
       const half = window.innerHeight * 0.5;
+      const y0 = window.scrollY;
       anchors = Array.from(document.querySelectorAll<HTMLElement>("[data-chapter]"))
-        .map((el) => ({
-          y: Math.max(0, el.getBoundingClientRect().top + window.scrollY - half),
-          c: Number(el.dataset.chapter),
-        }))
+        .map((el) => ({ y: Math.max(0, el.getBoundingClientRect().top + y0 - half), c: Number(el.dataset.chapter) }))
         .sort((a, b) => a.y - b.y);
       if (anchors[0]?.c === 0) anchors[0].y = 0;
+      covers = Array.from(document.querySelectorAll<HTMLElement>("[data-covers-world]")).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { top: r.top + y0, bottom: r.bottom + y0 };
+      });
     };
-    const update = (y: number) => {
-      if (!anchors.length) return;
-      if (y <= anchors[0].y) return void (world.chapter = anchors[0].c);
-      for (let i = 0; i < anchors.length - 1; i++) {
-        const a = anchors[i];
-        const b = anchors[i + 1];
-        if (y <= b.y) return void (world.chapter = a.c + ((y - a.y) / Math.max(1, b.y - a.y)) * (b.c - a.c));
+
+    const update = (y: number, vh: number) => {
+      if (anchors.length) {
+        let c = anchors[anchors.length - 1].c;
+        if (y <= anchors[0].y) c = anchors[0].c;
+        else
+          for (let i = 0; i < anchors.length - 1; i++) {
+            const a = anchors[i];
+            const b = anchors[i + 1];
+            if (y <= b.y) {
+              c = a.c + ((y - a.y) / Math.max(1, b.y - a.y)) * (b.c - a.c);
+              break;
+            }
+          }
+        world.chapter = c;
       }
-      world.chapter = anchors[anchors.length - 1].c;
+      // Opaque editorial sections hide the world: stop rendering beneath them.
+      setWorldPaused(covers.some((r) => r.top <= y && r.bottom >= y + vh));
     };
 
-    const master = ScrollTrigger.create({
-      start: 0,
-      end: "max",
-      onRefresh: (self) => {
-        measure();
-        update(self.scroll());
-      },
-      onUpdate: (self) => update(self.scroll()),
-    });
-
-    // Opaque editorial sections hide the world: stop rendering beneath them.
-    const covering = new Set<Element>();
-    const covers = Array.from(document.querySelectorAll<HTMLElement>("[data-covers-world]")).map((el) =>
-      ScrollTrigger.create({
-        trigger: el,
-        start: "top top",
-        end: "bottom bottom",
-        onToggle: (self) => {
-          if (self.isActive) covering.add(el);
-          else covering.delete(el);
-          setWorldPaused(covering.size > 0);
-        },
-      }),
-    );
-
-    measure();
-    update(window.scrollY);
+    const dispose = onScroll(update, measure);
     return () => {
-      master.kill();
-      covers.forEach((t) => t.kill());
+      dispose();
       setWorldPaused(false);
     };
   }, [enabled]);
@@ -112,7 +96,7 @@ export function WorldLayer() {
   useChapterScroll(mode.kind === "webgl");
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-world)]">
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-world)] overflow-hidden [contain:strict]">
       {/* Static map — visible until WebGL is drawing, and permanently when it can't or shouldn't. */}
       <div
         className="absolute inset-0 bg-[url(/terrain-fallback.svg)] bg-cover bg-center opacity-60 transition-opacity duration-[1200ms] ease-[var(--ease-out-quart)] max-md:bg-[position:70%_50%]"
@@ -126,6 +110,20 @@ export function WorldLayer() {
           <World tier={mode.tier} introDelay={mode.introDelay} onReady={() => setReady(true)} />
         </div>
       )}
+      {/* Survey-node label, positioned by the scene when a marker is active. */}
+      <div
+        ref={(el) => {
+          nodeLabel.el = el;
+        }}
+        data-on="false"
+        className="absolute top-0 left-0 z-[1] transition-opacity duration-300 data-[on=false]:opacity-0"
+      >
+        <div className="flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/85 px-2.5 py-1.5 whitespace-nowrap backdrop-blur-sm ml-4">
+          <span className="h-1 w-1 bg-[color:var(--color-lime)]" />
+          <span data-name className="label text-[color:var(--color-fg)]" />
+          <span data-coords className="label text-[color:var(--color-fg-3)]" />
+        </div>
+      </div>
       {/* Vignette keeps text legible at the edges of every composition. */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_70%_40%,transparent_35%,rgba(8,11,14,0.75)_100%)]" />
     </div>

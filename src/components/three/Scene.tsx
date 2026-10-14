@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { CAMERA_KEYS, NODES, PATHS, nodeById } from "./landmarks";
@@ -29,14 +29,27 @@ const FOG: [number, number] = [16, 60];
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
+/**
+ * Mounts layers one frame apart so geometry building and shader compilation
+ * are spread over several short tasks instead of one long main-thread block.
+ */
+function useStagedMount(stages: number) {
+  const [stage, setStage] = useState(1);
+  useFrame(() => {
+    if (stage < stages) setStage((s) => s + 1);
+  });
+  return stage;
+}
+
 export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) {
+  const stage = useStagedMount(4);
   return (
     <>
       <CameraRig tier={tier} introDelay={introDelay} />
       <Terrain tier={tier} />
-      <Paths />
-      <SurveyNodes />
-      {tier === "high" && <Particles />}
+      {stage >= 2 && <Paths />}
+      {stage >= 3 && <SurveyNodes />}
+      {stage >= 4 && tier === "high" && <Particles />}
     </>
   );
 }

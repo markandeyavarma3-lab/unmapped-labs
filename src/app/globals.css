@@ -12,7 +12,7 @@
   --color-line: #27323d;
   --color-fg: #f2f1eb;
   --color-fg-2: #a0aab5;
-  --color-fg-3: #6b7785;
+  --color-fg-3: #7a8693; /* ≥4.5:1 on ink for small labels */
   --color-cyan: #65e4e8;
   --color-lime: #c7f36b;
 
@@ -241,6 +241,36 @@ html[data-intro="on"] {
   }
 }
 
+/* ---------------- Mobile menu ------------------------------------- */
+.mobile-panel {
+  visibility: hidden;
+  clip-path: inset(0 0 100% 0);
+  transition:
+    clip-path 0.5s var(--ease-out-expo),
+    visibility 0s linear 0.5s;
+}
+.mobile-panel[data-open] {
+  visibility: visible;
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 0.5s var(--ease-out-expo),
+    visibility 0s;
+}
+.mobile-item {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 0.3s var(--ease-out-quart),
+    transform 0.3s var(--ease-out-quart);
+}
+.mobile-panel[data-open] .mobile-item {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s var(--ease-out-expo) calc(80ms + var(--i, 0) * 50ms),
+    transform 0.5s var(--ease-out-expo) calc(80ms + var(--i, 0) * 50ms);
+}
+
 /* ---------------- Scroll reveals (only hidden once JS is confirmed) ---- */
 html.js .reveal:not([data-in]) {
   opacity: 0;
@@ -267,6 +297,18 @@ html.js .reveal-mask:not([data-in]) > * {
   transform: translate3d(0, 108%, 0);
 }
 
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+}
+@keyframes label-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
 @keyframes scroll-cue {
   0% {
     transform: translateY(-100%);
