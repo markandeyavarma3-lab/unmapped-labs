@@ -1,5 +1,6 @@
 import { hero } from "@/content/site-content";
 import { Magnetic } from "@/components/ui/Magnetic";
+import { BtnLabel } from "@/components/ui/BtnLabel";
 
 export function Hero() {
   return (
@@ -42,14 +43,14 @@ export function Hero() {
         <div className="fade-up mt-10 flex flex-wrap items-center gap-3" style={{ "--i": 4 } as React.CSSProperties}>
           <Magnetic>
             <a href={hero.primaryCta.href} className="btn btn-primary">
-              {hero.primaryCta.label}
+              <BtnLabel>{hero.primaryCta.label}</BtnLabel>
               <svg aria-hidden className="btn-arrow h-3.5 w-3.5" viewBox="0 0 14 14" fill="none">
                 <path d="M7 1v12M1.5 7.5 7 13l5.5-5.5" stroke="currentColor" strokeWidth="1.6" />
               </svg>
             </a>
           </Magnetic>
           <a href={hero.secondaryCta.href} className="btn btn-ghost">
-            {hero.secondaryCta.label}
+            <BtnLabel>{hero.secondaryCta.label}</BtnLabel>
           </a>
         </div>
 

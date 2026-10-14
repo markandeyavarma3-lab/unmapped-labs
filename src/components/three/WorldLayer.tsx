@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { onScroll } from "@/components/motion/scroll-engine";
 import { nodeLabel, setWorldPaused, world } from "./world-store";
+import { setWorldMode, setWorldReady } from "./views";
 import type { Tier } from "./Scene";
 
 const World = dynamic(() => import("./World"), { ssr: false });
@@ -25,7 +26,7 @@ function detectMode(): Mode {
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   const weak = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
   const tier: Tier = coarse || weak || window.innerWidth < 768 ? "low" : "high";
-  const introDelay = document.documentElement.dataset.intro === "on" ? 1.6 : 0.15;
+  const introDelay = document.documentElement.dataset.intro === "on" ? 1.9 : 0.15;
   return { kind: "webgl", tier, introDelay };
 }
 
@@ -89,7 +90,14 @@ export function WorldLayer() {
     // Defer WebGL until the main thread is idle so text and CTAs win first paint.
     const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 200));
     const cancel = window.cancelIdleCallback ?? window.clearTimeout;
-    const id = idle(() => setMode(detectMode()), { timeout: 900 });
+    const id = idle(
+      () => {
+        const m = detectMode();
+        setMode(m);
+        setWorldMode(m.kind);
+      },
+      { timeout: 900 },
+    );
     return () => cancel(id as number);
   }, []);
 
@@ -107,7 +115,10 @@ export function WorldLayer() {
           className="absolute inset-0 transition-opacity duration-[1400ms] ease-[var(--ease-out-quart)]"
           style={{ opacity: ready ? 1 : 0 }}
         >
-          <World tier={mode.tier} introDelay={mode.introDelay} onReady={() => setReady(true)} />
+          <World tier={mode.tier} introDelay={mode.introDelay} onReady={() => {
+              setReady(true);
+              setWorldReady(true);
+            }} />
         </div>
       )}
       {/* Survey-node label, positioned by the scene when a marker is active. */}

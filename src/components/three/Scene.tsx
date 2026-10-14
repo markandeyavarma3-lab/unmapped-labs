@@ -18,6 +18,9 @@ import {
 import { CHAPTERS, world } from "./world-store";
 import { SurveyNodes } from "./SurveyNodes";
 import { frame } from "./frame-state";
+import { ViewLayer } from "./WorldRenderer";
+import { ParticleMorph } from "./ParticleMorph";
+import { ProcessIsland } from "./ProcessIsland";
 
 export type Tier = "high" | "low";
 
@@ -42,7 +45,7 @@ function useStagedMount(stages: number) {
 }
 
 export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) {
-  const stage = useStagedMount(4);
+  const stage = useStagedMount(6);
   return (
     <>
       <CameraRig tier={tier} introDelay={introDelay} />
@@ -50,6 +53,16 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
       {stage >= 2 && <Paths />}
       {stage >= 3 && <SurveyNodes />}
       {stage >= 4 && tier === "high" && <Particles />}
+      {stage >= 5 && (
+        <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
+          <ParticleMorph tier={tier} />
+        </ViewLayer>
+      )}
+      {stage >= 6 && (
+        <ViewLayer id="island" fov={36} position={[0, 4, 6]}>
+          <ProcessIsland tier={tier} />
+        </ViewLayer>
+      )}
     </>
   );
 }
@@ -114,6 +127,12 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     tmp.pos.y += tmp.parallax.y * 0.45 + Math.sin(t * 0.17) * 0.18;
     tmp.pos.addScaledVector(tmp.right, Math.sin(t * 0.11) * 0.3);
 
+    // Entrance: arrive from high and far back while the terrain draws itself.
+    const arrive = 1 - Math.pow(1 - f.introT, 3);
+    tmp.pos.y += (1 - arrive) * 11;
+    tmp.pos.z += (1 - arrive) * 16;
+    tmp.pos.x -= (1 - arrive) * 4;
+
     cam.position.copy(tmp.pos);
     cam.lookAt(tmp.target);
 
@@ -128,8 +147,9 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     cam.setViewOffset(size.width, size.height, -tmp.offset, 0, size.width, size.height);
 
     // Path draw-in and node discovery derive from the smoothed chapter.
-    const introT = easeOutCubic(clamp01((t - introDelay) / 2.6));
+    const introT = easeOutCubic(clamp01((t - introDelay) / 3.2));
     f.introT = introT;
+    f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, 4.3, 4.95), 3, dt);
     PATHS.forEach((p, i) => {
       const raw = clamp01((f.chapter - p.span[0]) / (p.span[1] - p.span[0]));
       f.draws[i] = raw * clamp01(introT * 1.4 - 0.3);
@@ -194,6 +214,8 @@ function Terrain({ tier }: { tier: Tier }) {
           uLine: { value: new THREE.Vector3(...LINE) },
           uCyan: { value: new THREE.Vector3(...CYAN) },
           uFog: { value: new THREE.Vector2(...FOG) },
+          uSweep: { value: -1 },
+          uFinale: { value: 0 },
         },
       }),
     [range],
@@ -220,6 +242,8 @@ function Terrain({ tier }: { tier: Tier }) {
     const t = state.clock.elapsedTime;
     u.uTime.value = t;
     u.uIntro.value = f.introT;
+    u.uSweep.value = f.introT < 1 ? f.introT : -1;
+    u.uFinale.value = f.finale;
 
     // Map grows with the journey; centred on what the camera looks at.
     const c = clamp01(f.chapter / CHAPTERS);
@@ -294,6 +318,7 @@ function Paths() {
           blending: THREE.AdditiveBlending,
           uniforms: {
             uDraw: { value: 0 },
+            uBoost: { value: 0 },
             uTime: { value: 0 },
             uColor: { value: new THREE.Vector3(...CYAN) },
             uFog: { value: new THREE.Vector2(...FOG) },
@@ -317,6 +342,7 @@ function Paths() {
     meshes.current.forEach((m, i) => {
       if (!m) return;
       m.material.uniforms.uDraw.value = frame.draws[i];
+      m.material.uniforms.uBoost.value = frame.finale;
       m.material.uniforms.uTime.value = state.clock.elapsedTime;
     });
   });

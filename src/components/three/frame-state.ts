@@ -9,4 +9,6 @@ export const frame = {
   draws: PATHS.map(() => 0),
   nodeStrength: NODES.map(() => 0),
   introT: 0,
+  /** 0 → 1 as the visitor reaches Contact: every path lights at once. */
+  finale: 0,
 };

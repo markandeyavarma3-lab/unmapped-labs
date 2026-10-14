@@ -131,7 +131,7 @@ export function SiteHeader() {
                   <a
                     href={href(item.id)}
                     aria-current={isActive ? "location" : undefined}
-                    className={`group relative flex items-center gap-2 px-3 py-2 text-[13.5px] transition-colors duration-[var(--duration-hover)] ${
+                    className={`nav-link group relative flex items-center gap-2 px-3 py-2 text-[13.5px] transition-colors duration-[var(--duration-hover)] ${
                       isActive ? "text-[color:var(--h-fg)]" : "text-[color:var(--h-fg-2)] hover:text-[color:var(--h-fg)]"
                     }`}
                   >

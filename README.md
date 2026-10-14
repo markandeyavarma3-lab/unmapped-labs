@@ -34,6 +34,7 @@ Requires Node 20+.
 | Content | MDX (`@next/mdx`) for Field Notes | Write a file → get a page |
 | Contact | Next route handler + Resend | Real delivery, honest failure states |
 | Analytics | Vercel Analytics + Speed Insights | Privacy-friendly; real-user Core Web Vitals |
+| Post-processing | three.js `EffectComposer` + `UnrealBloomPass` (high tier only) | Glow on paths, nodes and particles |
 
 GSAP, Motion, drei and Zod were tried and then removed to cut initial
 JavaScript (mobile Lighthouse performance went from 61 to 96).
@@ -62,6 +63,25 @@ public/terrain-fallback.svg generated top-down contour map of the same terrain
 ```
 
 ## The world (3D)
+
+- **One canvas, several views.** `WorldRenderer.tsx` takes over rendering: it draws
+  the terrain world, then each *view* (the particle morph and the process
+  island) into the screen rectangle of a DOM anchor in its section
+  (`views.ts`). One GPU context, one loop. On high-tier devices the whole frame
+  goes through bloom (`UnrealBloomPass`); phones skip bloom.
+- **Views mount lazily:** a section registers its anchor only when it's
+  within about one screen of the viewport, so geometry is built just before
+  it's needed.
+- **Particle morph** (`ParticleMorph.tsx`, `morph-shapes.ts`): 14k particles on
+  desktop, 5.6k on phones, moving through six formations (Unknown → Build)
+  driven by a sticky scroll track in `MorphSequence.tsx`.
+- **Process island** (`ProcessIsland.tsx`): a floating terrain island with five
+  stations (radar scan, unfolding map grid, separating strata, assembling
+  blocks, validation beacon). The camera flies station to station as the
+  stage list scrolls. Phones get a pinned layout: island on top, current stage
+  below.
+- **Colour:** the canvas runs with `linear` + `flat`, so every hex value is used
+  as-is and matches the CSS colours exactly.
 
 - **One persistent scene** sits fixed behind the page (`WorldLayer` → `World` → `Scene`).
   It loads lazily, after first paint and when the browser is idle. Headline, copy
@@ -142,8 +162,11 @@ it's best effort. Move it to a shared store (e.g. Upstash) if abuse appears.
   map; the mobile menu traps focus, closes on Escape and returns focus.
 - `prefers-reduced-motion`: no WebGL, no intro, no smooth scroll, no scrubbed
   animations. Everything is shown complete.
-- The intro shows once per browser, only on the home page, can be skipped
-  (button, Escape, click), and dismisses itself with CSS even if JavaScript fails.
+- The intro (particles assemble the logo, then burst away) shows once per
+  browser, only on the home page, can be skipped (button, Escape, click), runs as
+  a tiny inline 2D-canvas script before the app loads, and dismisses itself with
+  CSS even if JavaScript fails.
+- Wide screens get a chapter rail (left edge) for orientation and jumping.
 
 ## Testing done (and results)
 
@@ -158,9 +181,9 @@ Run locally against the production build (`next build && next start`):
   drafts not public, `/notes` empty state, sitemap/robots/OG/icons/manifest,
   reduced-motion fallback, first visit vs. return visit intro.
 - No horizontal overflow at 390px and 1440px across all sections.
-- Lighthouse 12 (local, simulated throttling):
-  mobile **96 / 100 / 96 / 100** (Perf / A11y / BP / SEO), LCP 2.4s, CLS 0, TBT 130ms;
-  desktop **99 / 100 / 96 / 100**, LCP 0.6s, CLS 0, TBT 20ms.
+- Lighthouse 12 (local, simulated throttling), after the 3D upgrade:
+  mobile **97 / 100 / 96 / 100** (Perf / A11y / BP / SEO), LCP 2.4s, CLS 0, TBT 130ms;
+  desktop **100 / 100 / 96 / 100**, LCP 0.6s, CLS 0, TBT 20ms.
   The Best Practices deduction is Vercel Analytics' script 404ing locally; it
   only exists on Vercel.
 

@@ -86,6 +86,7 @@ function Node({
   );
   useEffect(() => () => halo.dispose(), [halo]);
 
+  const rise = useRef<THREE.Group>(null);
   const haloMesh = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null);
   const core = useRef<THREE.Mesh>(null);
   const pole = useRef<THREE.Mesh>(null);
@@ -100,7 +101,13 @@ function Node({
 
   useFrame((state, delta) => {
     if (!haloMesh.current) return;
-    const s = frame.nodeStrength[index];
+    // Entrance: each marker rises out of the ground, staggered by index.
+    if (rise.current) {
+      const k = THREE.MathUtils.clamp(frame.introT * 1.6 - index * 0.08, 0, 1);
+      rise.current.position.y = -1.6 * Math.pow(1 - k, 3);
+      rise.current.scale.setScalar(Math.max(0.001, k));
+    }
+    const s = Math.max(frame.nodeStrength[index], frame.finale);
     const dt = Math.min(delta, 1 / 20);
     emphasis.current = THREE.MathUtils.damp(emphasis.current, activeRef.current ? 1 : 0, 8, dt);
     const e = emphasis.current;
@@ -150,6 +157,7 @@ function Node({
 
   return (
     <group position={[node.x, node.y, node.z]}>
+      <group ref={rise}>
       {labelled && (
         <mesh ref={pole} position={[0, 0.55, 0]}>
           <cylinderGeometry args={[0.006, 0.006, 1.1, 4]} />
@@ -172,7 +180,7 @@ function Node({
           <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
         </mesh>
       )}
-
+      </group>
     </group>
   );
 }

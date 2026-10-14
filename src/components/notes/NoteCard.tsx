@@ -5,7 +5,7 @@ import { NoteCover } from "./NoteCover";
 export function NoteCard({ note }: { note: Note }) {
   return (
     <article className="group relative flex h-full flex-col">
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="glint relative aspect-[16/10] overflow-hidden">
         <NoteCover
           slug={note.slug}
           label={note.category.toUpperCase()}

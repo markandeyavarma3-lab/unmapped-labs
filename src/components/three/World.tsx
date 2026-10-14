@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import { Scene, type Tier } from "./Scene";
+import { WorldRenderer } from "./WorldRenderer";
 import { onWorldPauseChange, world } from "./world-store";
 
 /** Stops the render loop entirely while an opaque section covers the canvas. */
@@ -76,12 +78,15 @@ export default function World({
       eventPrefix="client"
       dpr={dpr}
       flat
+      linear
       gl={{ antialias: tier === "high", alpha: false, stencil: false, powerPreference: "high-performance" }}
       camera={{ fov: 40, near: 0.1, far: 140, position: [0, 8, 47] }}
-      onCreated={({ gl }) => gl.setClearColor("#080b0e")}
+      // Raw display-space RGB: must equal the page background exactly, whatever the colour-management state.
+      onCreated={({ gl }) => gl.setClearColor(new THREE.Color().setRGB(8 / 255, 11 / 255, 14 / 255))}
     >
       <PauseController />
       <AdaptiveDpr max={maxDpr} />
+      <WorldRenderer bloom={tier === "high"} />
       <Scene tier={tier} introDelay={introDelay} />
       <ReadySignal onReady={onReady} />
     </Canvas>

@@ -19,6 +19,15 @@ export const intro = {
     "We begin by learning how things actually work. Then we investigate what could work better.",
   ],
   progression: ["Unknown", "Observe", "Map", "Understand", "Discover", "Build"],
+  figure: "Fig. 02 — From unknown to built",
+  captions: [
+    "Noise and fragments. Plenty of opinions, no shape yet.",
+    "Watch the system as it actually runs — before deciding anything.",
+    "Trace the terrain: flows, dependencies, and the places nobody has charted.",
+    "Separate the layers. Symptoms on the surface, causes underneath.",
+    "Find the connections between parts that no one has drawn.",
+    "Only then, build — and build what fits the ground it stands on.",
+  ],
 };
 
 export type Stage = {

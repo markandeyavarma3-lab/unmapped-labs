@@ -1,5 +1,5 @@
 import { intro } from "@/content/site-content";
-import { Progression } from "./Progression";
+import { MorphSequence } from "./MorphSequence";
 
 export function IntroSection() {
   return (
@@ -7,11 +7,12 @@ export function IntroSection() {
       id="intro"
       data-chapter="1"
       aria-labelledby="intro-heading"
-      className="relative py-[var(--section-y)]"
+      className="relative pt-[var(--section-y)]"
     >
+      {/* Veil only behind the copy — the morph stage below stays clear. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(8,11,14,0.7)_30%,rgba(8,11,14,0.7)_75%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[min(100%,58rem)] bg-[linear-gradient(180deg,transparent_0%,rgba(8,11,14,0.7)_25%,rgba(8,11,14,0.7)_70%,transparent_100%)]"
       />
       <div className="container-site relative grid gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7">
@@ -41,8 +42,8 @@ export function IntroSection() {
         </div>
       </div>
 
-      <div className="container-site relative mt-[clamp(4rem,10vw,8rem)]">
-        <Progression steps={intro.progression} />
+      <div className="relative mt-[clamp(3rem,8vw,6rem)]">
+        <MorphSequence />
       </div>
     </section>
   );

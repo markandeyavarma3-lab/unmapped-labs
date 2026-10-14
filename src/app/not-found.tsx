@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/brand/Logo";
+import { BtnLabel } from "@/components/ui/BtnLabel";
 
 export default function NotFound() {
   return (
@@ -20,10 +21,10 @@ export default function NotFound() {
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link href="/" className="btn btn-primary">
-            Back to known ground
+            <BtnLabel>Back to known ground</BtnLabel>
           </Link>
           <Link href="/notes" className="btn btn-ghost">
-            Read the field notes
+            <BtnLabel>Read the field notes</BtnLabel>
           </Link>
         </div>
       </div>

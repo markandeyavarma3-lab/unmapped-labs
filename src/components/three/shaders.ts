@@ -38,6 +38,8 @@ export const terrainFragment = /* glsl */ `
   uniform vec3  uLine;
   uniform vec3  uCyan;
   uniform vec2  uFog;            // near, far
+  uniform float uSweep;          // 0 → 1 during the entrance; < 0 when done
+  uniform float uFinale;         // 0 → 1 at Contact
 
   varying vec3 vWorld;
   varying vec3 vNormal;
@@ -72,7 +74,7 @@ export const terrainFragment = /* glsl */ `
       vec3 n = uNodes[i];
       nodeGlow = max(nodeGlow, (1.0 - smoothstep(0.4, 3.4, length(vWorld.xz - n.xy))) * n.z);
     }
-    float known = clamp(max(max(reveal, flash), nodeGlow), 0.0, 1.0);
+    float known = clamp(max(max(max(reveal, flash), nodeGlow), uFinale), 0.0, 1.0);
 
     // Contours: minor every 0.4 units, major every 2.0.
     float minor = isoLine(vH * 2.5, 1.0);
@@ -97,6 +99,17 @@ export const terrainFragment = /* glsl */ `
     float pulse = (1.0 - smoothstep(0.0, 0.7, abs(length(vWorld.xz - uFocus) - ring))) * (1.0 - ring / 46.0);
     col += uCyan * pulse * (minor * 0.5 + major) * 0.32 * rising;
 
+    // Entrance: a bright survey line sweeps across the terrain, front to back.
+    if (uSweep >= 0.0) {
+      float front = mix(60.0, -30.0, uSweep);
+      float band = 1.0 - smoothstep(0.0, 2.2, abs(vWorld.z - front));
+      float wake = smoothstep(front, front + 9.0, vWorld.z) * (1.0 - smoothstep(front + 9.0, front + 22.0, vWorld.z));
+      col += uCyan * band * (0.08 + (minor + major) * 0.9);
+      col += uLine * wake * (minor * 0.12 + major * 0.25);
+    }
+    // Finale: the whole map lit as one connected system.
+    col += uCyan * (minor * 0.06 + major * 0.14) * uFinale;
+
     // Atmosphere.
     float fog = smoothstep(uFog.x, uFog.y, dist);
     col = mix(col, uBg, fog);
@@ -118,6 +131,7 @@ export const pathVertex = /* glsl */ `
 
 export const pathFragment = /* glsl */ `
   uniform float uDraw;
+  uniform float uBoost;
   uniform float uTime;
   uniform vec3  uColor;
   uniform vec2  uFog;
@@ -127,10 +141,11 @@ export const pathFragment = /* glsl */ `
   void main() {
     if (vUv.x > uDraw || uDraw <= 0.001) discard;
     float head = smoothstep(uDraw - 0.08, uDraw, vUv.x) * step(uDraw, 0.999);
-    float travel = pow(1.0 - fract(vUv.x * 2.0 - uTime * 0.12), 12.0);
-    float a = 0.42 + head * 0.9 + travel * 0.55;
-    a *= 1.0 - smoothstep(uFog.x, uFog.y, vDist);
-    gl_FragColor = vec4(uColor * a, a);
+    float travel = pow(1.0 - fract(vUv.x * 2.0 - uTime * (0.12 + uBoost * 0.25)), 12.0);
+    float a = (0.42 + head * 0.9 + travel * 0.55) * (1.0 + uBoost * 0.9);
+    a *= 1.0 - smoothstep(uFog.x, uFog.y + uBoost * 30.0, vDist);
+    vec3 col = mix(uColor, vec3(0.78, 0.95, 0.42), uBoost * travel);
+    gl_FragColor = vec4(col * a, a);
   }
 `;
 

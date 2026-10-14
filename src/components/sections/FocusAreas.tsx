@@ -23,18 +23,18 @@ export function FocusAreas() {
           {focus.areas.map((area, i) => (
             <li
               key={area.id}
-              className="group reveal relative grid gap-x-8 gap-y-5 border-b border-[color:var(--color-paper-line)] py-10 transition-colors duration-[var(--duration-hover)] hover:bg-[color:var(--color-paper-2)]/60 sm:grid-cols-[4.5rem_1fr] lg:grid-cols-[6rem_minmax(0,5fr)_minmax(0,4fr)_10rem] lg:items-center lg:py-12"
+              className="focus-row group reveal relative grid gap-x-8 gap-y-5 border-b border-[color:var(--color-paper-line)] py-10 transition-colors duration-[var(--duration-hover)] hover:bg-[color:var(--color-paper-2)]/60 sm:grid-cols-[4.5rem_1fr] lg:grid-cols-[6rem_minmax(0,5fr)_minmax(0,4fr)_10rem] lg:items-center lg:py-12"
               style={{ "--d": i % 2 } as React.CSSProperties}
             >
               <span
                 aria-hidden
-                className={`label flex h-9 w-9 items-center justify-center border transition-colors duration-[var(--duration-hover)] lg:ml-4 ${
+                className={`focus-index label flex h-9 w-9 items-center justify-center border lg:ml-4 ${
                   area.id === "open"
-                    ? "border-dashed border-[color:var(--color-paper-fg-2)] text-[color:var(--color-paper-fg-2)]"
-                    : "border-[color:var(--color-paper-line)] text-[color:var(--color-paper-fg-2)] group-hover:border-[color:var(--color-teal)] group-hover:text-[color:var(--color-teal)]"
+                    ? "is-open border-dashed border-[color:var(--color-paper-fg-2)] text-[color:var(--color-paper-fg-2)]"
+                    : "border-[color:var(--color-paper-line)] text-[color:var(--color-paper-fg-2)]"
                 }`}
               >
-                {area.index}
+                <span>{area.index}</span>
               </span>
               <div>
                 <h3 className="text-[length:var(--text-h3)] leading-[var(--text-h3--line-height)] font-medium tracking-[var(--text-h3--letter-spacing)]">

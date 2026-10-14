@@ -12,6 +12,7 @@ export function IntroSkip() {
 
     const skip = () => {
       overlay?.classList.add("intro-skipped");
+      root.dataset.introDone = "1";
       root.style.setProperty("--intro-delay", "0ms");
       cleanup();
     };
@@ -22,7 +23,7 @@ export function IntroSkip() {
     };
     window.addEventListener("keydown", onKey);
     overlay?.addEventListener("pointerdown", skip);
-    const done = window.setTimeout(cleanup, 2600);
+    const done = window.setTimeout(cleanup, 3000);
     return () => {
       window.clearTimeout(done);
       cleanup();

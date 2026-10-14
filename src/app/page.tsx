@@ -10,6 +10,7 @@ import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
 import { SheetFrame } from "@/components/ui/SheetFrame";
+import { ChapterRail } from "@/components/layout/ChapterRail";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -28,6 +29,7 @@ export default function Home() {
     <>
       <Intro />
       <WorldLayer />
+      <ChapterRail />
       <main id="main" tabIndex={-1} className="relative z-[var(--z-content)]">
         <Hero />
         <IntroSection />

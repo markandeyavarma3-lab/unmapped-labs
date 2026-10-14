@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { contact } from "@/content/site-content";
 import { site } from "@/config/site";
 import { CONTACT_FIELDS as FIELDS, HONEYPOT_FIELD, STARTED_FIELD, validateContact, type ContactErrors, type ContactField } from "@/lib/contact-schema";
+import { BtnLabel } from "@/components/ui/BtnLabel";
 
 type Status =
   | { kind: "idle" }
@@ -91,7 +92,7 @@ export function ContactForm() {
   // A render helper, not a component: a component declared here would remount
   // its inputs on every render and wipe what the visitor typed.
   const field = (name: ContactField, label: string, children: React.ReactNode, optional = false) => (
-    <div className="flex flex-col">
+    <div className="field flex flex-col">
       <label htmlFor={fid(name)} className="label flex justify-between text-[color:var(--color-fg-2)]">
         <span>{label}</span>
         {optional && <span className="text-[color:var(--color-fg-3)]">Optional</span>}
@@ -179,7 +180,7 @@ export function ContactForm() {
                   </>
                 ) : (
                   <>
-                    Send message
+                    <BtnLabel>Send message</BtnLabel>
                     <span aria-hidden className="btn-arrow">→</span>
                   </>
                 )}
