@@ -10,12 +10,12 @@ export async function FieldNotes() {
   const latest = notes.slice(0, 3);
 
   return (
-    <section id="notes" data-chapter="10" aria-labelledby="notes-heading" className="relative pb-[var(--section-y)]">
+    <section id="notes" data-chapter="10" aria-labelledby="notes-heading" className="relative py-[var(--section-y)]">
       <div className="container-site">
-        <div className="flex flex-wrap items-end justify-between gap-8 border-t border-[color:var(--color-paper-line)] pt-[clamp(4rem,9vw,7rem)]">
-          <SectionHeading id="notes-heading" tone="paper" label={copy.label} heading={copy.heading} intro={copy.intro} />
+        <div className="flex flex-wrap items-end justify-between gap-8">
+          <SectionHeading id="notes-heading" label={copy.label} heading={copy.heading} intro={copy.intro} />
           {notes.length > 0 && (
-            <Link href="/notes" className="link-underline reveal pb-1 text-[15px] font-medium text-[color:var(--color-paper-fg)]">
+            <Link href="/notes" className="link-underline reveal pb-1 text-[15px] font-medium text-[color:var(--color-fg)]">
               All field notes ({notes.length}) →
             </Link>
           )}
@@ -23,9 +23,9 @@ export async function FieldNotes() {
 
         <div className="mt-14 lg:mt-20">
           {latest.length > 0 ? (
-            <ul className="grid gap-px border border-[color:var(--color-paper-line)] bg-[color:var(--color-paper-line)] md:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid gap-px border border-[color:var(--color-line)] bg-[color:var(--color-line)] md:grid-cols-2 lg:grid-cols-3">
               {latest.map((n, i) => (
-                <li key={n.slug} className="reveal bg-[color:var(--color-paper)]" style={{ "--d": i } as React.CSSProperties}>
+                <li key={n.slug} className="reveal bg-[color:var(--color-ink)]" style={{ "--d": i } as React.CSSProperties}>
                   <NoteCard note={n} />
                 </li>
               ))}

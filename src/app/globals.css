@@ -238,29 +238,20 @@ html.lenis body {
     transform: scaleX(1);
     transform-origin: left;
   }
-  /* Focus-area rows */
-  .focus-row h3 {
-    transition: transform 0.5s var(--ease-out-expo);
+  /* Dark glass panels over the living terrain */
+  .glass {
+    background: linear-gradient(160deg, rgb(16 21 27 / 0.72), rgb(8 11 14 / 0.6));
+    border: 1px solid rgb(39 50 61 / 0.9);
+    backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.8);
   }
-  .focus-row:hover h3 {
-    transform: translateX(8px);
+  .territory-index {
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
   }
-  .focus-row .focus-index {
-    transition:
-      background-color 0.3s,
-      color 0.3s,
-      border-color 0.3s,
-      transform 0.5s var(--ease-out-expo);
-  }
-  .focus-row:hover .focus-index:not(.is-open) {
-    background: var(--color-teal);
-    border-color: var(--color-teal);
-    color: var(--color-paper);
-    transform: rotate(45deg);
-  }
-  .focus-row:hover .focus-index:not(.is-open) > span {
-    display: inline-block;
-    transform: rotate(-45deg);
+  .territory-card.is-open .territory-index {
+    border-color: var(--color-fg-3);
+    color: var(--color-fg-3);
   }
   /* Card glint */
   .glint {
@@ -447,6 +438,16 @@ html[data-intro="on"] {
   }
 }
 
+/* ---------------- Process takeover ------------------------------- */
+.process-track {
+  height: 560vh;
+}
+@media (prefers-reduced-motion: reduce) {
+  .process-track {
+    height: 100vh;
+  }
+}
+
 /* ---------------- Process stages & island labels ----------------- */
 .stage-item .stage-bar {
   transform: scaleX(0);
@@ -489,66 +490,76 @@ html.js .stage-item:not([data-on]) .stage-body {
   color: rgb(8 11 14 / 0.6);
 }
 
-/* ---------------- Chapter rail ------------------------------------ */
-.chapter-rail {
-  --rail-fg: var(--color-fg);
-  --rail-muted: var(--color-fg-3);
-  --rail-line: var(--color-line);
-  --rail-accent: var(--color-cyan);
-  --rail-bg: var(--color-ink);
-}
-.chapter-rail[data-tone="paper"] {
-  --rail-fg: var(--color-paper-fg);
-  --rail-muted: var(--color-paper-fg-2);
-  --rail-line: var(--color-paper-line);
-  --rail-accent: var(--color-teal);
-  --rail-bg: var(--color-paper);
-}
-.rail-track {
-  background: var(--rail-line);
-  transition: background-color 0.4s;
-}
-.rail-fill {
-  background: var(--rail-accent);
-}
-.rail-dot {
-  border-color: var(--rail-muted);
-  background: var(--rail-bg);
-  transform: rotate(45deg) scale(0.62);
+/* ---------------- Mini-map navigator ------------------------------ */
+.minimap-view {
+  width: 184px;
+  height: 115px;
   transition:
-    transform 0.45s var(--ease-out-expo),
-    background-color 0.3s,
-    border-color 0.3s,
-    box-shadow 0.4s;
+    width 0.6s var(--ease-out-expo),
+    height 0.6s var(--ease-out-expo);
 }
-.rail-link[data-state="passed"] .rail-dot {
-  border-color: var(--rail-accent);
-  background: var(--rail-accent);
+.minimap[data-open] .minimap-view {
+  width: min(300px, calc((100svh - 150px) / 2));
+  height: min(600px, calc(100svh - 150px));
 }
-.rail-link[data-state="current"] .rail-dot {
-  border-color: var(--rail-accent);
-  background: var(--rail-accent);
-  transform: rotate(45deg) scale(1);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--rail-accent) 18%, transparent);
+@media (max-width: 639px) {
+  .minimap[data-open] .minimap-view {
+    width: 100%;
+    height: min(64svh, 560px);
+  }
 }
-.rail-label {
-  color: var(--rail-fg);
-  opacity: 0;
-  transform: translateX(-6px);
-  pointer-events: none;
-  background: var(--rail-bg);
-  padding: 0.2rem 0.45rem;
+.minimap-pin rect {
+  fill: var(--color-ink);
+  stroke: var(--color-fg-3);
+  stroke-width: 1.2;
   transition:
-    opacity 0.25s var(--ease-out-quart),
-    transform 0.35s var(--ease-out-expo);
+    fill 0.3s,
+    stroke 0.3s;
 }
-.rail-link:hover .rail-label,
-.rail-link:focus-visible .rail-label {
-  opacity: 1;
-  transform: none;
+.minimap-pin[data-state="passed"] rect {
+  fill: var(--color-cyan);
+  stroke: var(--color-cyan);
 }
-.rail-link:hover .rail-dot {
-  transform: rotate(45deg) scale(1.1);
+.minimap-pin[data-state="current"] rect {
+  fill: var(--color-lime);
+  stroke: var(--color-lime);
+}
+.minimap-pin:hover rect,
+.minimap-pin:focus-visible rect {
+  stroke: var(--color-fg);
+}
+.minimap-pin-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--color-fg-2);
+  paint-order: stroke;
+  stroke: var(--color-ink);
+  stroke-width: 3px;
+}
+.minimap-pin[data-state="current"] .minimap-pin-label {
+  fill: var(--color-fg);
+}
+.minimap-unknown text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--color-fg-3);
+}
+.minimap-ping {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: minimap-ping 2.2s var(--ease-out-quart) infinite;
+}
+@keyframes minimap-ping {
+  from {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
 }
 
 /* ---------------- Mobile menu ------------------------------------- */
@@ -629,53 +640,6 @@ html.js .reveal-mask:not([data-in]) > * {
   }
 }
 
-/* ---------------- Focus-area glyphs -------------------------------- */
-.glyph {
-  color: var(--color-paper-line);
-}
-.glyph .glyph-accent {
-  stroke: var(--color-teal);
-  stroke-width: 1.6;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-}
-.glyph .glyph-node {
-  fill: var(--color-paper);
-  stroke: var(--color-paper-fg-2);
-}
-.glyph .glyph-dot {
-  fill: var(--color-paper-fg-2);
-  stroke: none;
-}
-@media (prefers-reduced-motion: no-preference) {
-  html.js .glyph .glyph-accent {
-    animation: glyph-trace 1.6s var(--ease-in-out-quart) 0.3s both paused;
-  }
-  .group:hover .glyph .glyph-accent,
-  .group:focus-within .glyph .glyph-accent,
-  .reveal[data-in] .glyph .glyph-accent {
-    animation-play-state: running;
-  }
-  .group:hover .glyph .glyph-pulse {
-    animation: glyph-pulse 1.8s var(--ease-out-quart) infinite;
-    transform-origin: 80px 76px;
-  }
-}
-@keyframes glyph-trace {
-  from {
-    stroke-dashoffset: 1;
-  }
-}
-@keyframes glyph-pulse {
-  from {
-    transform: scale(0.6);
-    opacity: 1;
-  }
-  to {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
 
 /* ---------------- Intro overlay ------------------------------------- */
 .intro {
@@ -752,7 +716,7 @@ html:not([data-intro="on"]) .intro {
 .prose-note {
   font-size: 1.125rem;
   line-height: 1.75;
-  color: var(--color-paper-fg);
+  color: var(--color-fg-2);
 }
 .prose-note > * + * {
   margin-top: 1.25em;
@@ -763,6 +727,7 @@ html:not([data-intro="on"]) .intro {
   line-height: 1.2;
   font-weight: 500;
   letter-spacing: -0.02em;
+  color: var(--color-fg);
 }
 .prose-note h3 {
   margin-top: 2em;
@@ -770,7 +735,7 @@ html:not([data-intro="on"]) .intro {
   font-weight: 500;
 }
 .prose-note a {
-  color: var(--color-teal);
+  color: var(--color-cyan);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -788,14 +753,14 @@ html:not([data-intro="on"]) .intro {
   margin-top: 0.4em;
 }
 .prose-note blockquote {
-  border-left: 2px solid var(--color-teal);
+  border-left: 2px solid var(--color-cyan);
   padding-left: 1.25rem;
-  color: var(--color-paper-fg-2);
+  color: var(--color-fg-2);
 }
 .prose-note code {
   font-family: var(--font-mono);
   font-size: 0.9em;
-  background: var(--color-paper-2);
+  background: var(--color-ink-3);
   padding: 0.1em 0.35em;
 }
 .prose-note img {

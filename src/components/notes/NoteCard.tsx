@@ -13,7 +13,7 @@ export function NoteCard({ note }: { note: Note }) {
         />
       </div>
       <div className="flex flex-1 flex-col gap-4 p-6 lg:p-7">
-        <p className="label flex gap-3 text-[color:var(--color-paper-fg-2)]">
+        <p className="label flex gap-3 text-[color:var(--color-fg-2)]">
           <time dateTime={note.date}>{formatNoteDate(note.date)}</time>
           <span aria-hidden>·</span>
           <span>{note.readingMinutes} min read</span>
@@ -23,8 +23,8 @@ export function NoteCard({ note }: { note: Note }) {
             {note.title}
           </Link>
         </h3>
-        <p className="text-[15px] leading-relaxed text-[color:var(--color-paper-fg-2)]">{note.summary}</p>
-        <span aria-hidden className="mt-auto pt-2 text-sm font-medium text-[color:var(--color-teal)] transition-transform duration-[var(--duration-hover)] group-hover:translate-x-1">
+        <p className="text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{note.summary}</p>
+        <span aria-hidden className="mt-auto pt-2 text-sm font-medium text-[color:var(--color-cyan)] transition-transform duration-[var(--duration-hover)] group-hover:translate-x-1">
           Read note →
         </span>
       </div>

@@ -10,8 +10,7 @@ import { FieldNotes } from "@/components/sections/FieldNotes";
 import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
-import { SheetFrame } from "@/components/ui/SheetFrame";
-import { ChapterRail } from "@/components/layout/ChapterRail";
+import { MiniMap } from "@/components/layout/MiniMap";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -30,25 +29,19 @@ export default function Home() {
     <>
       <Intro />
       <WorldLayer />
-      <ChapterRail />
+      <MiniMap />
       <main id="main" tabIndex={-1} className="relative z-[var(--z-content)]">
         <TitleSequence />
         <Hero />
         <IntroSection />
         <Approach />
 
-        <div data-covers-world className="surface-paper relative">
-          <SheetFrame sheet="Sheet 03–04 · Survey areas & field notes" note="Scale: to be discovered" />
-          <FocusAreas />
-          <FieldNotes />
-        </div>
+        <FocusAreas />
+        <FieldNotes />
 
         <Principles />
 
-        <div data-covers-world className="surface-paper relative">
-          <SheetFrame sheet="Sheet 06 · About" note="Status: evolving" />
-          <About />
-        </div>
+        <About />
 
         <Contact />
       </main>

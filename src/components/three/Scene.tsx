@@ -9,24 +9,18 @@ import {
   NODES,
   PATHS,
   PORTRAIT_TITLE_KEYS,
-  SURVEY_DISCS,
-  UNMAPPED_HOLD,
-  discRadius,
   nodeById,
 } from "./landmarks";
 import { TERRAIN, terrainHeight, mulberry32 } from "./terrain-math";
 import { TitleRelief } from "./TitleRelief";
+import { Territories } from "./Territories";
 import { makeTerrainMaterial, updateTerrainUniforms } from "./terrain-material";
 import {
-  DISC_SLOTS,
-  NODE_SLOTS,
   hexToVec3,
   particleFragment,
   particleVertex,
   pathFragment,
   pathVertex,
-  terrainFragment,
-  terrainVertex,
 } from "./shaders";
 import { world } from "./world-store";
 import { SurveyNodes } from "./SurveyNodes";
@@ -64,6 +58,7 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
       <TitleRelief tier={tier} introDelay={introDelay} />
       {stage >= 2 && <Paths />}
       {stage >= 3 && <SurveyNodes />}
+      {stage >= 3 && <Territories />}
       {stage >= 4 && tier === "high" && <Particles />}
       {stage >= 5 && (
         <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
@@ -171,7 +166,11 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     // Framing: wider lens on portrait screens; on wide screens, shift the
     // hero composition right so the headline owns the left column.
     const fov = aspect < 0.8 ? 60 : aspect < 1.2 ? 50 : 40;
-    const heroWeight = 1 - clamp01(Math.abs(f.chapter - 2) / 0.9);
+    // Shift the scene right where copy sits on the left: the hero and the territories.
+    const heroWeight = Math.max(
+      1 - clamp01(Math.abs(f.chapter - 2) / 0.9),
+      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 9, 9.6)) * 0.85,
+    );
     const targetOffset = aspect > 1.2 ? size.width * 0.13 * heroWeight : 0;
     tmp.offset = THREE.MathUtils.damp(tmp.offset, targetOffset, 4, dt);
     if (cam.fov !== fov) cam.fov = fov;
