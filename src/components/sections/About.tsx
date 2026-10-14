@@ -14,7 +14,7 @@ export async function About() {
   ];
 
   return (
-    <section id="about" aria-labelledby="about-heading" className="relative py-[var(--section-y)]">
+    <section id="about" data-chapter="12" aria-labelledby="about-heading" className="relative py-[var(--section-y)]">
       <div className="container-site grid gap-14 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-5">
           <SectionHeading id="about-heading" tone="paper" label={about.label} heading={about.heading} />

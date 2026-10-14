@@ -40,7 +40,6 @@ function useChapterScroll(enabled: boolean) {
     if (!enabled) return;
 
     let anchors: { y: number; c: number }[] = [];
-    let covers: { top: number; bottom: number }[] = [];
 
     const measure = () => {
       const half = window.innerHeight * 0.5;
@@ -49,13 +48,9 @@ function useChapterScroll(enabled: boolean) {
         .map((el) => ({ y: Math.max(0, el.getBoundingClientRect().top + y0 - half), c: Number(el.dataset.chapter) }))
         .sort((a, b) => a.y - b.y);
       if (anchors[0]?.c === 0) anchors[0].y = 0;
-      covers = Array.from(document.querySelectorAll<HTMLElement>("[data-covers-world]")).map((el) => {
-        const r = el.getBoundingClientRect();
-        return { top: r.top + y0, bottom: r.bottom + y0 };
-      });
     };
 
-    const update = (y: number, vh: number) => {
+    const update = (y: number) => {
       if (anchors.length) {
         let c = anchors[anchors.length - 1].c;
         if (y <= anchors[0].y) c = anchors[0].c;
@@ -70,8 +65,6 @@ function useChapterScroll(enabled: boolean) {
           }
         world.chapter = c;
       }
-      // Opaque editorial sections hide the world: stop rendering beneath them.
-      setWorldPaused(covers.some((r) => r.top <= y && r.bottom >= y + vh));
     };
 
     const dispose = onScroll(update, measure);
@@ -101,7 +94,8 @@ export function WorldLayer() {
     return () => cancel(id as number);
   }, []);
 
-  useChapterScroll(mode.kind === "webgl");
+  // Always on: the mini-map follows the journey even without WebGL.
+  useChapterScroll(true);
 
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-world)] overflow-hidden [contain:strict]">

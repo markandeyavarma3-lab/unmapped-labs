@@ -33,4 +33,3 @@ export function onWorldPauseChange(l: Listener) {
   };
 }
 
-export const CHAPTERS = 5;

@@ -345,6 +345,38 @@ html[data-intro="on"] {
   }
 }
 
+/* ---------------- Title sequence ---------------------------------- */
+.title-track {
+  height: 230vh;
+}
+.ghost-title {
+  font-size: clamp(3.4rem, 1rem + 11vw, 11.5rem);
+  line-height: 0.9;
+  font-weight: 500;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(242 241 235 / 0.75);
+}
+.tagline-text {
+  font-family: var(--font-sans);
+  font-size: 96px;
+  font-weight: 500;
+  letter-spacing: -3px;
+  fill: var(--color-fg);
+  fill-opacity: 0;
+  stroke: var(--color-cyan);
+  stroke-width: 1.1px;
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  paint-order: stroke;
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-track {
+    height: 100vh;
+  }
+}
+
 /* ---------------- Morph sequence ---------------------------------- */
 .morph-track {
   height: 380vh;

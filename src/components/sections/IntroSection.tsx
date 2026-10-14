@@ -5,7 +5,7 @@ export function IntroSection() {
   return (
     <section
       id="intro"
-      data-chapter="1"
+      data-chapter="3"
       aria-labelledby="intro-heading"
       className="relative pt-[var(--section-y)]"
     >

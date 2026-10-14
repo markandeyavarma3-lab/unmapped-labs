@@ -96,6 +96,16 @@ export const valleyX = (z: number) => Math.sin(z * 0.07) * 5.5 + Math.sin(z * 0.
 /** Terrain world size (x, z) and the z range the camera journeys through. */
 export const TERRAIN = { width: 90, depth: 150, centerZ: -10 } as const;
 
+/** Plateau under the title letters (covers both the one-line and stacked layouts). */
+export const TITLE_PLATE = { minX: -19.5, maxX: 19.5, minZ: 37.5, maxZ: 56.5 };
+
+function plateFlatten(x: number, z: number) {
+  const dx = Math.max(TITLE_PLATE.minX - x, 0, x - TITLE_PLATE.maxX);
+  const dz = Math.max(TITLE_PLATE.minZ - z, 0, z - TITLE_PLATE.maxZ);
+  const t = Math.min(1, Math.hypot(dx, dz) / 4);
+  return 0.18 + 0.82 * t * t * (3 - 2 * t);
+}
+
 export function terrainHeight(x: number, z: number): number {
   const rolling = fbm(x * 0.045, z * 0.045, 5) * 2.6;
   const ridge = 1 - Math.abs(simplex2(x * 0.03 + 11.7, z * 0.03 - 4.2));
@@ -106,5 +116,5 @@ export function terrainHeight(x: number, z: number): number {
   const shoulders = 0.28 + 0.72 * smoothstep(2, 11, d);
   const floor = (1 - smoothstep(0, 7, d)) * 1.1;
 
-  return ((rolling + ridged) * shoulders - floor) * 1.35;
+  return ((rolling + ridged) * shoulders - floor) * 1.35 * plateFlatten(x, z);
 }

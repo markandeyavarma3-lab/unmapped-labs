@@ -4,7 +4,7 @@ import { ProcessMap } from "./ProcessMap";
 
 export function Approach() {
   return (
-    <section id="approach" data-chapter="2" aria-labelledby="approach-heading" className="relative py-[var(--section-y)]">
+    <section id="approach" data-chapter="4" aria-labelledby="approach-heading" className="relative py-[var(--section-y)]">
       {/* Veil on the text column only; the island panel stays clear. */}
       <div
         aria-hidden

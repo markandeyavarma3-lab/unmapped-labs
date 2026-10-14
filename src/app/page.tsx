@@ -1,6 +1,7 @@
 import { site, socials } from "@/config/site";
 import { WorldLayer } from "@/components/three/WorldLayer";
 import { Intro } from "@/components/motion/Intro";
+import { TitleSequence } from "@/components/sections/TitleSequence";
 import { Hero } from "@/components/sections/Hero";
 import { IntroSection } from "@/components/sections/IntroSection";
 import { Approach } from "@/components/sections/Approach";
@@ -31,6 +32,7 @@ export default function Home() {
       <WorldLayer />
       <ChapterRail />
       <main id="main" tabIndex={-1} className="relative z-[var(--z-content)]">
+        <TitleSequence />
         <Hero />
         <IntroSection />
         <Approach />

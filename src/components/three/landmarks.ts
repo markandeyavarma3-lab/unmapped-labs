@@ -1,52 +1,131 @@
 import { terrainHeight, valleyX } from "./terrain-math";
+import { TITLE_CENTER } from "./title-glyphs";
 
 type V3 = [number, number, number];
+const vx = valleyX;
 
 /**
- * Camera journey — one keyframe per chapter (hero → contact).
- * The story: unknown overview → descend → walk the valley → rise →
- * read it as a map from above → look back over everything connected.
+ * The journey. One camera keyframe per chapter; page sections anchor chapter
+ * numbers with `data-chapter`. The camera glides between keyframes as you scroll.
  */
-export const CAMERA_KEYS: { pos: V3; target: V3 }[] = [
-  { pos: [valleyX(47) - 5, 8.2, 47], target: [valleyX(22) - 6.5, 0.4, 22] },
-  { pos: [valleyX(33) + 4, 5.4, 33], target: [valleyX(13) - 1, 0.2, 13] },
-  { pos: [valleyX(17) - 2, 3.4, 17], target: [valleyX(-1), 0.6, -1] },
-  { pos: [valleyX(3) + 7, 9.5, 3], target: [valleyX(-13), 0, -13] },
-  { pos: [valleyX(-12) + 0.5, 27, -7], target: [valleyX(-16), 0, -17] },
-  { pos: [valleyX(-50) - 9, 13, -50], target: [valleyX(-8) + 2, 0, -8] },
+export const CHAPTER = {
+  title: 0,
+  tagline: 1,
+  hero: 2,
+  intro: 3,
+  approach: 4,
+  territoryA: 5,
+  territoryB: 6,
+  territoryC: 7,
+  territoryD: 8,
+  territoryE: 9,
+  notes: 10,
+  philosophy: 11,
+  about: 12,
+  contact: 13,
+} as const;
+export const LAST_CHAPTER = 13;
+
+/* ---- Focus territories: regions of the map with their own settlements ---- */
+
+export type TerritoryId = "agriculture" | "logistics" | "healthcare" | "energy" | "open";
+export type Territory = { id: TerritoryId; x: number; z: number; y: number; side: 1 | -1 };
+
+const territory = (id: TerritoryId, z: number, offset: number): Territory => {
+  const x = vx(z) + offset;
+  return { id, x, z, y: terrainHeight(x, z), side: offset > 0 ? 1 : -1 };
+};
+
+export const TERRITORIES: Territory[] = [
+  territory("agriculture", -6, 10),
+  territory("logistics", -18, -10),
+  territory("healthcare", -30, 10),
+  territory("energy", -42, -10),
+  territory("open", -56, 11),
 ];
+
+const overlook = (t: Territory): { pos: V3; target: V3 } => ({
+  pos: [t.x - t.side * 7.5, t.y + 8.5, t.z + 11],
+  target: [t.x, t.y + 0.5, t.z],
+});
+
+export const CAMERA_KEYS: { pos: V3; target: V3 }[] = [
+  /* 0 title    */ { pos: [TITLE_CENTER.x, 22, 76], target: [TITLE_CENTER.x, 0, 49] },
+  /* 1 tagline  */ { pos: [TITLE_CENTER.x, 19, 78], target: [TITLE_CENTER.x, 0, 52] },
+  /* 2 hero     */ { pos: [vx(34) - 5, 8.2, 34], target: [vx(10) - 6.5, 0.4, 10] },
+  /* 3 intro    */ { pos: [vx(22) + 4, 6, 22], target: [vx(3) - 1, 0.2, 3] },
+  /* 4 approach */ { pos: [vx(8) - 2, 4.2, 8], target: [vx(-8), 0.6, -8] },
+  /* 5–9 territories */
+  ...TERRITORIES.map(overlook),
+  /* 10 notes   */ { pos: [vx(-46) + 14, 13, -40], target: [vx(-60), 0, -62] },
+  /* 11 philosophy — the whole map from above */ { pos: [vx(-8), 50, 4], target: [vx(-12), 0, -12] },
+  /* 12 about — a summit, looking back over everything */ { pos: [-27, 15, -32], target: [2, 0, 12] },
+  /* 13 contact — the final pull-back */ { pos: [vx(-62) - 8, 19, -68], target: [vx(-4) + 2, 0, -2] },
+];
+
+/** Portrait screens frame the stacked title from higher up. */
+export const PORTRAIT_TITLE_KEYS: { pos: V3; target: V3 }[] = [
+  { pos: [TITLE_CENTER.x, 36, 78], target: [TITLE_CENTER.x, 0, 49] },
+  { pos: [TITLE_CENTER.x, 33, 80], target: [TITLE_CENTER.x, 0, 52] },
+];
+
+/* ---- Fog of war: survey discs that open as the journey reaches them ---- */
+
+export type SurveyDisc = { x: number; z: number; r: number; from: number; to: number };
+
+export const SURVEY_DISCS: SurveyDisc[] = [
+  { x: TITLE_CENTER.x, z: TITLE_CENTER.z, r: 25, from: 0.15, to: 1.0 },
+  { x: vx(10) - 6.5, z: 10, r: 22, from: 1.3, to: 2.4 },
+  { x: vx(3), z: 3, r: 19, from: 2.3, to: 3.4 },
+  { x: vx(-8), z: -8, r: 18, from: 3.3, to: 4.4 },
+  ...TERRITORIES.slice(0, 4).map((t, i) => ({ x: t.x, z: t.z, r: 15, from: 4.5 + i, to: 5.4 + i })),
+  { x: vx(-14), z: -14, r: 40, from: 10.2, to: 11.3 },
+  { x: vx(-58), z: -58, r: 26, from: 12.2, to: 13 },
+];
+
+/** The corner that stays unmapped — "there is always more to map". */
+export const UNMAPPED_HOLD = { x: TERRITORIES[4].x, z: TERRITORIES[4].z, r: 11 };
+
+const smooth = (a: number, b: number, x: number) => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+/** Current radius of each disc for a (float) chapter. */
+export const discRadius = (d: SurveyDisc, chapter: number) => d.r * smooth(d.from, d.to, chapter);
+
+/** Share of the journey's map that has been surveyed, capped at 96%. */
+export const mappedPercent = (chapter: number) => {
+  const t = Math.min(1, Math.max(0, chapter / LAST_CHAPTER));
+  return Math.round(96 * (1 - Math.pow(1 - t, 1.25)));
+};
+
+/* ---- Survey nodes and discovery paths (along the valley) ---- */
 
 export type SurveyNode = { id: string; label?: string; x: number; z: number; y: number };
 
-const node = (id: string, x: number, z: number, label?: string): SurveyNode => ({
-  id,
-  label,
-  x,
-  z,
-  y: terrainHeight(x, z),
-});
+const node = (id: string, x: number, z: number, label?: string): SurveyNode => ({ id, label, x, z, y: terrainHeight(x, z) });
 
 export const NODES: SurveyNode[] = [
-  node("n0", valleyX(36) - 8, 36),
-  node("observe", valleyX(27) + 3.5, 27, "Observe"),
-  node("investigate", valleyX(18) - 4.5, 18, "Investigate"),
-  node("connect", valleyX(9) + 5, 9, "Connect"),
-  node("discover", valleyX(-3) - 3, -3, "Discover"),
-  node("understand", valleyX(-16) + 4, -16, "Understand"),
-  node("n6", valleyX(-28) - 5, -28),
-  node("n7", valleyX(-39) + 6, -39),
+  node("n0", vx(30) - 8, 30),
+  node("observe", vx(24) + 3.5, 24, "Observe"),
+  node("investigate", vx(16) - 4.5, 16, "Investigate"),
+  node("connect", vx(8) + 5, 8, "Connect"),
+  node("discover", vx(-3) - 3, -3, "Discover"),
+  node("understand", vx(-16) + 4, -16, "Understand"),
+  node("n6", vx(-28) - 5, -28),
+  node("n7", vx(-39) + 6, -39),
 ];
 
-/** Paths join previously disconnected nodes; each draws in over a chapter span. */
 export const PATHS: { from: string; to: string; span: [number, number]; seed: number }[] = [
-  { from: "n0", to: "observe", span: [-0.6, 0.5], seed: 1 },
-  { from: "observe", to: "investigate", span: [0.3, 1.3], seed: 2 },
-  { from: "investigate", to: "connect", span: [1.0, 2.1], seed: 3 },
-  { from: "connect", to: "discover", span: [1.8, 3.2], seed: 4 },
-  { from: "discover", to: "understand", span: [3.0, 4.2], seed: 5 },
-  { from: "understand", to: "n6", span: [3.8, 4.8], seed: 6 },
-  { from: "n6", to: "n7", span: [4.3, 5.0], seed: 7 },
-  { from: "investigate", to: "discover", span: [4.4, 5.0], seed: 8 },
+  { from: "n0", to: "observe", span: [1.5, 2.4], seed: 1 },
+  { from: "observe", to: "investigate", span: [2.2, 3.2], seed: 2 },
+  { from: "investigate", to: "connect", span: [3.0, 4.0], seed: 3 },
+  { from: "connect", to: "discover", span: [3.8, 5.4], seed: 4 },
+  { from: "discover", to: "understand", span: [5.4, 7.0], seed: 5 },
+  { from: "understand", to: "n6", span: [7.0, 8.5], seed: 6 },
+  { from: "n6", to: "n7", span: [8.5, 10.2], seed: 7 },
+  { from: "investigate", to: "discover", span: [11, 12.6], seed: 8 },
 ];
 
 export const nodeById = (id: string) => {

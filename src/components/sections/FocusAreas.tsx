@@ -4,7 +4,7 @@ import { FocusGlyph } from "@/components/ui/FocusGlyph";
 
 export function FocusAreas() {
   return (
-    <section id="focus" data-chapter="3" aria-labelledby="focus-heading" className="relative py-[var(--section-y)]">
+    <section id="focus" data-chapter="5" aria-labelledby="focus-heading" className="relative py-[var(--section-y)]">
       <div className="container-site">
         <div className="grid gap-8 lg:grid-cols-12">
           <SectionHeading

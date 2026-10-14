@@ -11,4 +11,11 @@ export const frame = {
   introT: 0,
   /** 0 → 1 as the visitor reaches Contact: every path lights at once. */
   finale: 0,
+  /** Explorer's light on the ground (world xz) and its strength. */
+  pointerX: 999,
+  pointerZ: 999,
+  pointerStrength: 0,
+  /** Ground point the camera looks at. */
+  focusX: 0,
+  focusZ: 0,
 };

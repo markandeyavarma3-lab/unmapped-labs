@@ -10,17 +10,32 @@ export const hexToVec3 = (hex: string): [number, number, number] => {
 };
 
 export const NODE_SLOTS = 8;
+export const DISC_SLOTS = 10;
 
+/**
+ * Terrain vertex shader. With TITLE defined it also lifts the letter relief
+ * (aLetter, 0 → LETTER_HEIGHT) by uRise so the name grows out of the ground.
+ */
 export const terrainVertex = /* glsl */ `
+  #ifdef TITLE
+  attribute float aLetter;
+  uniform float uRise;
+  varying float vLetter;
+  #endif
   varying vec3 vWorld;
   varying vec3 vNormal;
   varying float vH;
 
   void main() {
-    vec4 w = modelMatrix * vec4(position, 1.0);
+    vec3 p = position;
+    #ifdef TITLE
+    p.y += aLetter * uRise;
+    vLetter = aLetter;
+    #endif
+    vec4 w = modelMatrix * vec4(p, 1.0);
     vWorld = w.xyz;
     vNormal = normalize(mat3(modelMatrix) * normal);
-    vH = position.y;
+    vH = p.y;
     gl_Position = projectionMatrix * viewMatrix * w;
   }
 `;
@@ -28,18 +43,26 @@ export const terrainVertex = /* glsl */ `
 export const terrainFragment = /* glsl */ `
   uniform float uTime;
   uniform float uIntro;          // 0 → 1: contours rise from the valleys up
-  uniform float uRevealRadius;   // radius of mapped territory around uFocus
   uniform vec2  uFocus;
   uniform vec2  uPointer;
   uniform float uPointerStrength;
   uniform vec3  uNodes[${NODE_SLOTS}]; // (x, z, strength)
+  uniform vec4  uDiscs[${DISC_SLOTS}]; // (x, z, radius, _) — surveyed ground
+  uniform vec3  uHold;           // (x, z, r) — ground that stays unmapped
   uniform vec2  uHeightRange;
   uniform vec3  uBg;
   uniform vec3  uLine;
   uniform vec3  uCyan;
+  uniform vec3  uFogTint;
   uniform vec2  uFog;            // near, far
   uniform float uSweep;          // 0 → 1 during the entrance; < 0 when done
   uniform float uFinale;         // 0 → 1 at Contact
+  #ifdef TITLE
+  uniform float uRise;
+  uniform float uTitleGlow;
+  uniform float uTitleGain;
+  varying float vLetter;
+  #endif
 
   varying vec3 vWorld;
   varying vec3 vNormal;
@@ -49,10 +72,13 @@ export const terrainFragment = /* glsl */ `
     float d = abs(fract(v - 0.5) - 0.5) / max(fwidth(v), 1e-4);
     return 1.0 - clamp(d / width, 0.0, 1.0);
   }
-
-  float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vnoise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
   }
+  float fbm(vec2 p) { return vnoise(p) * 0.55 + vnoise(p * 2.1 + 7.3) * 0.3 + vnoise(p * 4.3 + 1.7) * 0.15; }
 
   void main() {
     vec3 N = normalize(vNormal);
@@ -66,52 +92,86 @@ export const terrainFragment = /* glsl */ `
     vec3 col = mix(vec3(0.034, 0.045, 0.056), vec3(0.085, 0.104, 0.122), hN) * (0.55 + 0.55 * key);
     col += vec3(0.11, 0.17, 0.19) * rim * 0.55;
 
-    // What is "known": mapped territory, discovered nodes, the explorer's light.
-    float reveal = 1.0 - smoothstep(uRevealRadius * 0.45, uRevealRadius, length(vWorld.xz - uFocus));
-    float flash = (1.0 - smoothstep(0.8, 6.0, length(vWorld.xz - uPointer))) * uPointerStrength;
+    // ---- Fog of war -------------------------------------------------------
+    vec2 xz = vWorld.xz;
+    float ragged = (fbm(xz * 0.09) - 0.5) * 7.0;          // organic survey edge
+    float surveyed = 0.0;
+    for (int i = 0; i < ${DISC_SLOTS}; i++) {
+      vec4 d = uDiscs[i];
+      if (d.z <= 0.01) continue;
+      float dd = length(xz - d.xy) + ragged;
+      surveyed = max(surveyed, 1.0 - smoothstep(d.z * 0.72, d.z, dd));
+    }
+    float hold = smoothstep(uHold.z * 0.55, uHold.z, length(xz - uHold.xy) + ragged * 0.6);
+    surveyed *= hold;
+    surveyed = max(surveyed, uFinale * hold);
+
+    float flash = (1.0 - smoothstep(0.8, 6.0, length(xz - uPointer))) * uPointerStrength;
     float nodeGlow = 0.0;
     for (int i = 0; i < ${NODE_SLOTS}; i++) {
       vec3 n = uNodes[i];
-      nodeGlow = max(nodeGlow, (1.0 - smoothstep(0.4, 3.4, length(vWorld.xz - n.xy))) * n.z);
+      nodeGlow = max(nodeGlow, (1.0 - smoothstep(0.4, 3.4, length(xz - n.xy))) * n.z);
     }
-    float known = clamp(max(max(max(reveal, flash), nodeGlow), uFinale), 0.0, 1.0);
+    float known = clamp(max(max(surveyed, flash), nodeGlow * 0.8), 0.0, 1.0);
 
     // Contours: minor every 0.4 units, major every 2.0.
     float minor = isoLine(vH * 2.5, 1.0);
     float major = isoLine(vH * 0.5, 1.4);
     float rising = 1.0 - smoothstep(uIntro * 1.15 - 0.12, uIntro * 1.15, hN);
+    #ifdef TITLE
+    rising = max(rising, step(0.01, vLetter) * uRise);
+    #endif
 
-    float unknownA = minor * 0.045 + major * 0.11;
-    float knownA = minor * 0.30 + major * 0.75;
+    float unknownA = minor * 0.03 + major * 0.08;
+    float knownA = minor * 0.32 + major * 0.78;
     float lineA = mix(unknownA, knownA, known) * rising;
     vec3 lineCol = mix(uLine, uCyan, clamp(flash * 0.9 + nodeGlow * 0.35, 0.0, 1.0));
     col += lineCol * lineA * 0.62;
 
-    // Incomplete survey grid — only where territory is known, with missing cells.
-    vec2 g = vWorld.xz / 3.0;
+    // Survey grid on mapped ground, with missing cells.
+    vec2 g = xz / 3.0;
     vec2 gd = abs(fract(g - 0.5) - 0.5) / max(fwidth(g), vec2(1e-4));
     float grid = 1.0 - clamp(min(gd.x, gd.y), 0.0, 1.0);
-    float keep = step(0.38, hash(floor(g)));
-    col += uLine * grid * keep * reveal * 0.07 * rising;
+    col += uLine * grid * step(0.38, hash(floor(g))) * surveyed * 0.075 * rising;
+
+    // The survey front: a bright seam where mapped meets unmapped.
+    float seam = smoothstep(0.25, 0.5, surveyed) * (1.0 - smoothstep(0.5, 0.78, surveyed));
+    col += uCyan * seam * (0.2 + (minor + major) * 0.7) * rising;
+
+    // Drifting fog over everything not yet surveyed.
+    float drift = fbm(xz * 0.07 + vec2(uTime * 0.025, uTime * 0.018));
+    vec3 fogCol = uFogTint * (0.65 + 0.7 * drift);
+    float fogAmt = (1.0 - known) * (0.55 + 0.35 * drift);
+    col = mix(col, fogCol, fogAmt);
 
     // A slow survey pulse travelling outward from the focus.
     float ring = mod(uTime * 3.2, 46.0);
-    float pulse = (1.0 - smoothstep(0.0, 0.7, abs(length(vWorld.xz - uFocus) - ring))) * (1.0 - ring / 46.0);
-    col += uCyan * pulse * (minor * 0.5 + major) * 0.32 * rising;
+    float pulse = (1.0 - smoothstep(0.0, 0.7, abs(length(xz - uFocus) - ring))) * (1.0 - ring / 46.0);
+    col += uCyan * pulse * (minor * 0.5 + major) * 0.28 * known * rising;
 
-    // Entrance: a bright survey line sweeps across the terrain, front to back.
+    // Entrance: a bright survey line sweeps across the land, front to back.
     if (uSweep >= 0.0) {
-      float front = mix(60.0, -30.0, uSweep);
+      float front = mix(70.0, -30.0, uSweep);
       float band = 1.0 - smoothstep(0.0, 2.2, abs(vWorld.z - front));
-      float wake = smoothstep(front, front + 9.0, vWorld.z) * (1.0 - smoothstep(front + 9.0, front + 22.0, vWorld.z));
-      col += uCyan * band * (0.08 + (minor + major) * 0.9);
-      col += uLine * wake * (minor * 0.12 + major * 0.25);
+      col += uCyan * band * (0.06 + (minor + major) * 0.8);
     }
-    // Finale: the whole map lit as one connected system.
-    col += uCyan * (minor * 0.06 + major * 0.14) * uFinale;
+    col += uCyan * (minor * 0.05 + major * 0.12) * uFinale * hold;
+
+    #ifdef TITLE
+    // Letters: lit mesa tops, glowing rims, contour rings on the slopes.
+    float letter = clamp(vLetter / 2.6, 0.0, 1.0);
+    float top = smoothstep(0.9, 0.99, letter);
+    float slope = letter * (1.0 - top);
+    float rimLine = smoothstep(0.82, 0.9, letter) * (1.0 - smoothstep(0.9, 0.98, letter));
+    vec3 lit = vec3(0.86, 0.9, 0.92);
+    col = mix(col, vec3(0.11, 0.135, 0.155) * (0.6 + 0.6 * key), top * uRise);
+    col += uCyan * rimLine * uRise * (0.62 + 0.3 * uTitleGlow) * uTitleGain;
+    col += lit * isoLine(vLetter * 3.2, 1.0) * slope * uRise * 0.35 * uTitleGain;
+    col += uCyan * top * uTitleGlow * 0.06 * (0.6 + 0.4 * sin(xz.x * 0.6 - uTime * 1.6));
+    #endif
 
     // Atmosphere.
-    float fog = smoothstep(uFog.x, uFog.y, dist);
+    float fog = smoothstep(uFog.x, uFog.y + uFinale * 35.0, dist);
     col = mix(col, uBg, fog);
 
     gl_FragColor = vec4(col, 1.0);
