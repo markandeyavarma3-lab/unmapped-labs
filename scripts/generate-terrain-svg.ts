@@ -10,8 +10,6 @@ import { join } from "node:path";
 import { terrainHeight } from "../src/components/three/terrain-math";
 import { NODES, PATHS, nodeById } from "../src/components/three/landmarks";
 import { contourSet } from "../src/lib/contours";
-import { MINIMAP } from "../src/lib/minimap";
-import { buildTitle, letterHeight } from "../src/components/three/title-glyphs";
 
 const W = 1600;
 const H = 900;
@@ -56,29 +54,3 @@ ${visible
 const out = join(__dirname, "..", "public", "terrain-fallback.svg");
 writeFileSync(out, svg);
 console.log(`wrote ${out} (${(svg.length / 1024).toFixed(1)} KB)`);
-
-/* ---------------------------------------------------------------------------
- * public/minimap.svg — north-up survey of the whole journey (−z is up), with
- * the title letters included. The MiniMap component overlays fog, route and
- * position on top using the same projection (see src/lib/minimap.ts).
- * ------------------------------------------------------------------------- */
-{
-  const title = buildTitle("line");
-  const { W: MW, H: MH, x0, x1, zTop, zBottom } = MINIMAP;
-  const mm = contourSet(
-    (u, v) => {
-      const x = x0 + (x1 - x0) * u;
-      const z = zTop + (zBottom - zTop) * v;
-      return terrainHeight(x, z) + letterHeight(title, x, z);
-    },
-    { width: MW, height: MH, cols: 120, step: 0.8, majorEvery: 3 },
-  );
-  const svg2 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${MW} ${MH}">
-<path d="${mm.minor}" fill="none" stroke="#9fb3c4" stroke-opacity=".22" stroke-width=".6"/>
-<path d="${mm.major}" fill="none" stroke="#9fb3c4" stroke-opacity=".5" stroke-width=".8"/>
-</svg>
-`;
-  const out2 = join(__dirname, "..", "public", "minimap.svg");
-  writeFileSync(out2, svg2);
-  console.log(`wrote ${out2} (${(svg2.length / 1024).toFixed(1)} KB)`);
-}

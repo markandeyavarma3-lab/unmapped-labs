@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { mulberry32, simplex2 } from "./terrain-math";
-import { islandState, viewRects } from "./views";
+import { islandState, viewRects, viewVisible } from "./views";
 import { glowFragment, glowVertex } from "./shaders";
 import type { Tier } from "./Scene";
 
@@ -394,6 +394,7 @@ export function ProcessIsland({ tier }: { tier: Tier }) {
   });
 
   useFrame((state, delta) => {
+    if (!viewVisible.island) return;
     const b = builtRef.current;
     const dt = Math.min(delta, 1 / 20);
     const t = state.clock.elapsedTime;

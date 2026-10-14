@@ -35,7 +35,6 @@ export function SiteHeader() {
   const isHome = pathname === "/";
   const getLenis = useLenis();
   const [scrolled, setScrolled] = useState(false);
-  const [onPaper, setOnPaper] = useState(false);
   // The menu belongs to the page it was opened on, so a route change closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
@@ -46,16 +45,7 @@ export function SiteHeader() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 24);
-      const probe = 36; // vertical centre of the header bar
-      setOnPaper(
-        Array.from(document.querySelectorAll<HTMLElement>("main .surface-paper, main.surface-paper")).some((el) => {
-          const r = el.getBoundingClientRect();
-          return r.top <= probe && r.bottom >= probe;
-        }),
-      );
-    };
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -99,7 +89,7 @@ export function SiteHeader() {
 
   const href = (id: string) => (isHome ? `#${id}` : `/#${id}`);
   const solid = scrolled || open || !isHome;
-  const light = onPaper && !open;
+  const light = false;
 
   return (
     <header
@@ -113,8 +103,8 @@ export function SiteHeader() {
           !solid
             ? "border-transparent bg-transparent"
             : light
-              ? "border-[color:var(--color-paper-line)] bg-[color:var(--color-paper)]/85 backdrop-blur-xl"
-              : "border-[color:var(--color-line)]/70 bg-[color:var(--color-ink)]/72 backdrop-blur-xl backdrop-saturate-150"
+              ? "border-[color:var(--color-paper-line)] bg-[color:var(--color-paper)]/95"
+              : "border-[color:var(--color-line)]/70 bg-[color:var(--color-ink)]/92"
         }`}
       />
       <div className="container-site relative flex h-[var(--header-h)] items-center justify-between gap-6">

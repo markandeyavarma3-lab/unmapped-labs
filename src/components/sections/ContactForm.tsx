@@ -116,7 +116,7 @@ export function ContactForm() {
       {status.kind === "sent" ? (
           <div
             key="sent"
-            className="animate-[swap-in_0.5s_var(--ease-out-expo)_both] flex min-h-[28rem] flex-col justify-center gap-5 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-8 backdrop-blur-md lg:p-12"
+            className="animate-[swap-in_0.5s_var(--ease-out-expo)_both] flex min-h-[28rem] flex-col justify-center gap-5 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-8 lg:p-12"
             role="status"
           >
             <span aria-hidden className="block h-3 w-3 rotate-45 bg-[color:var(--color-lime)]" />
@@ -138,7 +138,7 @@ export function ContactForm() {
               const name = (e.target as unknown as { name?: string }).name as ContactField;
               if (FIELDS.includes(name)) validateField(name);
             }}
-            className="grid gap-x-8 gap-y-4 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-6 backdrop-blur-md sm:grid-cols-2 sm:p-8 lg:p-10"
+            className="grid gap-x-8 gap-y-4 border border-[color:var(--color-line)] bg-[color:var(--color-ink-2)]/80 p-6 sm:grid-cols-2 sm:p-8 lg:p-10"
             aria-describedby={`${uid}-status`}
           >
             {field("name", "Name", <input {...aria("name")} type="text" autoComplete="name" required className={input} />)}

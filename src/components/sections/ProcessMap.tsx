@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Stage } from "@/content/site-content";
 import { prefersReducedMotion, track } from "@/components/motion/scroll-engine";
 import { useLenis } from "@/components/motion/SmoothScroll";
-import { getWorldLive, getWorldLiveServer, islandState, registerViewAnchorWhenNear, subscribeWorldMode } from "@/components/three/views";
+import { getWorldLive, getWorldLiveServer, islandState, setViewAnchor, subscribeWorldMode } from "@/components/three/views";
 
 const STAGES = 5;
 const smoothstep = (a: number, b: number, x: number) => {
@@ -37,7 +37,10 @@ export function ProcessMap({ stages }: { stages: Stage[] }) {
   const live = useSyncExternalStore(subscribeWorldMode, getWorldLive, getWorldLiveServer);
   const getLenis = useLenis();
 
-  useEffect(() => registerViewAnchorWhenNear("island", anchor.current), []);
+  useEffect(() => {
+    setViewAnchor("island", anchor.current);
+    return () => setViewAnchor("island", null);
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
@@ -95,7 +98,7 @@ export function ProcessMap({ stages }: { stages: Stage[] }) {
               data-active="false"
               className="island-label pointer-events-auto absolute top-0 left-0 -translate-x-1/2 -translate-y-full opacity-0"
             >
-              <span className="label flex items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/80 px-2 py-1 whitespace-nowrap backdrop-blur-sm">
+              <span className="label flex items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/92 px-2 py-1 whitespace-nowrap">
                 <span className="tabular-nums text-[color:var(--color-fg-3)]">{st.index}</span>
                 <span>{st.title}</span>
               </span>

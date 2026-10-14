@@ -20,28 +20,6 @@ export function setViewAnchor(id: ViewId, el: HTMLElement | null) {
   viewAnchors[id] = el;
   anchorListeners.forEach((l) => l());
 }
-/**
- * Registers an anchor only once its section comes within ~1 screen of the
- * viewport, so a view's geometry is built just before it's needed — not at load.
- */
-export function registerViewAnchorWhenNear(id: ViewId, el: HTMLElement | null) {
-  if (!el) return () => {};
-  const io = new IntersectionObserver(
-    (entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        setViewAnchor(id, el);
-        io.disconnect();
-      }
-    },
-    { rootMargin: "100% 0px 100% 0px" },
-  );
-  io.observe(el);
-  return () => {
-    io.disconnect();
-    setViewAnchor(id, null);
-  };
-}
-
 export function subscribeViewAnchors(l: Listener) {
   anchorListeners.add(l);
   return () => {
@@ -51,6 +29,9 @@ export function subscribeViewAnchors(l: Listener) {
 
 /** Each view's on-screen rectangle (CSS px, top-left origin), refreshed every frame by the renderer. */
 export const viewRects: Record<ViewId, { x: number; y: number; w: number; h: number } | null> = { morph: null, island: null };
+
+/** Whether each view was drawn this frame — content skips its per-frame work when not. */
+export const viewVisible: Record<ViewId, boolean> = { morph: false, island: false };
 
 /** Morph sequence: 0 (Unknown) … 5 (Build). */
 export const morphState = { progress: 0 };

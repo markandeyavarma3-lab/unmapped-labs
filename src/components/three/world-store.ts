@@ -13,7 +13,14 @@ export const world = {
   paused: false,
   /** Label of the survey node under the pointer, for the cursor. */
   hovered: null as string | null,
+  /** Last scroll / pointer / key activity (performance.now()). Drives idle throttling. */
+  lastActive: 0,
 };
+
+if (typeof window !== "undefined") {
+  const mark = () => (world.lastActive = performance.now());
+  for (const e of ["scroll", "pointermove", "pointerdown", "wheel", "keydown", "touchmove"]) window.addEventListener(e, mark, { passive: true });
+}
 
 /** The single DOM label for survey nodes; lives outside the canvas, positioned by the scene. */
 export const nodeLabel = { el: null as HTMLDivElement | null };

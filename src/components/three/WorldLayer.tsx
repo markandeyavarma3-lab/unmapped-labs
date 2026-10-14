@@ -123,7 +123,7 @@ export function WorldLayer() {
         data-on="false"
         className="absolute top-0 left-0 z-[1] transition-opacity duration-300 data-[on=false]:opacity-0"
       >
-        <div className="flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/85 px-2.5 py-1.5 whitespace-nowrap backdrop-blur-sm ml-4">
+        <div className="flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap ml-4">
           <span className="h-1 w-1 bg-[color:var(--color-lime)]" />
           <span data-name className="label text-[color:var(--color-fg)]" />
           <span data-coords className="label text-[color:var(--color-fg-3)]" />

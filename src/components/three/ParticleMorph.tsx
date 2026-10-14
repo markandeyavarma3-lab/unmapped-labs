@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { buildMorphShapes } from "./morph-shapes";
-import { morphState } from "./views";
+import { morphState, viewVisible } from "./views";
 import { mulberry32 } from "./terrain-math";
 import type { Tier } from "./Scene";
 
@@ -133,7 +133,7 @@ export function ParticleMorph({ tier }: { tier: Tier }) {
   );
 
   useFrame((state, delta) => {
-    if (!points.current || !group.current) return;
+    if (!points.current || !group.current || !viewVisible.morph) return;
     const dt = Math.min(delta, 1 / 20);
     const s = smooth.current;
     s.p = THREE.MathUtils.damp(s.p, morphState.progress, 3.2, dt);

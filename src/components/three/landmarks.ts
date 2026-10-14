@@ -94,12 +94,6 @@ const smooth = (a: number, b: number, x: number) => {
 /** Current radius of each disc for a (float) chapter. */
 export const discRadius = (d: SurveyDisc, chapter: number) => d.r * smooth(d.from, d.to, chapter);
 
-/** Share of the journey's map that has been surveyed, capped at 96%. */
-export const mappedPercent = (chapter: number) => {
-  const t = Math.min(1, Math.max(0, chapter / LAST_CHAPTER));
-  return Math.round(96 * (1 - Math.pow(1 - t, 1.25)));
-};
-
 /* ---- Survey nodes and discovery paths (along the valley) ---- */
 
 export type SurveyNode = { id: string; label?: string; x: number; z: number; y: number };

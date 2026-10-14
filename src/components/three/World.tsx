@@ -47,12 +47,12 @@ function AdaptiveDpr({ max }: { max: number }) {
     const fps = s.frames / s.time;
     s.frames = 0;
     s.time = 0;
-    if (fps < 45 && s.dpr > 1) {
-      s.dpr = Math.max(1, s.dpr - 0.25);
+    if (fps < 48 && s.dpr > 0.75) {
+      s.dpr = Math.max(0.75, s.dpr - 0.2);
       s.good = 0;
       setDpr(s.dpr);
-    } else if (fps > 57 && s.dpr < max && ++s.good >= 3) {
-      s.dpr = Math.min(max, s.dpr + 0.25);
+    } else if (fps > 58 && s.dpr < max && ++s.good >= 4) {
+      s.dpr = Math.min(max, s.dpr + 0.1);
       s.good = 0;
       setDpr(s.dpr);
     }
@@ -69,7 +69,8 @@ export default function World({
   introDelay: number;
   onReady: () => void;
 }) {
-  const maxDpr = tier === "high" ? 1.75 : 1.25;
+  // Pixel density is the biggest cost on Retina screens: cap it, adapt down under load.
+  const maxDpr = tier === "high" ? 1.4 : 1;
   const [dpr] = useState(() => Math.min(window.devicePixelRatio || 1, maxDpr));
 
   return (
@@ -86,7 +87,7 @@ export default function World({
     >
       <PauseController />
       <AdaptiveDpr max={maxDpr} />
-      <WorldRenderer bloom={tier === "high"} />
+      <WorldRenderer />
       <Scene tier={tier} introDelay={introDelay} />
       <ReadySignal onReady={onReady} />
     </Canvas>

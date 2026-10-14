@@ -59,7 +59,7 @@ export function Cursor() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-cursor)] hidden [@media(hover:hover)_and_(pointer:fine)]:block">
       <div
         ref={ring}
-        className="absolute top-0 left-0 h-7 w-7 rounded-full border border-[color:var(--color-cyan)] opacity-0 mix-blend-difference will-change-transform"
+        className="absolute top-0 left-0 h-7 w-7 rounded-full border border-[color:var(--color-cyan)] opacity-0 will-change-transform"
       >
         <span className="absolute top-1/2 left-1/2 h-px w-2 -translate-x-1/2 -translate-y-1/2 bg-[color:var(--color-cyan)]" />
         <span className="absolute top-1/2 left-1/2 h-2 w-px -translate-x-1/2 -translate-y-1/2 bg-[color:var(--color-cyan)]" />

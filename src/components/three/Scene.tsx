@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import {
@@ -26,6 +26,7 @@ import { world } from "./world-store";
 import { SurveyNodes } from "./SurveyNodes";
 import { frame } from "./frame-state";
 import { ViewLayer } from "./WorldRenderer";
+import { subscribeViewAnchors, viewAnchors, type ViewId } from "./views";
 import { ParticleMorph } from "./ParticleMorph";
 import { ProcessIsland } from "./ProcessIsland";
 
@@ -49,8 +50,57 @@ function useStagedMount(stages: number) {
   return stage;
 }
 
+/** True once the browser has been idle `delay` ms after mount — for building heavy scenes off the scroll path. */
+function useIdleReady(delay: number) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let idleId = 0;
+    const timer = window.setTimeout(() => {
+      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 50));
+      idleId = ric(() => setReady(true), { timeout: 2000 }) as number;
+    }, delay);
+    return () => {
+      window.clearTimeout(timer);
+      (window.cancelIdleCallback ?? window.clearTimeout)(idleId);
+    };
+  }, [delay]);
+  return ready;
+}
+
+/** True once a view's anchor comes within ~1.5 screens of the viewport (and stays true). */
+function useAnchorNear(id: ViewId, enabled: boolean) {
+  const [near, setNear] = useState(false);
+  const anchor = useSyncExternalStore(subscribeViewAnchors, () => viewAnchors[id], () => null);
+  useEffect(() => {
+    if (!enabled || !anchor || near) return;
+    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && setNear(true), { rootMargin: "150% 0px 150% 0px" });
+    io.observe(anchor);
+    return () => io.disconnect();
+  }, [anchor, enabled, near]);
+  return near;
+}
+
+/** Same idea for main-scene content tied to a chapter range. */
+function useChapterNear(chapter: number, enabled: boolean) {
+  const [near, setNear] = useState(false);
+  useFrame(() => {
+    if (enabled && !near && frame.chapter > chapter) setNear(true);
+  });
+  return near;
+}
+
 export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) {
-  const stage = useStagedMount(6);
+  const stage = useStagedMount(4);
+  const phone = tier === "low";
+  // Desktop: heavy views build in idle time after the opening settles, never mid-scroll.
+  // Phones: build each one only as you approach it, keeping the load window clear.
+  const morphIdle = useIdleReady(2200);
+  const islandIdle = useIdleReady(4200);
+  const morphNear = useAnchorNear("morph", phone);
+  const islandNear = useAnchorNear("island", phone);
+  const territoriesNear = useChapterNear(3, phone);
+  const morphReady = phone ? morphNear : morphIdle;
+  const islandReady = phone ? islandNear : islandIdle;
   return (
     <>
       <CameraRig tier={tier} introDelay={introDelay} />
@@ -58,14 +108,14 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
       <TitleRelief tier={tier} introDelay={introDelay} />
       {stage >= 2 && <Paths />}
       {stage >= 3 && <SurveyNodes />}
-      {stage >= 3 && <Territories />}
+      {stage >= 3 && (!phone || territoriesNear) && <Territories />}
       {stage >= 4 && tier === "high" && <Particles />}
-      {stage >= 5 && (
+      {morphReady && (
         <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
           <ParticleMorph tier={tier} />
         </ViewLayer>
       )}
-      {stage >= 6 && (
+      {islandReady && (
         <ViewLayer id="island" fov={36} position={[0, 4, 6]}>
           <ProcessIsland tier={tier} />
         </ViewLayer>

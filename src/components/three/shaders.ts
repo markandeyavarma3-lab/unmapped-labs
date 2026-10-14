@@ -42,6 +42,7 @@ export const terrainVertex = /* glsl */ `
 
 export const terrainFragment = /* glsl */ `
   uniform float uTime;
+  uniform sampler2D uNoise;      // tileable value noise: R 1×, G 2×, B 4×
   uniform float uIntro;          // 0 → 1: contours rise from the valleys up
   uniform vec2  uFocus;
   uniform vec2  uPointer;
@@ -73,12 +74,11 @@ export const terrainFragment = /* glsl */ `
     return 1.0 - clamp(d / width, 0.0, 1.0);
   }
   float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  float vnoise(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+  // One texture fetch instead of three procedural noise evaluations.
+  float fbm(vec2 p) {
+    vec3 n = texture2D(uNoise, p * 0.0625).rgb;
+    return n.r * 0.55 + n.g * 0.3 + n.b * 0.15;
   }
-  float fbm(vec2 p) { return vnoise(p) * 0.55 + vnoise(p * 2.1 + 7.3) * 0.3 + vnoise(p * 4.3 + 1.7) * 0.15; }
 
   void main() {
     vec3 N = normalize(vNormal);

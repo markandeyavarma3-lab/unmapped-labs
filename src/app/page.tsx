@@ -10,7 +10,6 @@ import { FieldNotes } from "@/components/sections/FieldNotes";
 import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
-import { MiniMap } from "@/components/layout/MiniMap";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -29,7 +28,6 @@ export default function Home() {
     <>
       <Intro />
       <WorldLayer />
-      <MiniMap />
       <main id="main" tabIndex={-1} className="relative z-[var(--z-content)]">
         <TitleSequence />
         <Hero />

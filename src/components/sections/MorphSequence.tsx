@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { intro } from "@/content/site-content";
 import { prefersReducedMotion, track } from "@/components/motion/scroll-engine";
-import { morphState, registerViewAnchorWhenNear } from "@/components/three/views";
+import { morphState, setViewAnchor } from "@/components/three/views";
 
 const STAGES = intro.progression.length - 1; // 5
 const smoothstep = (a: number, b: number, x: number) => {
@@ -24,7 +24,10 @@ export function MorphSequence() {
   const stepsRef = useRef<HTMLOListElement>(null);
   const [stage, setStage] = useState(0);
 
-  useEffect(() => registerViewAnchorWhenNear("morph", anchorRef.current), []);
+  useEffect(() => {
+    setViewAnchor("morph", anchorRef.current);
+    return () => setViewAnchor("morph", null);
+  }, []);
 
   useEffect(() => {
     const el = trackRef.current;
