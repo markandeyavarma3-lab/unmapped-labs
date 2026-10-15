@@ -3,30 +3,13 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-  CAMERA_KEYS,
-  DISSOLVE,
-  LAST_CHAPTER,
-  NODES,
-  PATHS,
-  PORTRAIT_TITLE_KEYS,
-  nodeById,
-} from "./landmarks";
-import { TERRAIN, terrainHeight, mulberry32 } from "./terrain-math";
-import { TitleRelief } from "./TitleRelief";
-import { Territories } from "./Territories";
-import { WorkSites } from "./WorkSites";
-import { SystemNetwork } from "./SystemNetwork";
-import { makeTerrainMaterial, updateTerrainUniforms } from "./terrain-material";
-import {
-  hexToVec3,
-  particleFragment,
-  particleVertex,
-  pathFragment,
-  pathVertex,
-} from "./shaders";
+import { CAMERA_KEYS, LAST_CHAPTER, PORTRAIT_TITLE_KEYS } from "./landmarks";
+import { mulberry32 } from "./terrain-math";
+import { City } from "./City";
+import { Districts } from "./Districts";
+import { updateCityState } from "./city-state";
+import { hexToVec3, particleFragment, particleVertex } from "./shaders";
 import { world } from "./world-store";
-import { SurveyNodes } from "./SurveyNodes";
 import { frame } from "./frame-state";
 import { ViewLayer } from "./WorldRenderer";
 import { subscribeViewAnchors, viewAnchors, type ViewId } from "./views";
@@ -34,9 +17,6 @@ import { ParticleMorph } from "./ParticleMorph";
 import { ProcessIsland } from "./ProcessIsland";
 
 export type Tier = "high" | "low";
-
-const CYAN = hexToVec3("#65e4e8");
-const FOG: [number, number] = [16, 62];
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -93,7 +73,7 @@ function useChapterNear(chapter: number, enabled: boolean) {
 }
 
 export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) {
-  const stage = useStagedMount(4);
+  const stage = useStagedMount(3);
   const phone = tier === "low";
   // Desktop: heavy views build in idle time after the opening settles, never mid-scroll.
   // Phones: build each one only as you approach it, keeping the load window clear.
@@ -101,31 +81,15 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
   const islandIdle = useIdleReady(4200);
   const morphNear = useAnchorNear("morph", phone);
   const islandNear = useAnchorNear("island", phone);
-  const territoriesNear = useChapterNear(3, phone);
   const morphReady = phone ? morphNear : morphIdle;
   const islandReady = phone ? islandNear : islandIdle;
-  const networkIdle = useIdleReady(6500);
-  const networkNear = useChapterNear(8, phone);
-  const networkReady = phone ? networkNear : networkIdle;
-  const workNear = useChapterNear(7, phone);
 
   return (
     <>
       <CameraRig tier={tier} introDelay={introDelay} />
-      {/* The land: stops rendering entirely once it has dissolved into the network. */}
-      <ShowWhile test={() => frame.dissolve < 0.999}>
-        <Terrain tier={tier} />
-        <TitleRelief tier={tier} introDelay={introDelay} />
-        {/* Survey details vanish first as the land starts to break. */}
-        <ShowWhile test={() => frame.dissolve < 0.3}>
-          {stage >= 2 && <Paths />}
-          {stage >= 3 && <SurveyNodes />}
-          {stage >= 3 && (!phone || territoriesNear) && <Territories />}
-          {stage >= 3 && (!phone || workNear) && <WorkSites />}
-        </ShowWhile>
-      </ShowWhile>
-      {stage >= 4 && tier === "high" && <Particles />}
-      {networkReady && <SystemNetwork tier={tier} />}
+      <City tier={tier} introDelay={introDelay} />
+      {stage >= 2 && <Districts />}
+      {stage >= 3 && tier === "high" && <Particles />}
       {morphReady && (
         <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
           <ParticleMorph tier={tier} />
@@ -138,15 +102,6 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
       )}
     </>
   );
-}
-
-/** A group whose visibility is re-evaluated every frame (no React renders). */
-function ShowWhile({ test, children }: { test: () => boolean; children: React.ReactNode }) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame(() => {
-    if (ref.current) ref.current.visible = test();
-  });
-  return <group ref={ref}>{children}</group>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -230,7 +185,7 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     tmp.pos.y += tmp.parallax.y * 0.45 + Math.sin(t * 0.17) * 0.18;
     tmp.pos.addScaledVector(tmp.right, Math.sin(t * 0.11) * 0.3);
 
-    // Entrance: descend from high above while the name rises out of the fog.
+    // Entrance: descend from high above while the name rises out of the city.
     const arrive = 1 - Math.pow(1 - f.introT, 3);
     tmp.pos.y += (1 - arrive) * 16;
     tmp.pos.z += (1 - arrive) * 14;
@@ -244,201 +199,20 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     // Shift the scene right where copy sits on the left: the hero and the territories.
     const heroWeight = Math.max(
       1 - clamp01(Math.abs(f.chapter - 2) / 0.9),
-      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 11, 11.6)) * 0.85,
-      THREE.MathUtils.smoothstep(f.chapter, 11.8, 12.3) * 0.9,
+      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 11.4, 11.9)) * 0.85,
     );
     const targetOffset = aspect > 1.2 ? size.width * 0.13 * heroWeight : 0;
     tmp.offset = THREE.MathUtils.damp(tmp.offset, targetOffset, 4, dt);
     if (cam.fov !== fov) cam.fov = fov;
     cam.setViewOffset(size.width, size.height, -tmp.offset, 0, size.width, size.height);
 
-    // Path draw-in and node discovery derive from the smoothed chapter.
-    const introT = easeOutCubic(clamp01((t - introDelay) / 3.2));
-    f.introT = introT;
+    // Story state for every district derives from the smoothed chapter.
+    f.introT = easeOutCubic(clamp01((t - introDelay) / 3.2));
     f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, LAST_CHAPTER - 0.6, LAST_CHAPTER - 0.05), 3, dt);
-    f.dissolve = THREE.MathUtils.smoothstep(f.chapter, DISSOLVE.from, DISSOLVE.to);
-    PATHS.forEach((p, i) => {
-      const raw = clamp01((f.chapter - p.span[0]) / (p.span[1] - p.span[0]));
-      f.draws[i] = raw * clamp01(introT * 1.4 - 0.3);
-    });
-    NODES.forEach((n, i) => {
-      let s = n.label ? 0.25 : 0.1;
-      PATHS.forEach((p, j) => {
-        if (p.from === n.id) s = Math.max(s, clamp01(f.draws[j] * 5));
-        if (p.to === n.id) s = Math.max(s, clamp01((f.draws[j] - 0.82) * 6));
-      });
-      f.nodeStrength[i] = s * introT;
-    });
+    updateCityState(f.chapter, f.finale);
   });
 
   return null;
-}
-
-/* ------------------------------------------------------------------ */
-/* Terrain                                                            */
-/* ------------------------------------------------------------------ */
-
-function Terrain({ tier }: { tier: Tier }) {
-  const mesh = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>>(null);
-
-  const { geometry, range } = useMemo(() => {
-    const segX = tier === "high" ? 230 : 120;
-    const segZ = tier === "high" ? 380 : 200;
-    const geo = new THREE.PlaneGeometry(TERRAIN.width, TERRAIN.depth, segX, segZ);
-    geo.rotateX(-Math.PI / 2);
-    geo.translate(0, 0, TERRAIN.centerZ);
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    let min = Infinity;
-    let max = -Infinity;
-    for (let i = 0; i < pos.count; i++) {
-      const h = terrainHeight(pos.getX(i), pos.getZ(i));
-      pos.setY(i, h);
-      if (h < min) min = h;
-      if (h > max) max = h;
-    }
-    geo.computeVertexNormals();
-    geo.computeBoundingSphere();
-    return { geometry: geo, range: [min, max] as [number, number] };
-  }, [tier]);
-
-  useEffect(() => () => geometry.dispose(), [geometry]);
-
-  const material = useMemo(() => makeTerrainMaterial(range), [range]);
-  useEffect(() => () => material.dispose(), [material]);
-
-  const scratch = useRef({
-    ray: new THREE.Raycaster(),
-    plane: new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.4),
-    hit: new THREE.Vector3(),
-    ptr: new THREE.Vector2(999, 999),
-    strength: 0,
-    fine: typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
-    focus: new THREE.Vector3(),
-  });
-
-  useFrame((state, delta) => {
-    if (!mesh.current) return;
-    const f = frame;
-    const tmp = scratch.current;
-    const camera = state.camera;
-    const u = mesh.current.material.uniforms;
-    const dt = Math.min(delta, 1 / 20);
-    const t = state.clock.elapsedTime;
-    // Ground point under the camera's gaze.
-    camera.getWorldDirection(tmp.focus);
-    const k = (0.4 - camera.position.y) / Math.min(tmp.focus.y, -0.05);
-    f.focusX = camera.position.x + tmp.focus.x * k;
-    f.focusZ = camera.position.z + tmp.focus.z * k;
-
-    // Explorer's light: follows a mouse; on touch it wanders by itself.
-    const inHero = f.chapter < 3;
-    let want = 0;
-    if (tmp.fine && inHero) {
-      tmp.ray.setFromCamera(state.pointer, camera);
-      if (tmp.ray.ray.intersectPlane(tmp.plane, tmp.hit)) {
-        tmp.ptr.x = THREE.MathUtils.damp(tmp.ptr.x === 999 ? tmp.hit.x : tmp.ptr.x, tmp.hit.x, 6, dt);
-        tmp.ptr.y = THREE.MathUtils.damp(tmp.ptr.y === 999 ? tmp.hit.z : tmp.ptr.y, tmp.hit.z, 6, dt);
-        want = 1;
-      }
-    } else if (!tmp.fine && inHero) {
-      tmp.ptr.set(f.focusX + Math.sin(t * 0.31) * 7, f.focusZ + Math.cos(t * 0.23) * 4);
-      want = 0.75;
-    }
-    tmp.strength = THREE.MathUtils.damp(tmp.strength, want * f.introT, 3, dt);
-    f.pointerX = tmp.ptr.x;
-    f.pointerZ = tmp.ptr.y;
-    f.pointerStrength = tmp.strength;
-
-    updateTerrainUniforms(u, t);
-  });
-
-  return <mesh ref={mesh} geometry={geometry} material={material} frustumCulled={false} />;
-}
-
-/* ------------------------------------------------------------------ */
-/* Discovery paths                                                    */
-/* ------------------------------------------------------------------ */
-
-function buildPathCurve(fromId: string, toId: string, seed: number) {
-  const a = nodeById(fromId);
-  const b = nodeById(toId);
-  const rand = mulberry32(seed * 977);
-  const dx = b.x - a.x;
-  const dz = b.z - a.z;
-  const len = Math.hypot(dx, dz);
-  const nx = -dz / len;
-  const nz = dx / len;
-  const controls: THREE.Vector3[] = [];
-  const steps = 5;
-  for (let i = 0; i <= steps; i++) {
-    const s = i / steps;
-    const sway = i === 0 || i === steps ? 0 : (rand() - 0.5) * len * 0.28;
-    controls.push(new THREE.Vector3(a.x + dx * s + nx * sway, 0, a.z + dz * s + nz * sway));
-  }
-  const flat = new THREE.CatmullRomCurve3(controls, false, "centripetal");
-  const pts = flat.getSpacedPoints(140).map((p) => new THREE.Vector3(p.x, terrainHeight(p.x, p.z) + 0.07, p.z));
-  return new THREE.CatmullRomCurve3(pts);
-}
-
-function Paths() {
-  const meshes = useRef<(THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null)[]>([]);
-  const items = useMemo(
-    () =>
-      PATHS.map((p) => {
-        const curve = buildPathCurve(p.from, p.to, p.seed);
-        const geometry = new THREE.TubeGeometry(curve, 220, 0.028, 5, false);
-        const material = new THREE.ShaderMaterial({
-          vertexShader: pathVertex,
-          fragmentShader: pathFragment,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-          uniforms: {
-            uDraw: { value: 0 },
-            uBoost: { value: 0 },
-            uTime: { value: 0 },
-            uColor: { value: new THREE.Vector3(...CYAN) },
-            uFog: { value: new THREE.Vector2(...FOG) },
-          },
-        });
-        return { geometry, material };
-      }),
-    [],
-  );
-
-  useEffect(
-    () => () =>
-      items.forEach(({ geometry, material }) => {
-        geometry.dispose();
-        material.dispose();
-      }),
-    [items],
-  );
-
-  useFrame((state) => {
-    meshes.current.forEach((m, i) => {
-      if (!m) return;
-      m.material.uniforms.uDraw.value = frame.draws[i];
-      m.material.uniforms.uBoost.value = frame.finale;
-      m.material.uniforms.uTime.value = state.clock.elapsedTime;
-    });
-  });
-
-  return (
-    <>
-      {items.map(({ geometry, material }, i) => (
-        <mesh
-          key={i}
-          ref={(m) => {
-            meshes.current[i] = m as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial> | null;
-          }}
-          geometry={geometry}
-          material={material}
-          renderOrder={2}
-        />
-      ))}
-    </>
-  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -453,10 +227,10 @@ function Particles() {
     const pos = new Float32Array(count * 3);
     const phase = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      const x = (rand() - 0.5) * 70;
-      const z = 58 - rand() * 125;
+      const x = (rand() - 0.5) * 80;
+      const z = 62 - rand() * 135;
       pos[i * 3] = x;
-      pos[i * 3 + 1] = terrainHeight(x, z) + 0.6 + rand() * 7;
+      pos[i * 3 + 1] = 1.2 + rand() * 9;
       pos[i * 3 + 2] = z;
       phase[i] = rand();
     }

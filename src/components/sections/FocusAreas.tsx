@@ -1,10 +1,11 @@
-import { focus } from "@/content/site-content";
-import { TERRITORIES } from "@/components/three/landmarks";
+import { fixLabels, focus } from "@/content/site-content";
+import { DISTRICTS } from "@/components/three/city-layout";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
- * Five territories on the map. Each row is a stop on the journey: the camera
- * flies to that region and its settlement animates while the card is read.
+ * Five districts of the city. Each row is a stop on the journey: the camera
+ * flies to the district while it plays an example — bottleneck, diagnosis,
+ * and the fix the problem actually needs.
  */
 export function FocusAreas() {
   return (
@@ -22,10 +23,12 @@ export function FocusAreas() {
 
       <ol className="relative mt-[10vh]">
         {focus.areas.map((area, i) => {
-          const t = TERRITORIES[i];
+          const t = DISTRICTS[(["farms", "logistics", "healthcare", "energy", "open"] as const)[i]];
           const open = area.id === "open";
           return (
-            <li key={area.id} id={`focus-${area.id}`} data-chapter={5 + i} className="territory flex min-h-[100svh] items-center">
+            <li key={area.id} id={`focus-${area.id}`} className="relative territory flex min-h-[140svh] items-center">
+              {/* The journey reaches this stop when the card is centred on screen. */}
+              <span aria-hidden data-chapter={5 + i} className="pointer-events-none absolute top-1/2 h-px w-px" />
               <div className="container-site">
                 <article className={`territory-card reveal glass max-w-[30rem] p-7 sm:p-9 ${open ? "is-open" : ""}`}>
                   <div className="flex items-center justify-between gap-4">
@@ -33,7 +36,7 @@ export function FocusAreas() {
                       <span aria-hidden className={`territory-index label flex h-9 w-9 items-center justify-center border ${open ? "border-dashed" : ""}`}>
                         {area.index}
                       </span>
-                      <span className="label text-[color:var(--color-fg-3)]">Territory {area.index}</span>
+                      <span className="label text-[color:var(--color-fg-3)]">District {area.index}</span>
                     </span>
                     <span aria-hidden className="label tabular-nums text-[color:var(--color-fg-3)]">
                       {t.x.toFixed(1)}, {t.z.toFixed(1)}
@@ -48,12 +51,23 @@ export function FocusAreas() {
                       </li>
                     ))}
                   </ul>
-                  <p className="label mt-7 flex items-center gap-2.5 border-t border-[color:var(--color-line)] pt-4">
-                    <span aria-hidden className={`h-1.5 w-1.5 rotate-45 ${open ? "border border-[color:var(--color-fg-3)]" : "bg-[color:var(--color-cyan)]"}`} />
-                    <span className={open ? "text-[color:var(--color-fg-3)]" : "text-[color:var(--color-cyan)]"}>
-                      {open ? "Uncharted — still under fog" : "Initial area of interest · surveying"}
-                    </span>
-                  </p>
+                  <div className="mt-7 border-t border-[color:var(--color-line)] pt-5">
+                    <p className="label text-[color:var(--color-fg-3)]">Example scenario</p>
+                    <p className="mt-3 flex gap-2.5 text-[15px] leading-snug text-[color:var(--color-fg)]">
+                      <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-[#ff6b5e]" />
+                      {area.scenario.problem}
+                    </p>
+                    <p className="mt-3 flex flex-wrap items-center gap-2.5 text-[15px] leading-snug text-[color:var(--color-fg-2)]">
+                      {area.scenario.fix ? (
+                        <span className="label border border-[color:var(--color-lime)]/60 bg-[color:var(--color-lime)] px-2 py-0.5 text-[color:var(--color-ink)]">
+                          Fix: {fixLabels[area.scenario.fix]}
+                        </span>
+                      ) : (
+                        <span className="label border border-dashed border-[color:var(--color-fg-3)] px-2 py-0.5 text-[color:var(--color-fg-3)]">Fix: ?</span>
+                      )}
+                      <span>{area.scenario.fixNote}</span>
+                    </p>
+                  </div>
                 </article>
               </div>
             </li>

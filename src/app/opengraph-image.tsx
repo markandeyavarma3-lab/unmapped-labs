@@ -7,7 +7,7 @@ export const alt = `${site.name} — ${site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const terrain = await readFile(join(process.cwd(), "public", "terrain-fallback.svg"));
+const terrain = await readFile(join(process.cwd(), "public", "city-map.svg"));
 const terrainSrc = `data:image/svg+xml;base64,${terrain.toString("base64")}`;
 
 export default async function Image() {

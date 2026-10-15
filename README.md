@@ -16,7 +16,7 @@ npm run dev        # http://localhost:3000
 npm run build      # production build (also type-checks)
 npm start          # serve the production build
 npm run lint
-npx tsx scripts/generate-terrain-svg.ts   # regenerate the static fallback map
+npx tsx scripts/generate-city-svg.ts      # regenerate the static fallback map
 ```
 
 Requires Node 20+.
@@ -62,49 +62,39 @@ scripts/generate-terrain-svg.ts
 public/terrain-fallback.svg generated top-down contour map of the same terrain
 ```
 
-## The world (3D)
+## The world (3D): a miniature city at night
 
-- **One canvas, several views.** `WorldRenderer.tsx` takes over rendering: it draws
-  the terrain world, then each *view* (the particle morph and the process
-  island) into the screen rectangle of a DOM anchor in its section
-  (`views.ts`). One GPU context, one loop. On high-tier devices the whole frame
-  goes through bloom (`UnrealBloomPass`); phones skip bloom.
-- **Views mount lazily:** a section registers its anchor only when it's
-  within about one screen of the viewport, so geometry is built just before
-  it's needed.
-- **Particle morph** (`ParticleMorph.tsx`, `morph-shapes.ts`): 14k particles on
-  desktop, 5.6k on phones, moving through six formations (Unknown → Build)
-  driven by a sticky scroll track in `MorphSequence.tsx`.
-- **Process island** (`ProcessIsland.tsx`): a floating terrain island with five
-  stations (radar scan, unfolding map grid, separating strata, assembling
-  blocks, validation beacon). The camera flies station to station as the
-  stage list scrolls. Phones get a pinned layout: island on top, current stage
-  below.
-- **Colour:** the canvas runs with `linear` + `flat`, so every hex value is used
-  as-is and matches the CSS colours exactly.
+The background is one persistent city (`src/components/three/`). Visitors read
+it as *we study real systems, find the bottleneck, and pick the fix the
+problem actually needs*.
 
-- **One persistent scene** sits fixed behind the page (`WorldLayer` → `World` → `Scene`).
-  It loads lazily, after first paint and when the browser is idle. Headline, copy
-  and CTAs never wait for it.
-- **Terrain** is a deterministic noise function (`terrain-math.ts`) shared by the
-  mesh, nodes, paths and the SVG fallback, so they all agree.
-- **Shader** (`shaders.ts`) draws contour lines from screen-space derivatives
-  (sharp at any distance). It splits territory into *unknown* (faint) and
-  *known* (bright, gridded). The known region grows as you scroll and follows
-  the mouse like an explorer's light.
-- **Camera journey:** each section with `data-chapter="0…5"` anchors a camera
-  keyframe (`landmarks.ts`). Scroll position interpolates between them, and the
-  camera damps toward the result. Scroll is never hijacked.
-- **Discovery paths** draw in over chapter ranges; **survey nodes** light up as
-  paths reach them, and show a label on hover (or tap on touch).
-- **Performance:** two quality tiers (touch, small screen or ≤4 cores/4GB → low:
-  fewer vertices, no particles, lower DPR); adaptive DPR from measured FPS; the
-  render loop stops completely while a light editorial section covers the
-  screen; layers mount over several frames.
-- **Fallback:** reduced motion, Save-Data or no WebGL → the static contour map
-  (`public/terrain-fallback.svg`). The same image shows while WebGL starts.
+- **Layout** (`city-layout.ts`, pure data): a downtown grid whose towers on
+  the title strokes spell **UNMAPPED LABS**, an avenue, and six districts:
+  farms, logistics, healthcare, energy, markets and uncharted. It also holds the
+  roads and the flow paths. The 3D scene, the journey and the fallback map all
+  build from it.
+- **City** (`City.tsx`): the ground, roads, and all buildings in one instanced
+  draw with a single shader (windows switch on as districts are understood,
+  edges glow, letter towers rise for the opening and sink back afterwards),
+  plus flows of goods, water, energy, data and people that queue at a
+  bottleneck.
+- **Districts** (`Districts.tsx`): landmarks, plus each district's story,
+  driven by `city-state.ts`: the jam turns red → a diagnostic scan → a fork
+  of **Software / Hardware / Process / Data & AI** → only the right fix lights
+  up and builds (selector hologram, bypass lane, forecast chart, sensors on
+  pylons, a data lens). The uncharted district stays dark with a "?".
+- **Journey** (`landmarks.ts`): 17 camera keyframes. Page sections (and
+  centred markers inside the focus/work stops) anchor them with `data-chapter`.
+- **Views**: the particle morph and the process island still render as camera
+  views inside the same canvas (`WorldRenderer.tsx`, `views.ts`).
+- **Performance:** pixel density capped at 1.4 (1.0 on phones) and adapting
+  down under load; half-rate rendering while idle; heavy views build in idle
+  time on desktop and on approach on phones; no post-processing.
+- **Fallback:** `public/city-map.svg`, a plan of the same city, is generated
+  by `npx tsx scripts/generate-city-svg.ts`. Rerun it if you change the layout.
 
-If you change `terrain-math.ts` or `landmarks.ts`, rerun the SVG generator.
+The district scenarios are **illustrative examples**, labelled as such on the
+page. They are not claims of client work.
 
 ## Editing content
 

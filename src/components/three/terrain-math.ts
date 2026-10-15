@@ -1,7 +1,6 @@
 /**
- * Deterministic terrain. The same height function feeds the mesh, the
- * survey nodes and the discovery paths, so everything sits on the surface.
- * Pure maths — no three.js import — so it is also safe on the server.
+ * Deterministic noise and randomness shared by the 3D scenes and the
+ * procedural note covers. Pure maths — no three.js — so it is server-safe.
  */
 
 // 2D simplex noise (Stefan Gustavson, public domain), seeded permutation.
@@ -71,50 +70,4 @@ export function simplex2(x: number, y: number): number {
     n += t2 * t2 * (g[0] * x2 + g[1] * y2);
   }
   return 70 * n; // ~[-1, 1]
-}
-
-function fbm(x: number, y: number, octaves: number) {
-  let sum = 0;
-  let amp = 0.5;
-  let freq = 1;
-  for (let o = 0; o < octaves; o++) {
-    sum += amp * simplex2(x * freq, y * freq);
-    freq *= 2.03;
-    amp *= 0.5;
-  }
-  return sum;
-}
-
-const smoothstep = (a: number, b: number, x: number) => {
-  const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
-  return t * t * (3 - 2 * t);
-};
-
-/** Centre line of the valley the camera travels along. */
-export const valleyX = (z: number) => Math.sin(z * 0.07) * 5.5 + Math.sin(z * 0.023 + 1.3) * 3;
-
-/** Terrain world size (x, z) and the z range the camera journeys through. */
-export const TERRAIN = { width: 90, depth: 150, centerZ: -10 } as const;
-
-/** Plateau under the title letters (covers both the one-line and stacked layouts). */
-export const TITLE_PLATE = { minX: -19.5, maxX: 19.5, minZ: 37.5, maxZ: 56.5 };
-
-function plateFlatten(x: number, z: number) {
-  const dx = Math.max(TITLE_PLATE.minX - x, 0, x - TITLE_PLATE.maxX);
-  const dz = Math.max(TITLE_PLATE.minZ - z, 0, z - TITLE_PLATE.maxZ);
-  const t = Math.min(1, Math.hypot(dx, dz) / 4);
-  return 0.18 + 0.82 * t * t * (3 - 2 * t);
-}
-
-export function terrainHeight(x: number, z: number): number {
-  const rolling = fbm(x * 0.045, z * 0.045, 5) * 2.6;
-  const ridge = 1 - Math.abs(simplex2(x * 0.03 + 11.7, z * 0.03 - 4.2));
-  const ridged = ridge * ridge * 3.4;
-
-  // Carve a broad valley: lower and flatter near the centre line.
-  const d = Math.abs(x - valleyX(z));
-  const shoulders = 0.28 + 0.72 * smoothstep(2, 11, d);
-  const floor = (1 - smoothstep(0, 7, d)) * 1.1;
-
-  return ((rolling + ridged) * shoulders - floor) * 1.35 * plateFlatten(x, z);
 }

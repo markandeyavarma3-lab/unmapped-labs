@@ -98,7 +98,7 @@ export function TitleSequence() {
           <span className="relative block h-9 w-px overflow-hidden bg-[color:var(--color-line)]">
             <span className="absolute inset-x-0 top-0 h-3 animate-[scroll-cue_2.2s_var(--ease-in-out-quart)_infinite] bg-[color:var(--color-cyan)]" />
           </span>
-          Scroll to lift the fog
+          Scroll to light up the city
         </div>
       </div>
     </section>

@@ -22,7 +22,9 @@ export function SelectedWork() {
 
       <ol className="relative mt-[8vh]">
         {work.cases.map((cs, i) => (
-          <li key={cs.slug} id={`work-${cs.slug}`} data-chapter={10 + i} className="flex min-h-[110svh] items-center">
+          <li key={cs.slug} id={`work-${cs.slug}`} className="relative flex min-h-[140svh] items-center">
+              {/* The journey reaches this stop when the card is centred on screen. */}
+              <span aria-hidden data-chapter={10 + i} className="pointer-events-none absolute top-1/2 h-px w-px" />
             <div className="container-site">
               <article className="reveal glass max-w-[34rem] p-7 sm:p-9">
                 <div className="flex flex-wrap items-center justify-between gap-3">

@@ -437,6 +437,27 @@ html[data-intro="on"] {
   }
 }
 
+/* ---------------- City labels ------------------------------------- */
+.city-fork > span {
+  color: var(--color-fg-3);
+  border-color: var(--color-line);
+  background: rgb(8 11 14 / 0.92);
+  transition:
+    color 0.35s,
+    border-color 0.35s,
+    background-color 0.35s,
+    transform 0.5s var(--ease-out-expo);
+}
+.city-fork[data-state="chosen"] > span {
+  color: var(--color-ink);
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  transform: scale(1.12); /* Tailwind positions with the separate `translate` property */
+}
+.city-fork[data-state="dim"] > span {
+  opacity: 0.45;
+}
+
 /* ---------------- Process takeover ------------------------------- */
 .process-track {
   height: 560vh;

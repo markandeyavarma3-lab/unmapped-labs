@@ -1,8 +1,7 @@
 /**
- * "UNMAPPED LABS" as landforms. A tiny stroke alphabet (polylines on a 4×6
- * grid) is laid out on the ground plane; terrain height near a stroke rises
- * into a flat-topped ridge, so the name becomes a mesa range that contour
- * lines wrap around. Pure maths — shared by the mesh, mini-map and fallback.
+ * "UNMAPPED LABS" laid out on the ground plane with a tiny stroke alphabet
+ * (polylines on a 4×6 grid). The city lights the downtown towers that sit on
+ * these strokes, so the name is spelled in buildings. Pure maths.
  */
 
 type Pt = [number, number];
@@ -118,27 +117,4 @@ export function strokeDistance(shape: TitleShape, x: number, z: number) {
     if (d < best) best = d;
   }
   return Math.sqrt(best);
-}
-
-export const LETTER_HEIGHT = 2.6;
-const INNER = 0.2; // flat mesa top half-width
-const OUTER = 0.62; // where the slope meets the ground
-
-/** Letter relief at (x, z): 0 off the strokes, LETTER_HEIGHT on the mesa tops. */
-export function letterHeight(shape: TitleShape, x: number, z: number) {
-  if (x < shape.minX || x > shape.maxX || z < shape.minZ || z > shape.maxZ) return 0;
-  const d = strokeDistance(shape, x, z);
-  if (d >= OUTER) return 0;
-  const t = 1 - Math.min(1, Math.max(0, (d - INNER) / (OUTER - INNER)));
-  return LETTER_HEIGHT * t * t * (3 - 2 * t);
-}
-
-/** 0 inside the title plate, easing to 1 outside — flattens the ground under the letters. */
-export function titleFlatten(shape: TitleShape, x: number, z: number) {
-  const m = 3;
-  const dx = Math.max(shape.minX - x, 0, x - shape.maxX);
-  const dz = Math.max(shape.minZ - z, 0, z - shape.maxZ);
-  const d = Math.hypot(dx, dz);
-  const t = Math.min(1, d / m);
-  return 0.25 + 0.75 * t * t * (3 - 2 * t);
 }

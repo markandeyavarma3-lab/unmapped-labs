@@ -2,8 +2,8 @@ import { services } from "@/content/site-content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
 /**
- * Services, read inside the systems network the land has become — each card
- * matches one of the four lit hubs at its core.
+ * Services: research always comes first, then whichever of the four kinds of
+ * fix the problem needs. The city behind labels where each one was used.
  */
 export function WhatWeDo() {
   return (
@@ -12,8 +12,13 @@ export function WhatWeDo() {
         <SectionHeading id="services-heading" label={services.label} heading={services.heading} intro={services.intro} />
         <ol className="mt-16 grid gap-4 md:grid-cols-2 lg:mt-24">
           {services.items.map((sv, i) => (
-            <li key={sv.index} className="reveal glass group flex flex-col p-7 sm:p-8" style={{ "--d": i % 2 } as React.CSSProperties}>
+            <li
+              key={sv.index}
+              className={`reveal glass group flex flex-col p-7 sm:p-8 ${i === 0 ? "md:col-span-2 md:border-[color:var(--color-cyan)]/40" : ""}`}
+              style={{ "--d": i % 2 } as React.CSSProperties}
+            >
               <div className="flex items-center gap-3">
+                {i === 0 && <span className="label text-[color:var(--color-cyan)]">Always first</span>}
                 <span className="label flex h-9 min-w-9 items-center justify-center border border-[color:var(--color-lime)]/50 px-1.5 tabular-nums text-[color:var(--color-lime)] transition-colors duration-[var(--duration-hover)] group-hover:bg-[color:var(--color-lime)] group-hover:text-[color:var(--color-ink)]">
                   {sv.index}
                 </span>

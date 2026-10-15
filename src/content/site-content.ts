@@ -76,19 +76,30 @@ export const approach = {
   ] satisfies Stage[],
 };
 
+export type FixType = "software" | "hardware" | "process" | "data";
+
+export const fixLabels: Record<FixType, string> = {
+  software: "Software",
+  hardware: "Hardware",
+  process: "Process",
+  data: "Data & AI",
+};
+
 export type FocusArea = {
   id: "agriculture" | "logistics" | "healthcare" | "energy" | "open";
   index: string;
   title: string;
   body: string;
   keywords: string[];
+  /** An illustrative example of problem → diagnosis → fix in this district. Not client work. */
+  scenario: { problem: string; fix: FixType | null; fixNote: string };
 };
 
 export const focus = {
   label: "03 — Focus areas",
   heading: "Where we're looking first.",
   intro:
-    "These are initial areas of interest — places where we want to learn — not claims of established expertise. The map is deliberately left open at the edges.",
+    "These are initial areas of interest, not claims of established expertise. In each district, an example of how we think: find the bottleneck, diagnose it, then choose the fix the problem actually needs — software, hardware, process, or data.",
   areas: [
     {
       id: "agriculture",
@@ -96,6 +107,7 @@ export const focus = {
       title: "Agriculture & food systems",
       body: "Investigate production, distribution, sourcing, market access, operational processes, and other real-world challenges.",
       keywords: ["Production", "Distribution", "Market access"],
+      scenario: { problem: "Water runs short at the field: the borewell has the wrong pump for its depth.", fix: "software", fixNote: "A selector that matches the pump to the borewell’s flow and depth." },
     },
     {
       id: "logistics",
@@ -103,6 +115,7 @@ export const focus = {
       title: "Logistics & supply chains",
       body: "Explore transportation, movement of goods, coordination, bottlenecks, inventory, and information flow.",
       keywords: ["Movement", "Coordination", "Information flow"],
+      scenario: { problem: "Trucks queue at a single loading dock while the yard sits half empty.", fix: "process", fixNote: "No new software needed: a second dock lane and a re-timed schedule." },
     },
     {
       id: "healthcare",
@@ -110,6 +123,7 @@ export const focus = {
       title: "Healthcare systems",
       body: "Explore operational challenges, coordination, access, and delivery processes — while respecting privacy, safety, and professional expertise.",
       keywords: ["Access", "Coordination", "Delivery"],
+      scenario: { problem: "Patients pile up at the entrance at the same hours every day.", fix: "data", fixNote: "A forecast of arrivals, so staffing and appointments spread the load." },
     },
     {
       id: "energy",
@@ -117,6 +131,7 @@ export const focus = {
       title: "Energy & essential infrastructure",
       body: "Investigate how essential systems are operated, coordinated, maintained, and improved.",
       keywords: ["Operations", "Maintenance", "Utilities"],
+      scenario: { problem: "A substation overloads, and nobody knows until something trips.", fix: "hardware", fixNote: "Sensors on the line, chosen and integrated so the load is seen in time." },
     },
     {
       id: "open",
@@ -124,6 +139,7 @@ export const focus = {
       title: "Open exploration",
       body: "The next meaningful problem may exist in an industry that isn't listed here yet. If you know where it is, tell us.",
       keywords: ["Uncharted"],
+      scenario: { problem: "We don’t know yet — and that is the point.", fix: null, fixNote: "The next problem might need any of the four. We find out first." },
     },
   ] satisfies FocusArea[],
 };
@@ -219,36 +235,47 @@ export const work = {
   ] satisfies CaseStudy[],
 };
 
-export type Service = { index: string; title: string; body: string; deliverables: string[] };
+export type Service = { index: string; title: string; body: string; deliverables: string[]; fix?: FixType };
 
 export const services = {
   label: "05 — What we do",
-  heading: "Once the system is understood, this is how we help.",
-  intro: "Four kinds of work, usually in this order — and only the ones the problem actually needs.",
+  heading: "Research first. Then whichever fix the problem needs.",
+  intro:
+    "Every engagement starts the same way: understanding the system. What comes after depends on what we find — sometimes software, sometimes hardware, sometimes just a better way of working.",
   items: [
     {
-      index: "S1",
+      index: "00",
       title: "Field research & mapping",
-      body: "We go to where the work happens, talk to the people doing it, and map how the system really runs — flows, dependencies, bottlenecks and the gaps nobody has written down.",
+      body: "We go to where the work happens, talk to the people doing it, and map how the system really runs — flows, dependencies, bottlenecks and the gaps nobody has written down. This decides everything else.",
       deliverables: ["Process maps", "Bottleneck reports", "Opportunity briefs"],
     },
     {
+      index: "S1",
+      fix: "software",
+      title: "Software & tools",
+      body: "Websites that bring customers, lead systems, quoting and billing, selectors and internal tools shaped around how a business already works.",
+      deliverables: ["Websites & lead systems", "Internal tools", "Selectors & catalogues"],
+    },
+    {
       index: "S2",
-      title: "Websites & lead systems",
-      body: "Sites that explain what a business does to the people who need it, with the plumbing behind them — lead capture, dashboards and follow-up that someone will actually use.",
-      deliverables: ["Websites", "Lead dashboards", "Landing pages"],
+      fix: "hardware",
+      title: "Hardware & IoT",
+      body: "When the answer is physical, we advise on the right sensors, devices and controllers, and integrate them with the software that makes them useful. We don't manufacture hardware.",
+      deliverables: ["Device selection", "Sensor integration", "Monitoring"],
     },
     {
       index: "S3",
-      title: "Internal tools & software",
-      body: "Tools shaped around how a business already works: quoting, billing, catalogues, selectors — often local-first, so they run where the work is.",
-      deliverables: ["Quoting & billing", "Selectors & catalogues", "Admin tools"],
+      fix: "process",
+      title: "Process & operations",
+      body: "Sometimes the fix isn't technology at all: a different layout, a clearer handoff, a better schedule. We redesign the way work flows and help it stick.",
+      deliverables: ["Workflow redesign", "Layouts & schedules", "Handoff design"],
     },
     {
       index: "S4",
-      title: "Data, research & automation",
-      body: "Pulling structure out of PDFs and public records, building research platforms, and automating the repetitive parts — with the checks that prove it's right.",
-      deliverables: ["Data extraction", "Research platforms", "Automation & ML"],
+      fix: "data",
+      title: "Data & AI",
+      body: "Pulling structure out of PDFs and public records, forecasting, research platforms and automation — with the checks that prove the numbers are right.",
+      deliverables: ["Data extraction", "Forecasting", "Research platforms"],
     },
   ] satisfies Service[],
 };

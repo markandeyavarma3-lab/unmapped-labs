@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { onScroll } from "@/components/motion/scroll-engine";
-import { nodeLabel, serviceLabels, setWorldPaused, world } from "./world-store";
-import { services } from "@/content/site-content";
+import { cityLabels, serviceLabels, setWorldPaused, world } from "./world-store";
+import { fixLabels, services, type FixType } from "@/content/site-content";
 import { setWorldMode, setWorldReady } from "./views";
 import type { Tier } from "./Scene";
 
@@ -102,7 +102,7 @@ export function WorldLayer() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-world)] overflow-hidden [contain:strict]">
       {/* Static map — visible until WebGL is drawing, and permanently when it can't or shouldn't. */}
       <div
-        className="absolute inset-0 bg-[url(/terrain-fallback.svg)] bg-cover bg-center opacity-60 transition-opacity duration-[1200ms] ease-[var(--ease-out-quart)] max-md:bg-[position:70%_50%]"
+        className="absolute inset-0 bg-[url(/city-map.svg)] bg-cover bg-center opacity-60 transition-opacity duration-[1200ms] ease-[var(--ease-out-quart)] max-md:bg-[position:70%_50%]"
         style={{ opacity: ready ? 0 : undefined }}
       />
       {mode.kind === "webgl" && (
@@ -116,22 +116,34 @@ export function WorldLayer() {
             }} />
         </div>
       )}
-      {/* Survey-node label, positioned by the scene when a marker is active. */}
+      {/* The focused district's problem (red) and the fork of possible fixes. */}
       <div
         ref={(el) => {
-          nodeLabel.el = el;
+          cityLabels.problem = el;
         }}
-        data-on="false"
-        className="absolute top-0 left-0 z-[1] transition-opacity duration-300 data-[on=false]:opacity-0"
+        className="city-problem absolute top-0 left-0 z-[1] opacity-0"
       >
-        <div className="flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-line)] bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap ml-4">
-          <span className="h-1 w-1 bg-[color:var(--color-lime)]" />
-          <span data-name className="label text-[color:var(--color-fg)]" />
-          <span data-coords className="label text-[color:var(--color-fg-3)]" />
+        <div className="-translate-x-1/2 -translate-y-full pb-3">
+          <div className="flex max-w-[17rem] items-start gap-2 border border-[#ff6b5e]/50 bg-[color:var(--color-ink)]/92 px-3 py-2">
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rotate-45 bg-[#ff6b5e]" />
+            <span data-text className="text-[12.5px] leading-snug text-[color:var(--color-fg)]" />
+          </div>
         </div>
       </div>
+      {(Object.keys(fixLabels) as FixType[]).map((k, i) => (
+        <div
+          key={k}
+          ref={(el) => {
+            cityLabels.fork[i] = el;
+          }}
+          data-state="idle"
+          className="city-fork absolute top-0 left-0 z-[1] opacity-0"
+        >
+          <span className="label block -translate-x-1/2 -translate-y-1/2 border px-2.5 py-1.5 whitespace-nowrap">{fixLabels[k]}</span>
+        </div>
+      ))}
       {/* Service hub labels on the systems network */}
-      {services.items.map((sv, k) => (
+      {services.items.filter((sv) => sv.fix).map((sv, k) => (
         <div
           key={sv.index}
           ref={(el) => {
@@ -139,7 +151,7 @@ export function WorldLayer() {
           }}
           className="absolute top-0 left-0 z-[1] opacity-0"
         >
-          <div className="ml-3 flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-lime)]/40 bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap">
+          <div className="flex -translate-x-1/2 -translate-y-full items-center gap-2 border border-[color:var(--color-lime)]/40 bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap">
             <span className="label tabular-nums text-[color:var(--color-lime)]">{sv.index}</span>
             <span className="label text-[color:var(--color-fg)]">{sv.title}</span>
           </div>

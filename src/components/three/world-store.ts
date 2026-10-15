@@ -25,8 +25,13 @@ if (typeof window !== "undefined") {
 /** DOM labels for the four service hubs of the systems network, positioned by the scene. */
 export const serviceLabels: (HTMLElement | null)[] = [];
 
-/** The single DOM label for survey nodes; lives outside the canvas, positioned by the scene. */
-export const nodeLabel = { el: null as HTMLDivElement | null };
+/** City labels (DOM, outside the canvas), positioned by the scene each frame. */
+export const cityLabels = {
+  /** Red: what's going wrong in the focused district. */
+  problem: null as HTMLElement | null,
+  /** The fork: Software / Hardware / Process / Data & AI. */
+  fork: [] as (HTMLElement | null)[],
+};
 
 const pauseListeners = new Set<Listener>();
 
