@@ -22,6 +22,7 @@ const vertex = /* glsl */ `
   varying float vAccent;
   varying float vAlpha;
   varying float vBuild;
+  varying float vShade;
 
   vec3 shapeAt(float i) {
     if (i < 0.5) return position;
@@ -48,7 +49,7 @@ const vertex = /* glsl */ `
       sin(aRand * 67.0 + uTime * 0.5)) * 0.85;
 
     // Idle life: restless when unknown, nearly still once built.
-    float chaos = mix(0.32, 0.025, smoothstep(0.0, 2.0, p));
+    float chaos = mix(0.32, 0.02, smoothstep(0.0, 0.9, p));
     pos += chaos * vec3(
       sin(uTime * 0.55 + aRand * 31.0),
       cos(uTime * 0.47 + aRand * 17.0),
@@ -61,7 +62,8 @@ const vertex = /* glsl */ `
     vBuild = smoothstep(4.2, 5.0, p);
     float size = uSize * (1.0 + vAccent * 0.7) * (0.75 + aRand * 0.5);
     gl_PointSize = size * uPixelRatio * (10.0 / -mv.z);
-    vAlpha = (0.45 + 0.55 * aRand) * (0.55 + 0.45 * smoothstep(0.0, 1.0, p));
+    vAlpha = (0.55 + 0.45 * aRand) * (0.6 + 0.4 * smoothstep(0.0, 1.0, p));
+    vShade = fract(aRand * 13.7);
   }
 `;
 
@@ -73,24 +75,41 @@ const fragment = /* glsl */ `
   varying float vAccent;
   varying float vAlpha;
   varying float vBuild;
+  varying float vShade;
+  uniform vec3 uDeep;
 
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float a = (1.0 - smoothstep(0.18, 0.5, d)) * vAlpha * uOpacity;
     if (a < 0.01) discard;
+    // golden particles with teal accents; the finished city warms toward lime
     vec3 accent = mix(uCyan, uLime, vBuild);
-    vec3 base = mix(uBase, mix(uBase, uLime, 0.25), vBuild);
-    vec3 col = mix(base * 0.8, accent * 1.35, vAccent);
-    gl_FragColor = vec4(col * a, a);
+    vec3 base = mix(uBase, uDeep, vShade);
+    vec3 col = mix(base, accent, vAccent);
+    gl_FragColor = vec4(col, a);
+    #include <colorspace_fragment>
+  }
+`;
+
+/** A screen-space haze behind the particles, so they read over the live city. */
+const backdropVertex = /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy * 2.0, 0.999, 1.0); }`;
+const backdropFragment = /* glsl */ `
+  uniform vec2 uCenter; uniform float uAspect; varying vec2 vUv;
+  void main() {
+    vec2 d = (vUv - uCenter) * vec2(uAspect, 1.0);
+    float a = mix(0.9, 0.62, smoothstep(0.1, 0.9, length(d)));
+    gl_FragColor = vec4(vec3(0.985, 0.965, 0.93), a);
+    #include <colorspace_fragment>
   }
 `;
 
 /** Per-stage camera-facing tilt: rings and maps read best from above. */
-const TILT = [0.15, 0.95, 0.72, 0.32, 0.18, 0.42];
+const TILT = [0.15, 0.62, 0.7, 0.42, 0.3, 0.4];
 
 export function ParticleMorph({ tier }: { tier: Tier }) {
   const points = useRef<THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>>(null);
   const group = useRef<THREE.Group>(null);
+  const backdropRef = useRef<THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>>(null);
   const smooth = useRef({ p: 0, tiltX: TILT[0], spin: 0, px: 0, py: 0 });
 
   const { geometry, material } = useMemo(() => {
@@ -109,27 +128,41 @@ export function ParticleMorph({ tier }: { tier: Tier }) {
       fragmentShader: fragment,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
       uniforms: {
         uProgress: { value: 0 },
         uTime: { value: 0 },
         uPixelRatio: { value: 1 },
-        uSize: { value: tier === "high" ? 2.2 : 2.8 },
+        uSize: { value: tier === "high" ? 2.6 : 3.2 },
         uOpacity: { value: 1 },
-        uBase: { value: new THREE.Color("#dfe7ec") },
-        uCyan: { value: new THREE.Color("#65e4e8") },
-        uLime: { value: new THREE.Color("#c7f36b") },
+        uBase: { value: new THREE.Color("#d79a2b") },
+        uDeep: { value: new THREE.Color("#9a5f12") },
+        uCyan: { value: new THREE.Color("#0b8a90") },
+        uLime: { value: new THREE.Color("#5f9614") },
       },
     });
     return { geometry, material };
   }, [tier]);
 
+  const backdrop = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: backdropVertex,
+        fragmentShader: backdropFragment,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        uniforms: { uCenter: { value: new THREE.Vector2(0.68, 0.5) }, uAspect: { value: 1.6 } },
+      }),
+    [],
+  );
+
   useEffect(
     () => () => {
       geometry.dispose();
       material.dispose();
+      backdrop.dispose();
     },
-    [geometry, material],
+    [geometry, material, backdrop],
   );
 
   useFrame((state, delta) => {
@@ -156,11 +189,21 @@ export function ParticleMorph({ tier }: { tier: Tier }) {
     const aspect = state.size.width / state.size.height;
     group.current.position.set(aspect > 1.15 ? 2.6 : 0, aspect < 0.9 ? 1.4 : 0.25, 0);
     group.current.scale.setScalar(aspect < 0.9 ? 0.78 : 1);
+    const bu = backdropRef.current?.material.uniforms;
+    if (bu) {
+      bu.uAspect.value = aspect;
+      bu.uCenter.value.set(aspect > 1.15 ? 0.68 : 0.5, aspect < 0.9 ? 0.62 : 0.5);
+    }
   });
 
   return (
+    <>
+    <mesh ref={backdropRef} material={backdrop} renderOrder={-1} frustumCulled={false}>
+      <planeGeometry args={[1, 1]} />
+    </mesh>
     <group ref={group}>
       <points ref={points} geometry={geometry} material={material} frustumCulled={false} />
     </group>
+    </>
   );
 }

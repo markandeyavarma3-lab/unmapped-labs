@@ -64,7 +64,7 @@ export function MorphSequence() {
         <div ref={anchorRef} aria-hidden className="absolute inset-0" />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(8,11,14,0.85)_0%,rgba(8,11,14,0.35)_40%,transparent_65%)] max-md:bg-[linear-gradient(0deg,rgba(8,11,14,0.92)_0%,rgba(8,11,14,0.5)_45%,transparent_70%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(247,242,233,0.85)_0%,rgba(247,242,233,0.35)_40%,transparent_65%)] max-md:bg-[linear-gradient(0deg,rgba(247,242,233,0.92)_0%,rgba(247,242,233,0.5)_45%,transparent_70%)]"
         />
 
         <div className="container-site relative flex h-full flex-col justify-end pt-[calc(var(--header-h)+2rem)] pb-[clamp(2rem,7vh,4.5rem)]">
@@ -79,7 +79,7 @@ export function MorphSequence() {
             <p
               key={word}
               className={`swap-word mt-3 text-[clamp(3rem,1.6rem+6vw,7rem)] leading-[0.95] font-medium tracking-[-0.045em] ${
-                stage === STAGES ? "text-[color:var(--color-lime)]" : "text-[color:var(--color-fg)]"
+                stage === STAGES ? "text-[color:var(--color-lime-ink)]" : "text-[color:var(--color-fg)]"
               }`}
             >
               {word}

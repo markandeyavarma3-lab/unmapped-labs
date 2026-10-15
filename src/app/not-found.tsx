@@ -9,7 +9,7 @@ export default function NotFound() {
       tabIndex={-1}
       className="relative z-[var(--z-content)] flex min-h-[100svh] items-center bg-[url(/city-map.svg)] bg-cover bg-center"
     >
-      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(8,11,14,0.92),rgba(8,11,14,0.6))]" />
+      <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(247,242,233,0.92),rgba(247,242,233,0.6))]" />
       <div className="container-site relative py-32">
         <LogoMark className="h-10 w-10 text-[color:var(--color-fg)]" />
         <p className="label mt-10 text-[color:var(--color-cyan)]">Error 404 · Off the map</p>

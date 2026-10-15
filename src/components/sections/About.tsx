@@ -18,7 +18,7 @@ export async function About() {
       <div className="container-site grid gap-14 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-5">
           <SectionHeading id="about-heading" label={about.label} heading={about.heading} />
-          <dl className="reveal glass mt-12 px-5 pt-1" style={{ "--d": 2 } as React.CSSProperties}>
+          <dl className="reveal-card glass mt-12 px-5 pt-1" style={{ "--d": 2 } as React.CSSProperties}>
             {status.map((s) => (
               <div key={s.k} className="grid grid-cols-[8.5rem_1fr] gap-4 border-b border-[color:var(--color-line)] py-3.5 last:border-b-0">
                 <dt className="label pt-0.5 text-[color:var(--color-fg-2)]">{s.k}</dt>
@@ -28,7 +28,7 @@ export async function About() {
           </dl>
         </div>
 
-        <div className="glass flex flex-col gap-6 p-7 sm:p-10 lg:col-span-6 lg:col-start-7 lg:mt-20">
+        <div className="reveal-card glass flex flex-col gap-6 p-7 sm:p-10 lg:col-span-6 lg:col-start-7 lg:mt-20" style={{ "--dir": 1 } as React.CSSProperties}>
           {about.body.map((p, i) => (
             <p
               key={i}

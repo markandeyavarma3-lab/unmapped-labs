@@ -19,7 +19,14 @@ function detectMode(): Mode {
 
   try {
     const c = document.createElement("canvas");
-    if (!(c.getContext("webgl2") || c.getContext("webgl"))) return { kind: "static" };
+    const gl = (c.getContext("webgl2") || c.getContext("webgl")) as WebGLRenderingContext | null;
+    if (!gl) return { kind: "static" };
+    // Software-rendered WebGL (no GPU, or acceleration disabled) would take
+    // seconds per frame on this scene: show the static map instead.
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer)) return { kind: "static" };
   } catch {
     return { kind: "static" };
   }
@@ -102,7 +109,7 @@ export function WorldLayer() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[var(--z-world)] overflow-hidden [contain:strict]">
       {/* Static map — visible until WebGL is drawing, and permanently when it can't or shouldn't. */}
       <div
-        className="absolute inset-0 bg-[url(/city-map.svg)] bg-cover bg-center opacity-60 transition-opacity duration-[1200ms] ease-[var(--ease-out-quart)] max-md:bg-[position:70%_50%]"
+        className="absolute inset-0 bg-[url(/city-map.svg)] bg-cover bg-center opacity-80 transition-opacity duration-[1200ms] ease-[var(--ease-out-quart)] max-md:bg-[position:70%_50%]"
         style={{ opacity: ready ? 0 : undefined }}
       />
       {mode.kind === "webgl" && (
@@ -124,8 +131,8 @@ export function WorldLayer() {
         className="city-problem absolute top-0 left-0 z-[1] opacity-0"
       >
         <div className="-translate-x-1/2 -translate-y-full pb-3">
-          <div className="flex max-w-[17rem] items-start gap-2 border border-[#ff6b5e]/50 bg-[color:var(--color-ink)]/92 px-3 py-2">
-            <span className="mt-1 h-1.5 w-1.5 shrink-0 rotate-45 bg-[#ff6b5e]" />
+          <div className="flex max-w-[17rem] items-start gap-2 rounded-xl border border-[color:var(--color-red)]/40 bg-[color:var(--color-ink-2)]/95 px-3 py-2 shadow-[0_10px_30px_-14px_rgba(120,40,20,0.55)]">
+            <span className="mt-1 h-1.5 w-1.5 shrink-0 rotate-45 bg-[color:var(--color-red)]" />
             <span data-text className="text-[12.5px] leading-snug text-[color:var(--color-fg)]" />
           </div>
         </div>
@@ -151,14 +158,14 @@ export function WorldLayer() {
           }}
           className="absolute top-0 left-0 z-[1] opacity-0"
         >
-          <div className="flex -translate-x-1/2 -translate-y-full items-center gap-2 border border-[color:var(--color-lime)]/40 bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap">
-            <span className="label tabular-nums text-[color:var(--color-lime)]">{sv.index}</span>
+          <div className="flex -translate-x-1/2 -translate-y-full items-center gap-2 rounded-full border border-[color:var(--color-lime)] bg-[color:var(--color-ink-2)]/95 px-3 py-1.5 whitespace-nowrap shadow-[0_8px_24px_-12px_rgba(80,54,24,0.5)]">
+            <span className="label tabular-nums text-[color:var(--color-lime-ink)]">{sv.index}</span>
             <span className="label text-[color:var(--color-fg)]">{sv.title}</span>
           </div>
         </div>
       ))}
       {/* Vignette keeps text legible at the edges of every composition. */}
-      <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_70%_40%,transparent_35%,rgba(8,11,14,0.75)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_70%_40%,transparent_45%,rgba(247,236,218,0.45)_100%)]" />
     </div>
   );
 }

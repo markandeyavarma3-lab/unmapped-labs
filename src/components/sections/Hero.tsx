@@ -13,7 +13,7 @@ export function Hero() {
       {/* Legibility veil on the text side only — the terrain stays clear on the right. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(8,11,14,0.82)_0%,rgba(8,11,14,0.45)_38%,transparent_62%)] max-md:bg-[linear-gradient(0deg,rgba(8,11,14,0.92)_0%,rgba(8,11,14,0.55)_45%,transparent_75%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(247,242,233,0.82)_0%,rgba(247,242,233,0.45)_38%,transparent_62%)] max-md:bg-[linear-gradient(0deg,rgba(247,242,233,0.92)_0%,rgba(247,242,233,0.55)_45%,transparent_75%)]"
       />
 
       <div className="container-site relative pt-[calc(var(--header-h)+3rem)] pb-[clamp(2.5rem,7vh,5.5rem)]">

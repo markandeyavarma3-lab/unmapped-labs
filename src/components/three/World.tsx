@@ -18,20 +18,6 @@ function PauseController() {
   return null;
 }
 
-/** Reports readiness after real frames have been drawn, not on context creation. */
-function ReadySignal({ onReady }: { onReady: () => void }) {
-  const frames = useRef(0);
-  const done = useRef(false);
-  useFrame(() => {
-    if (done.current) return;
-    if (++frames.current > 2) {
-      done.current = true;
-      onReady();
-    }
-  });
-  return null;
-}
-
 /**
  * Adaptive resolution: samples frame time in 1.5s windows and steps the
  * device-pixel-ratio down when the GPU struggles, back up when it has headroom.
@@ -78,18 +64,19 @@ export default function World({
       eventSource={document.body}
       eventPrefix="client"
       dpr={dpr}
-      flat
-      linear
-      gl={{ antialias: tier === "high", alpha: false, stencil: false, powerPreference: "high-performance" }}
-      camera={{ fov: 40, near: 0.1, far: 140, position: [0, 8, 47] }}
-      // Raw display-space RGB: must equal the page background exactly, whatever the colour-management state.
-      onCreated={({ gl }) => gl.setClearColor(new THREE.Color().setRGB(8 / 255, 11 / 255, 14 / 255))}
+      shadows={{ type: THREE.PCFShadowMap }}
+      gl={{ antialias: tier === "high", alpha: false, stencil: false, powerPreference: "high-performance", toneMappingExposure: 1.05 }}
+      camera={{ fov: 40, near: 0.1, far: 700, position: [0, 8, 47] }}
+      // Until the sky draws: the page's warm haze.
+      onCreated={({ gl }) => {
+        gl.setClearColor("#f3e6d2");
+        gl.localClippingEnabled = true; // the process block cuts the street open
+      }}
     >
       <PauseController />
       <AdaptiveDpr max={maxDpr} />
       <WorldRenderer />
-      <Scene tier={tier} introDelay={introDelay} />
-      <ReadySignal onReady={onReady} />
+      <Scene tier={tier} introDelay={introDelay} onReady={onReady} />
     </Canvas>
   );
 }

@@ -62,34 +62,49 @@ scripts/generate-terrain-svg.ts
 public/terrain-fallback.svg generated top-down contour map of the same terrain
 ```
 
-## The world (3D): a miniature city at night
+## The world (3D): a colourful miniature city at golden hour
 
-The background is one persistent city (`src/components/three/`). Visitors read
-it as *we study real systems, find the bottleneck, and pick the fix the
-problem actually needs*.
+The background is one persistent, living toy city (`src/components/three/`).
+Visitors read it as *we study real systems, find the bottleneck, and pick the
+fix the problem actually needs*.
 
-- **Layout** (`city-layout.ts`, pure data): a downtown grid whose towers on
-  the title strokes spell **UNMAPPED LABS**, an avenue, and six districts:
-  farms, logistics, healthcare, energy, markets and uncharted. It also holds the
-  roads and the flow paths. The 3D scene, the journey and the fallback map all
-  build from it.
-- **City** (`City.tsx`): the ground, roads, and all buildings in one instanced
-  draw with a single shader (windows switch on as districts are understood,
-  edges glow, letter towers rise for the opening and sink back afterwards),
-  plus flows of goods, water, energy, data and people that queue at a
-  bottleneck.
-- **Districts** (`Districts.tsx`): landmarks, plus each district's story,
-  driven by `city-state.ts`: the jam turns red → a diagnostic scan → a fork
-  of **Software / Hardware / Process / Data & AI** → only the right fix lights
-  up and builds (selector hologram, bypass lane, forecast chart, sensors on
-  pylons, a data lens). The uncharted district stays dark with a "?".
-- **Journey** (`landmarks.ts`): 17 camera keyframes. Page sections (and
-  centred markers inside the focus/work stops) anchor them with `data-chapter`.
-- **Views**: the particle morph and the process island still render as camera
-  views inside the same canvas (`WorldRenderer.tsx`, `views.ts`).
+- **Models** (`public/models/city.glb`, ~1.7 MB): Kenney's CC0 city, car and
+  nature kits, built by `npx tsx scripts/build-models.mts <unzipped kits>`.
+  The script bakes each kit's palette texture into vertex colours, merges
+  parts, welds, quantises and meshopt-compresses, and writes model sizes to
+  `models.generated.ts`. Credits: `public/models/CREDITS.txt`. Pieces the kits
+  lack (pylons, cranes, ships, train, helicopter, exchange, people, birds) are
+  built in `procedural.ts`. Every model shares one material, so the city draws
+  in a handful of `BatchedMesh` calls (`models.ts`).
+- **Layout** (`city-layout.ts`, pure data): a core street grid with perimeter
+  blocks and courtyards, suburbs along lanes and a ring road, farmland and a
+  railway to the west, the coast and harbour to the east, and a downtown of
+  slim towers whose letters spell **UNMAPPED LABS**. The 3D scene, the
+  journey and the fallback map all build from it.
+- **Look** (`Environment.tsx`, `ground-paint.ts`): a low warm sun with soft
+  shadows that follow the camera, a peach-to-blue sky, haze that scales with
+  the shot, an animated sea, a painted ground and shader road markings.
+- **Districts** (`district-scenes.ts`, `Districts.tsx`): full scenes for farms,
+  logistics, healthcare, energy, markets and the uncharted lots, each playing
+  its story from `city-state.ts`: a red bottleneck → a scan → a fork of
+  **Software / Hardware / Process / Data & AI** → the right fix arrives
+  (irrigation spreading from the canal, a second dock lane, an arrivals
+  forecast, sensors on the line, a data lens).
+- **Life** (`Life.tsx`): traffic that keeps left and stops at signals, trucks
+  queueing at the logistics gate, patients at the hospital, a tractor, an
+  ambulance, a helicopter, a train, boats, birds, people and chimney smoke.
+- **Process** (`ProcessBlock.tsx`): the five steps play out in one block as
+  the Approach section pins: drone → blueprint → x-ray cutaway of the street
+  → crane installs the fix → traffic flows. The camera flies the block's own
+  path while that section fills the screen.
+- **Journey** (`landmarks.ts`): 17 camera keyframes with slow orbits around
+  each district. Page sections anchor them with `data-chapter`.
+- **Morph** (`ParticleMorph.tsx`, `morph-shapes.ts`): golden particles go
+  dust → farm → truck route → hospital → power grid → city, drawn as a view
+  inside the same canvas (`WorldRenderer.tsx`, `views.ts`).
 - **Performance:** pixel density capped at 1.4 (1.0 on phones) and adapting
-  down under load; half-rate rendering while idle; heavy views build in idle
-  time on desktop and on approach on phones; no post-processing.
+  down under load; per-instance culling; half-rate rendering while idle;
+  layers mount over several frames; phones get fewer houses, trees and cars.
 - **Fallback:** `public/city-map.svg`, a plan of the same city, is generated
   by `npx tsx scripts/generate-city-svg.ts`. Rerun it if you change the layout.
 

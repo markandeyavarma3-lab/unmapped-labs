@@ -107,6 +107,8 @@ export function SiteHeader() {
               : "border-[color:var(--color-line)]/70 bg-[color:var(--color-ink)]/92"
         }`}
       />
+      {/* How far through the page you are */}
+      <span aria-hidden className="scroll-progress absolute inset-x-0 bottom-0 h-[2px] bg-[linear-gradient(90deg,var(--color-cyan),var(--color-lime))]" />
       <div className="container-site relative flex h-[var(--header-h)] items-center justify-between gap-6">
         <Link href="/" className="-m-2 p-2 text-[color:var(--h-fg)]" aria-label={`${site.name} — home`}>
           <Logo />

@@ -8,7 +8,7 @@ export function Contact() {
     <section id="contact" data-chapter="16" aria-labelledby="contact-heading" className="relative py-[var(--section-y)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(8,11,14,0.85)_0%,rgba(8,11,14,0.35)_45%,rgba(8,11,14,0.55)_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(247,242,233,0.85)_0%,rgba(247,242,233,0.35)_45%,rgba(247,242,233,0.55)_100%)]"
       />
       <div className="container-site relative grid gap-14 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-5">

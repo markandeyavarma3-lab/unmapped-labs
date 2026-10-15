@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 type Props = {
   id: string;
   label: string;
@@ -13,14 +15,21 @@ export function SectionHeading({ id, label, heading, intro, tone = "dark", class
   return (
     <div className={className}>
       <p className={`label reveal flex items-center gap-3 ${muted}`}>
-        <span aria-hidden className={`h-px w-6 ${tone === "dark" ? "bg-[color:var(--color-cyan)]" : "bg-[color:var(--color-teal)]"}`} />
+        <span aria-hidden className={`label-line h-px w-6 ${tone === "dark" ? "bg-[color:var(--color-cyan)]" : "bg-[color:var(--color-teal)]"}`} />
         {label}
       </p>
       <h2
         id={id}
-        className="reveal-mask mt-6 max-w-[18ch] text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] font-medium tracking-[var(--text-h2--letter-spacing)] text-balance"
+        className="reveal-words mt-6 max-w-[18ch] text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] font-medium tracking-[var(--text-h2--letter-spacing)] text-balance"
       >
-        <span>{heading}</span>
+        <span className="sr-only">{heading}</span>
+        {heading.split(" ").map((word, i) => (
+          <Fragment key={i}>
+            <span aria-hidden className="w" style={{ "--i": i } as React.CSSProperties}>
+              <span>{word}</span>
+            </span>{" "}
+          </Fragment>
+        ))}
       </h2>
       {intro && (
         <p className={`reveal mt-7 max-w-[36rem] text-[length:var(--text-lead)] leading-[var(--text-lead--line-height)] ${muted}`} style={{ "--d": 2 } as React.CSSProperties}>

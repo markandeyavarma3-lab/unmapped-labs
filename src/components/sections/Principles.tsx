@@ -7,7 +7,7 @@ export function Principles() {
     <section id="philosophy" data-chapter="14" aria-labelledby="philosophy-heading" className="relative py-[var(--section-y)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(8,11,14,0.8)_16%,rgba(8,11,14,0.8)_84%,transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(247,242,233,0.8)_16%,rgba(247,242,233,0.8)_84%,transparent)]"
       />
       <div className="container-site relative grid gap-16 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-6">

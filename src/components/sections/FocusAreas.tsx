@@ -12,7 +12,7 @@ export function FocusAreas() {
     <section id="focus" aria-labelledby="focus-heading" className="relative pt-[var(--section-y)]">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[70vh] bg-[linear-gradient(180deg,transparent,rgba(8,11,14,0.75)_35%,transparent)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[70vh] bg-[linear-gradient(180deg,transparent,rgba(247,242,233,0.75)_35%,transparent)]"
       />
       <div className="container-site relative grid gap-8 lg:grid-cols-12">
         <SectionHeading id="focus-heading" label={focus.label} heading={focus.heading} className="lg:col-span-7" />
@@ -30,7 +30,7 @@ export function FocusAreas() {
               {/* The journey reaches this stop when the card is centred on screen. */}
               <span aria-hidden data-chapter={5 + i} className="pointer-events-none absolute top-1/2 h-px w-px" />
               <div className="container-site">
-                <article className={`territory-card reveal glass max-w-[30rem] p-7 sm:p-9 ${open ? "is-open" : ""}`}>
+                <article className={`territory-card reveal-card glass max-w-[30rem] p-7 sm:p-9 ${open ? "is-open" : ""}`}>
                   <div className="flex items-center justify-between gap-4">
                     <span className="flex items-center gap-3">
                       <span aria-hidden className={`territory-index label flex h-9 w-9 items-center justify-center border ${open ? "border-dashed" : ""}`}>
@@ -54,12 +54,12 @@ export function FocusAreas() {
                   <div className="mt-7 border-t border-[color:var(--color-line)] pt-5">
                     <p className="label text-[color:var(--color-fg-3)]">Example scenario</p>
                     <p className="mt-3 flex gap-2.5 text-[15px] leading-snug text-[color:var(--color-fg)]">
-                      <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-[#ff6b5e]" />
+                      <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rotate-45 bg-[color:var(--color-red)]" />
                       {area.scenario.problem}
                     </p>
                     <p className="mt-3 flex flex-wrap items-center gap-2.5 text-[15px] leading-snug text-[color:var(--color-fg-2)]">
                       {area.scenario.fix ? (
-                        <span className="label border border-[color:var(--color-lime)]/60 bg-[color:var(--color-lime)] px-2 py-0.5 text-[color:var(--color-ink)]">
+                        <span className="label border border-[color:var(--color-lime)]/60 bg-[color:var(--color-lime)] px-2 py-0.5 text-[color:var(--color-on-accent)]">
                           Fix: {fixLabels[area.scenario.fix]}
                         </span>
                       ) : (

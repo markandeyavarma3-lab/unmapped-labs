@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080b0e",
+  themeColor: "#f7f2e9",
   colorScheme: "dark",
 };
 
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-screen">
         <a
           href="#main"
-          className="label fixed top-3 left-3 z-[100] -translate-y-20 bg-[color:var(--color-lime)] px-4 py-3 text-[color:var(--color-ink)] transition-transform focus:translate-y-0"
+          className="label fixed top-3 left-3 z-[100] -translate-y-20 bg-[color:var(--color-lime)] px-4 py-3 text-[color:var(--color-on-accent)] transition-transform focus:translate-y-0"
         >
           Skip to content
         </a>

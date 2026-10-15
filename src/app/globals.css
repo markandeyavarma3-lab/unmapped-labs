@@ -5,16 +5,21 @@
    Tailwind utilities are generated from @theme; raw CSS uses var(--*).
    ------------------------------------------------------------------ */
 @theme {
-  /* Colour — dark world */
-  --color-ink: #080b0e;
-  --color-ink-2: #10151b;
-  --color-ink-3: #161d25;
-  --color-line: #27323d;
-  --color-fg: #f2f1eb;
-  --color-fg-2: #a0aab5;
-  --color-fg-3: #7a8693; /* ≥4.5:1 on ink for small labels */
-  --color-cyan: #65e4e8;
-  --color-lime: #c7f36b;
+  /* Colour — a light, airy page over the golden-hour city.
+     "ink" is the page; "fg" the text on it. */
+  --color-ink: #f7f2e9;
+  --color-ink-2: #fffdf8;
+  --color-ink-3: #efe8dc;
+  --color-line: #ddd1bf;
+  --color-fg: #15191d;
+  --color-fg-2: #454e57;
+  --color-fg-3: #5c6570; /* ≥4.5:1 on the page for small labels */
+  --color-cyan: #0b7c81; /* teal: text-safe accent */
+  --color-cyan-bright: #65e4e8;
+  --color-lime: #c7f36b; /* fills and highlights */
+  --color-lime-ink: #4a7410; /* lime as text */
+  --color-on-accent: #11160c; /* text on lime / teal fills */
+  --color-red: #e5402f;
 
   /* Colour — light editorial surface */
   --color-paper: #f2f1eb;
@@ -70,12 +75,13 @@
   --z-cursor: 80;
   --z-intro: 90;
 
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--color-ink);
   color: var(--color-fg);
 }
 
 html {
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   scroll-padding-top: var(--header-h);
@@ -90,7 +96,7 @@ body {
 
 ::selection {
   background: var(--color-lime);
-  color: var(--color-ink);
+  color: var(--color-on-accent);
 }
 
 /* Focus — always visible, on both surfaces */
@@ -186,18 +192,23 @@ html.lenis body {
   }
   .btn-primary {
     background: var(--color-lime);
-    color: var(--color-ink);
+    color: var(--color-on-accent);
+    box-shadow: 0 10px 30px -14px rgb(74 116 16 / 0.6);
   }
   .btn-primary::before {
     background: var(--color-fg);
   }
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    color: var(--color-ink-2);
+  }
   .btn-ghost {
     border: 1px solid var(--color-line);
     color: var(--color-fg);
-    background: rgb(8 11 14 / 0.6);
+    background: rgb(255 253 248 / 0.82);
   }
   .btn-ghost::before {
-    background: rgb(242 241 235 / 0.08);
+    background: rgb(21 25 29 / 0.06);
   }
   .btn-ghost:hover {
     border-color: var(--color-fg-2);
@@ -237,12 +248,16 @@ html.lenis body {
     transform: scaleX(1);
     transform-origin: left;
   }
-  /* Dark glass panels over the living terrain */
+  /* Off-white glass cards over the city */
   /* No backdrop-filter: blurring a live WebGL canvas re-blurs every frame. */
   .glass {
-    background: linear-gradient(160deg, rgb(16 21 27 / 0.9), rgb(8 11 14 / 0.84));
-    border: 1px solid rgb(39 50 61 / 0.9);
-    box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.8);
+    background: linear-gradient(160deg, rgb(255 253 248 / 0.95), rgb(251 246 237 / 0.9));
+    border: 1px solid rgb(255 255 255 / 0.7);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.9) inset,
+      0 0 0 1px rgb(120 96 64 / 0.08),
+      0 30px 70px -36px rgb(80 54 24 / 0.45);
+    border-radius: 18px;
   }
   .territory-index {
     border-color: var(--color-cyan);
@@ -262,7 +277,7 @@ html.lenis body {
     position: absolute;
     inset: -20% auto -20% -60%;
     width: 40%;
-    background: linear-gradient(100deg, transparent, rgb(242 241 235 / 0.18), transparent);
+    background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55), transparent);
     transform: skewX(-12deg) translateX(0);
     transition: transform 0.9s var(--ease-out-quart);
     pointer-events: none;
@@ -346,7 +361,7 @@ html[data-intro="on"] {
   letter-spacing: -0.055em;
   text-transform: uppercase;
   color: transparent;
-  -webkit-text-stroke: 1px rgb(242 241 235 / 0.75);
+  -webkit-text-stroke: 1px rgb(21 25 29 / 0.55);
 }
 .tagline-text {
   font-family: var(--font-sans);
@@ -399,13 +414,13 @@ html[data-intro="on"] {
   border-color: var(--color-cyan);
   background: var(--color-cyan);
   transform: scale(1.35) rotate(45deg);
-  box-shadow: 0 0 0 5px rgb(101 228 232 / 0.15), 0 0 18px rgb(101 228 232 / 0.6);
+  box-shadow: 0 0 0 5px rgb(11 124 129 / 0.15), 0 0 18px rgb(11 124 129 / 0.35);
 }
 .morph-step[data-state="current"] .morph-dot.is-last,
 .morph-step[data-state="passed"] .morph-dot.is-last {
   border-color: var(--color-lime);
   background: var(--color-lime);
-  box-shadow: 0 0 0 5px rgb(199 243 107 / 0.15), 0 0 22px rgb(199 243 107 / 0.6);
+  box-shadow: 0 0 0 5px rgb(199 243 107 / 0.3), 0 0 22px rgb(140 200 40 / 0.55);
 }
 .swap-word {
   animation: word-in 0.8s var(--ease-out-expo) both;
@@ -439,9 +454,11 @@ html[data-intro="on"] {
 
 /* ---------------- City labels ------------------------------------- */
 .city-fork > span {
-  color: var(--color-fg-3);
+  color: var(--color-fg-2);
   border-color: var(--color-line);
-  background: rgb(8 11 14 / 0.92);
+  background: rgb(255 253 248 / 0.95);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px -12px rgb(80 54 24 / 0.5);
   transition:
     color 0.35s,
     border-color 0.35s,
@@ -449,7 +466,7 @@ html[data-intro="on"] {
     transform 0.5s var(--ease-out-expo);
 }
 .city-fork[data-state="chosen"] > span {
-  color: var(--color-ink);
+  color: var(--color-on-accent);
   background: var(--color-lime);
   border-color: var(--color-lime);
   transform: scale(1.12); /* Tailwind positions with the separate `translate` property */
@@ -501,13 +518,17 @@ html.js .stage-item:not([data-on]) .stage-body {
   color: var(--color-fg);
   border-color: var(--color-fg-2);
 }
+.island-label > span {
+  border-radius: 999px;
+  box-shadow: 0 8px 24px -12px rgb(80 54 24 / 0.5);
+}
 .island-label[data-active="true"] > span {
-  color: var(--color-ink);
+  color: var(--color-on-accent);
   background: var(--color-lime);
   border-color: var(--color-lime);
 }
 .island-label[data-active="true"] > span > span:first-child {
-  color: rgb(8 11 14 / 0.6);
+  color: rgb(17 22 12 / 0.6);
 }
 
 /* ---------------- Mobile menu ------------------------------------- */
@@ -564,6 +585,79 @@ html.js .reveal:not([data-in]) {
 }
 html.js .reveal-mask:not([data-in]) > * {
   transform: translate3d(0, 108%, 0);
+}
+
+/* Headings: words rise in one after another */
+.reveal-words .w {
+  display: inline-block;
+  overflow: clip;
+  vertical-align: top;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+.reveal-words .w > span {
+  display: inline-block;
+  transition:
+    transform 1.05s var(--ease-out-expo),
+    opacity 0.6s var(--ease-out-quart);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+html.js .reveal-words:not([data-in]) .w > span {
+  transform: translate3d(0, 110%, 0) rotate(5deg);
+  opacity: 0;
+}
+/* Section labels: the rule draws, then the words follow */
+.label-line {
+  transform-origin: left;
+  transition: transform 1s var(--ease-out-expo) 0.1s;
+}
+html.js .reveal:not([data-in]) .label-line {
+  transform: scaleX(0);
+}
+/* Cards slide in and unfold */
+.reveal-card {
+  transition:
+    opacity 0.9s var(--ease-out-quart),
+    transform 1.15s var(--ease-out-expo),
+    clip-path 1.15s var(--ease-out-expo);
+  transition-delay: calc(var(--d, 0) * 110ms);
+}
+html.js .reveal-card:not([data-in]) {
+  opacity: 0;
+  transform: translate3d(calc(var(--dir, -1) * 56px), 28px, 0) scale(0.96);
+  clip-path: inset(0 0 100% 0 round 18px);
+}
+html.js .reveal-card[data-in] {
+  clip-path: inset(0 0 0 0 round 18px);
+}
+@media (max-width: 767px) {
+  html.js .reveal-card:not([data-in]) {
+    transform: translate3d(0, 36px, 0) scale(0.97);
+  }
+}
+/* Page progress under the header (scroll-driven, no JavaScript) */
+.scroll-progress {
+  transform-origin: left;
+  transform: scaleX(0);
+}
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    animation: progress-grow linear both;
+    animation-timeline: scroll(root);
+  }
+}
+@keyframes progress-grow {
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js .reveal-words:not([data-in]) .w > span,
+  html.js .reveal-card:not([data-in]) {
+    transform: none;
+    opacity: 1;
+    clip-path: none;
+  }
 }
 
 @keyframes swap-in {

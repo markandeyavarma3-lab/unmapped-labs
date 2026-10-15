@@ -12,7 +12,7 @@ export function IntroSection() {
       {/* Veil only behind the copy — the morph stage below stays clear. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(100%,58rem)] bg-[linear-gradient(180deg,transparent_0%,rgba(8,11,14,0.7)_25%,rgba(8,11,14,0.7)_70%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[min(100%,58rem)] bg-[linear-gradient(180deg,transparent_0%,rgba(247,242,233,0.7)_25%,rgba(247,242,233,0.7)_70%,transparent_100%)]"
       />
       <div className="container-site relative grid gap-12 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-7">

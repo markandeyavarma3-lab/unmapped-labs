@@ -1,341 +1,279 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { AVENUE_PATH, DISTRICT_LIST, FLOW_PATHS, GROUND, LOGISTICS_BYPASS, ROADS, buildCity, type FlowKind } from "./city-layout";
-import { cityState } from "./city-state";
+import { GROUND, LETTER_TINT, RAIL_X, ROADS, buildCity, type CityData, type Road } from "./city-layout";
+import { MODELS } from "./models.generated";
+import { createBatch, createPaletteMaterial, useModels, type Geometries, releaseBatch } from "./models";
+import { paintGround } from "./ground-paint";
 import { frame } from "./frame-state";
+import { pitPlanes } from "./ProcessBlock";
 import type { Tier } from "./Scene";
 
 /**
- * The city at night: a dark ground with a faint survey grid, roads, every
- * building in one instanced draw, and flows of goods / water / energy / data
- * / people that queue at a district's bottleneck until its fix lands.
+ * The miniature city: painted ground, roads with crisp markings, every
+ * static model in one BatchedMesh, and the downtown towers that spell the
+ * name before settling into the skyline.
  */
 
-const INK: [number, number, number] = [8 / 255, 11 / 255, 14 / 255];
-const FOG: [number, number] = [26, 92];
-
 /* ------------------------------------------------------------------ */
-/* Buildings                                                          */
+/* Roads                                                              */
 /* ------------------------------------------------------------------ */
 
-const buildingVertex = /* glsl */ `
-  attribute float aH;
-  attribute float aLetterH;
-  attribute float aLetter;
-  attribute float aWake;
-  attribute float aSeed;
-  uniform float uTitle;
-  uniform float uRise;
-  uniform float uChapter;
-  uniform float uFinale;
-  varying vec3 vN;
-  varying vec2 vUv;
-  varying vec3 vWorld;
-  varying float vLit;
-  varying float vLetter;
-  varying float vSeed;
-  varying float vHeight;
-  void main() {
-    // Letters stand tall while they spell the name, then settle into the skyline.
-    float letter = aLetter * uTitle;
-    float h = mix(aH, aLetterH, letter) * mix(0.02, 1.0, uRise);
-    vec3 p = position;
-    p.y *= h;
-    vec4 w = modelMatrix * instanceMatrix * vec4(p, 1.0);
-    vWorld = w.xyz;
-    vUv = uv;
-    vN = normalize(mat3(modelMatrix * instanceMatrix) * normal);
-    float wake = aWake > 90.0 ? 0.0 : smoothstep(aWake - 0.6, aWake, uChapter);
-    vLit = max(wake, aWake > 90.0 ? 0.0 : uFinale);
-    vLetter = letter;
-    vSeed = aSeed;
-    vHeight = h;
-    gl_Position = projectionMatrix * viewMatrix * w;
-  }
-`;
+const KIND_CODE: Record<Road[5], number> = { avenue: 0, street: 1, lane: 2 };
 
-const buildingFragment = /* glsl */ `
-  uniform vec3 uBg;
-  uniform vec2 uFog;
-  varying vec3 vN;
-  varying vec2 vUv;
-  varying vec3 vWorld;
-  varying float vLit;
-  varying float vLetter;
-  varying float vSeed;
-  varying float vHeight;
-  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  void main() {
-    vec3 N = normalize(vN);
-    float top = step(0.5, N.y);
-    vec3 cyan = vec3(0.4, 0.89, 0.91);
-    float key = max(dot(N, normalize(vec3(0.4, 0.8, 0.3))), 0.0);
-    vec3 col = mix(vec3(0.043, 0.055, 0.068), vec3(0.075, 0.09, 0.105), top) * (0.7 + 0.5 * key);
+/** Splits roads at their crossings: marked segments plus plain junction squares. */
+function buildRoadGeometry() {
+  const pos: number[] = [], uv: number[] = [], info: number[] = [], idx: number[] = [];
+  const quad = (x0: number, z0: number, x1: number, z1: number, horizontal: boolean, w: number, len: number, kind: number) => {
+    const b = pos.length / 3;
+    const y = 0.02;
+    pos.push(x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1);
+    // uv.x runs across the road (0..1), uv.y along it in world units
+    if (horizontal) uv.push(0, 0, 0, len, 1, len, 1, 0);
+    else uv.push(0, 0, 1, 0, 1, len, 0, len);
+    for (let k = 0; k < 4; k++) info.push(w, len, kind);
+    idx.push(b, b + 2, b + 1, b, b + 3, b + 2);
+  };
 
-    // Crisp edges, constant width on screen.
-    vec2 e = min(vUv, 1.0 - vUv) / max(fwidth(vUv), vec2(1e-4));
-    float edge = 1.0 - clamp(min(e.x, e.y) / 1.3, 0.0, 1.0);
-    col += cyan * edge * (0.11 + 0.34 * vLit + 0.85 * vLetter);
-
-    // Windows on the sides: a lit grid, some rooms dark.
-    if (top < 0.5) {
-      float along = abs(N.x) > 0.5 ? vWorld.z : vWorld.x;
-      vec2 g = vec2(along * 3.4, vWorld.y * 3.8);
-      vec2 f = fract(g);
-      float win = step(0.28, f.x) * step(f.x, 0.72) * step(0.3, f.y) * step(f.y, 0.74);
-      float on = step(0.52, hash(floor(g) + vSeed * 17.0));
-      float rows = step(0.3, vWorld.y) * step(vWorld.y, vHeight - 0.12);
-      col += vec3(0.74, 0.88, 0.93) * win * on * rows * (0.06 + vLit * 0.5);
+  const junctions = new Set<string>();
+  for (const r of ROADS) {
+    const [x1, z1, x2, z2, w, kind] = r;
+    const horizontal = z1 === z2;
+    const a0 = horizontal ? Math.min(x1, x2) : Math.min(z1, z2);
+    const a1 = horizontal ? Math.max(x1, x2) : Math.max(z1, z2);
+    const c = horizontal ? z1 : x1;
+    // where perpendicular roads cross this one
+    const cuts: [number, number][] = [];
+    for (const o of ROADS) {
+      if (o === r) continue;
+      const oh = o[1] === o[3];
+      if (oh === horizontal) continue;
+      const oc = oh ? o[1] : o[0];
+      const o0 = oh ? Math.min(o[0], o[2]) : Math.min(o[1], o[3]);
+      const o1 = oh ? Math.max(o[0], o[2]) : Math.max(o[1], o[3]);
+      if (oc < a0 - 0.01 || oc > a1 + 0.01 || c < o0 - o[4] / 2 || c > o1 + o[4] / 2) continue;
+      cuts.push([oc - o[4] / 2, oc + o[4] / 2]);
+      const key = horizontal ? `${oc},${c}` : `${c},${oc}`;
+      if (!junctions.has(key)) {
+        junctions.add(key);
+        const jx = horizontal ? oc : c, jz = horizontal ? c : oc;
+        const hw = (horizontal ? o[4] : w) / 2, hd = (horizontal ? w : o[4]) / 2;
+        quad(jx - hw, jz - hd, jx + hw, jz + hd, true, 1, 1, 9);
+      }
     }
-    // Letter roofs glow while they spell the name.
-    col += cyan * top * vLetter * 0.85;
-
-    float fog = smoothstep(uFog.x, uFog.y, length(cameraPosition - vWorld));
-    gl_FragColor = vec4(mix(col, uBg, fog), 1.0);
-  }
-`;
-
-/* ------------------------------------------------------------------ */
-/* Ground & roads                                                     */
-/* ------------------------------------------------------------------ */
-
-const groundVertex = /* glsl */ `
-  varying vec3 vWorld;
-  void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
-`;
-const groundFragment = /* glsl */ `
-  uniform vec3 uBg; uniform vec2 uFog;
-  uniform vec4 uPools[6]; // district (x, z, r, lit)
-  varying vec3 vWorld;
-  void main() {
-    vec2 xz = vWorld.xz;
-    vec3 col = vec3(0.028, 0.036, 0.045);
-    vec2 g = abs(fract(xz / 1.7 - 0.5) - 0.5) / max(fwidth(xz / 1.7), vec2(1e-4));
-    col += vec3(0.62, 0.7, 0.77) * (1.0 - clamp(min(g.x, g.y), 0.0, 1.0)) * 0.035;
-    for (int i = 0; i < 6; i++) {
-      vec4 p = uPools[i];
-      float d = length(xz - p.xy);
-      col += vec3(0.4, 0.89, 0.91) * (1.0 - smoothstep(p.z * 0.3, p.z * 1.15, d)) * 0.05 * p.w;
-      col += vec3(0.4, 0.89, 0.91) * (1.0 - smoothstep(0.0, 0.06, abs(d - p.z))) * 0.18 * p.w;
+    cuts.sort((p, q) => p[0] - q[0]);
+    let s = a0;
+    const spans: [number, number][] = [];
+    for (const [c0, c1] of cuts) {
+      if (c0 > s + 0.05) spans.push([s, c0]);
+      s = Math.max(s, c1);
     }
-    float fog = smoothstep(uFog.x, uFog.y, length(cameraPosition - vWorld));
-    gl_FragColor = vec4(mix(col, uBg, fog), 1.0);
+    if (a1 > s + 0.05) spans.push([s, a1]);
+    for (const [s0, s1] of spans) {
+      const len = s1 - s0;
+      if (horizontal) quad(s0, c - w / 2, s1, c + w / 2, true, w, len, KIND_CODE[kind]);
+      else quad(c - w / 2, s0, c + w / 2, s1, false, w, len, KIND_CODE[kind]);
+    }
   }
-`;
-const roadFragment = /* glsl */ `
-  uniform vec3 uBg; uniform vec2 uFog; uniform float uLit;
-  varying vec2 vUv; varying vec3 vWorld;
-  void main() {
-    vec3 col = vec3(0.05, 0.062, 0.075);
-    float center = (1.0 - smoothstep(0.0, 0.04, abs(vUv.x - 0.5))) * step(0.5, fract(vUv.y * 0.9));
-    float kerb = 1.0 - smoothstep(0.0, 0.03, min(vUv.x, 1.0 - vUv.x));
-    col += vec3(0.62, 0.7, 0.77) * (center * 0.25 + kerb * 0.12) * (0.4 + 0.6 * uLit);
-    float fog = smoothstep(uFog.x, uFog.y, length(cameraPosition - vWorld));
-    gl_FragColor = vec4(mix(col, uBg, fog), 1.0);
-  }
-`;
-const roadVertex = /* glsl */ `
-  varying vec2 vUv; varying vec3 vWorld;
-  void main() { vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }
-`;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute("normal", new THREE.Float32BufferAttribute(new Array(pos.length).fill(0).map((_, i) => (i % 3 === 1 ? 1 : 0)), 3));
+  g.setAttribute("aRoadUv", new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute("aRoad", new THREE.Float32BufferAttribute(info, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+function roadMaterial() {
+  const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.92, clippingPlanes: pitPlanes, clipIntersection: true });
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nattribute vec2 aRoadUv; attribute vec3 aRoad; varying vec2 vRoadUv; varying vec3 vRoad;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvRoadUv = aRoadUv; vRoad = aRoad;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        `#include <common>
+        varying vec2 vRoadUv; varying vec3 vRoad;
+        float band(float x, float c, float hw) { float aa = fwidth(x) * 0.75; return 1.0 - smoothstep(hw - aa, hw + aa, abs(x - c)); }`,
+      )
+      .replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+        {
+          float w = vRoad.x, len = vRoad.y, kind = vRoad.z;
+          vec3 asphalt = vec3(0.105, 0.11, 0.122);
+          vec3 paint = vec3(0.86, 0.84, 0.8);
+          vec3 yellow = vec3(0.95, 0.62, 0.12);
+          vec3 col = asphalt;
+          if (kind < 8.5) {
+            float ax = vRoadUv.x * w;
+            float al = vRoadUv.y;
+            float endD = min(al, len - al);
+            float mid = step(0.55, endD);
+            // fine grain
+            col *= 0.94 + 0.06 * fract(sin(dot(floor(vec2(ax, al) * 24.0), vec2(12.9898, 78.233))) * 43758.5453);
+            if (kind < 0.5) {
+              // avenue: double yellow centre, dashed lane lines, edge lines
+              col = mix(col, yellow, (band(ax, w * 0.5 - 0.035, 0.012) + band(ax, w * 0.5 + 0.035, 0.012)) * mid);
+              float dash = step(fract(al / 0.6), 0.5) * mid;
+              col = mix(col, paint, (band(ax, w * 0.25, 0.012) + band(ax, w * 0.75, 0.012)) * dash);
+              col = mix(col, paint, (band(ax, 0.06, 0.01) + band(ax, w - 0.06, 0.01)) * mid);
+            } else if (kind < 1.5) {
+              float dash = step(fract(al / 0.5), 0.5) * mid;
+              col = mix(col, paint, band(ax, w * 0.5, 0.013) * dash);
+              col = mix(col, paint, (band(ax, 0.05, 0.009) + band(ax, w - 0.05, 0.009)) * mid);
+            }
+            if (kind < 1.5) {
+              // zebra crossings at every junction
+              float zebra = step(0.06, endD) * step(endD, 0.36) * step(fract(ax / 0.11), 0.55) * step(0.05, ax) * step(ax, w - 0.05);
+              col = mix(col, paint, zebra);
+            }
+          }
+          diffuseColor.rgb = col;
+        }`,
+      );
+  };
+  return mat;
+}
 
 /* ------------------------------------------------------------------ */
-/* Flows                                                              */
+/* Title towers                                                       */
 /* ------------------------------------------------------------------ */
 
-const KIND_COLOR: Record<FlowKind, THREE.Color> = {
-  goods: new THREE.Color("#9fe9ec"),
-  water: new THREE.Color("#65e4e8"),
-  energy: new THREE.Color("#c7f36b"),
-  data: new THREE.Color("#e8f6f7"),
-  people: new THREE.Color("#b9d4dc"),
-};
-const JAM_RED = new THREE.Color("#ff6b5e");
+function buildTowers(geos: Geometries, data: CityData, material: THREE.Material) {
+  const placements = data.towers.map((t) => ({ m: t.m, x: t.x, z: t.z, ry: t.ry, s: 1, sy: 0.02, tint: t.tint }));
+  const batch = createBatch(geos, placements, material);
+  return batch;
+}
 
-type Path = { curve: THREE.CurvePath<THREE.Vector3>; length: number };
-const toPath = (pts: [number, number][], y = 0.14): Path => {
-  const curve = new THREE.CurvePath<THREE.Vector3>();
-  for (let i = 0; i < pts.length - 1; i++) {
-    curve.add(new THREE.LineCurve3(new THREE.Vector3(pts[i][0], y, pts[i][1]), new THREE.Vector3(pts[i + 1][0], y, pts[i + 1][1])));
-  }
-  return { curve, length: curve.getLength() };
-};
+export function City({ tier }: { tier: Tier }) {
+  const geos = useModels();
+  const gl = useThree((s) => s.gl);
+  // Buildings mount a frame after the ground, so neither build is one long task.
+  const [blocks, setBlocks] = useState(false);
+  useFrame(() => {
+    if (!blocks) setBlocks(true);
+  });
 
-export function City({ tier, introDelay }: { tier: Tier; introDelay: number }) {
-  /* buildings */
-  const buildings = useMemo(() => {
+  const built = useMemo(() => {
     const layout = window.innerWidth / window.innerHeight < 0.9 ? "stacked" : "line";
-    const { buildings: list } = buildCity(layout);
-    const geo = new THREE.BoxGeometry(1, 1, 1);
-    geo.translate(0, 0.5, 0);
-    const mat = new THREE.ShaderMaterial({
-      vertexShader: buildingVertex,
-      fragmentShader: buildingFragment,
-      uniforms: {
-        uTitle: { value: 1 },
-        uRise: { value: 0 },
-        uChapter: { value: 0 },
-        uFinale: { value: 0 },
-        uBg: { value: new THREE.Vector3(...INK) },
-        uFog: { value: new THREE.Vector2(...FOG) },
-      },
-    });
-    const mesh = new THREE.InstancedMesh(geo, mat, list.length);
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const attrs = { aH: new Float32Array(list.length), aLetterH: new Float32Array(list.length), aLetter: new Float32Array(list.length), aWake: new Float32Array(list.length), aSeed: new Float32Array(list.length) };
-    list.forEach((b, i) => {
-      m.compose(new THREE.Vector3(b.x, 0, b.z), q, new THREE.Vector3(b.w, 1, b.d));
-      mesh.setMatrixAt(i, m);
-      attrs.aH[i] = b.h;
-      attrs.aLetterH[i] = b.letterH;
-      attrs.aLetter[i] = b.letter ? 1 : 0;
-      attrs.aWake[i] = b.wake;
-      attrs.aSeed[i] = b.seed;
-    });
-    for (const [k, v] of Object.entries(attrs)) geo.setAttribute(k, new THREE.InstancedBufferAttribute(v, 1));
-    mesh.frustumCulled = false;
-    return { mesh, geo, mat };
-  }, []);
+    const data = buildCity(layout, tier === "high" ? 1 : 0.55);
+    const material = createPaletteMaterial(tier);
 
-  /* ground + roads */
-  const ground = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(GROUND.maxX - GROUND.minX, GROUND.maxZ - GROUND.minZ);
-    geo.rotateX(-Math.PI / 2);
-    geo.translate((GROUND.minX + GROUND.maxX) / 2, 0, (GROUND.minZ + GROUND.maxZ) / 2);
-    const mat = new THREE.ShaderMaterial({
-      vertexShader: groundVertex,
-      fragmentShader: groundFragment,
-      uniforms: {
-        uBg: { value: new THREE.Vector3(...INK) },
-        uFog: { value: new THREE.Vector2(...FOG) },
-        uPools: { value: DISTRICT_LIST.map((d) => new THREE.Vector4(d.x, d.z, d.r, 0)) },
-      },
-    });
-    const roadMat = new THREE.ShaderMaterial({
-      vertexShader: roadVertex,
-      fragmentShader: roadFragment,
-      uniforms: { uBg: { value: new THREE.Vector3(...INK) }, uFog: { value: new THREE.Vector2(...FOG) }, uLit: { value: 0 } },
-    });
-    const roads = ROADS.map(([x1, z1, x2, z2, w]) => {
-      const len = Math.hypot(x2 - x1, z2 - z1);
-      const g = new THREE.PlaneGeometry(w, len);
-      // uv.y runs along the road in world units for the dashes
-      const uv = g.attributes.uv as THREE.BufferAttribute;
-      for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * len);
-      g.rotateX(-Math.PI / 2);
-      g.rotateY(-Math.atan2(x2 - x1, z2 - z1) + Math.PI);
-      g.translate((x1 + x2) / 2, 0.01, (z1 + z2) / 2);
-      return g;
-    });
-    return { geo, mat, roadMat, roads };
-  }, []);
+    const canvas = paintGround(data.title, tier === "high" ? 1 : 0.75, tier === "high" ? 2600 : 900);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    const groundGeo = new THREE.PlaneGeometry(GROUND.maxX - GROUND.minX, GROUND.maxZ - GROUND.minZ);
+    groundGeo.rotateX(-Math.PI / 2);
+    groundGeo.translate((GROUND.minX + GROUND.maxX) / 2, 0, (GROUND.minZ + GROUND.maxZ) / 2);
+    const groundMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, clippingPlanes: pitPlanes, clipIntersection: true });
+    // Beyond the painted ground: plain fields fading into the haze.
+    const farGeo = new THREE.PlaneGeometry(900, 900);
+    farGeo.rotateX(-Math.PI / 2);
+    farGeo.translate(-150, -0.02, 0);
+    const farMat = new THREE.MeshStandardMaterial({ color: "#a3c46a", roughness: 1, clippingPlanes: pitPlanes, clipIntersection: true });
 
-  /* flows */
-  const flows = useMemo(() => {
-    const per = tier === "high" ? 18 : 11;
-    const paths = FLOW_PATHS.map((f) => ({ ...f, path: toPath(f.points), alt: f.district === "logistics" ? toPath(LOGISTICS_BYPASS) : null }));
-    const avenue = toPath(AVENUE_PATH, 0.12);
-    const avenueCount = tier === "high" ? 26 : 14;
-    const total = paths.length * per + avenueCount;
-    const geo = new THREE.BoxGeometry(0.2, 0.12, 0.2);
-    const mat = new THREE.MeshBasicMaterial({ color: "#ffffff" });
-    const mesh = new THREE.InstancedMesh(geo, mat, total);
-    mesh.frustumCulled = false;
-    mesh.setColorAt(0, new THREE.Color());
-    const u = new Float32Array(total).map((_, i) => (i * 0.6180339) % 1);
-    return { paths, avenue, per, avenueCount, total, geo, mat, mesh, u };
-  }, [tier]);
+    const roadGeo = buildRoadGeometry();
+    const roadMat = roadMaterial();
+
+    // Railway: two rails and sleepers along the western line.
+    const railLen = GROUND.maxZ - GROUND.minZ + 200;
+    const railGeo = new THREE.BoxGeometry(0.04, 0.04, railLen);
+    const railMat = new THREE.MeshStandardMaterial({ color: "#6d6660", roughness: 0.5, metalness: 0.4 });
+    const sleeperCount = Math.floor(railLen / 0.3);
+    const sleepers = new THREE.InstancedMesh(new THREE.BoxGeometry(0.62, 0.03, 0.1), new THREE.MeshStandardMaterial({ color: "#7a5b40", roughness: 1 }), sleeperCount);
+    const m4 = new THREE.Matrix4();
+    for (let i = 0; i < sleeperCount; i++) sleepers.setMatrixAt(i, m4.makeTranslation(RAIL_X, 0.02, GROUND.maxZ + 100 - i * 0.3));
+    sleepers.receiveShadow = true;
+
+    return { data, material, tex, groundGeo, groundMat, farGeo, farMat, roadGeo, roadMat, railGeo, railMat, sleepers, railLen };
+  }, [gl, tier]);
 
   useEffect(
     () => () => {
-      buildings.geo.dispose();
-      buildings.mat.dispose();
-      buildings.mesh.dispose();
-      ground.geo.dispose();
-      ground.mat.dispose();
-      ground.roadMat.dispose();
-      ground.roads.forEach((g) => g.dispose());
-      flows.geo.dispose();
-      flows.mat.dispose();
-      flows.mesh.dispose();
+      const b = built;
+      b.material.dispose();
+      b.tex.dispose();
+      b.groundGeo.dispose();
+      b.groundMat.dispose();
+      b.farGeo.dispose();
+      b.farMat.dispose();
+      b.roadGeo.dispose();
+      b.roadMat.dispose();
+      b.railGeo.dispose();
+      b.railMat.dispose();
+      b.sleepers.geometry.dispose();
+      (b.sleepers.material as THREE.Material).dispose();
+      b.sleepers.dispose();
     },
-    [buildings, ground, flows],
+    [built],
   );
-
-  const refs = useRef({ buildings, ground, flows });
-  useEffect(() => {
-    refs.current = { buildings, ground, flows };
-  }, [buildings, ground, flows]);
-  const tmp = useRef({ m: new THREE.Matrix4(), p: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(1, 1, 1), c: new THREE.Color() });
-
-  useFrame((state, delta) => {
-    const { buildings: B, ground: G, flows: F } = refs.current;
-    const dt = Math.min(delta, 1 / 20);
-    const t = state.clock.elapsedTime;
-    const c = frame.chapter;
-
-    // Opening: the name rises out of the dark grid, then melts back into the skyline.
-    const u = B.mat.uniforms;
-    u.uRise.value = 1 - Math.pow(1 - Math.min(1, Math.max(0, (t - introDelay - 0.2) / 2.4)), 3);
-    u.uTitle.value = 1 - THREE.MathUtils.smoothstep(c, 1.15, 1.95);
-    u.uChapter.value = c;
-    u.uFinale.value = frame.finale;
-
-    DISTRICT_LIST.forEach((d, i) => {
-      (G.mat.uniforms.uPools.value as THREE.Vector4[])[i].w = cityState[d.id].lit;
-    });
-    G.roadMat.uniforms.uLit.value = Math.min(1, c / 2);
-
-    // Flows: each district's stream queues at its entrance while the problem stands.
-    const T = tmp.current;
-    let n = 0;
-    F.paths.forEach((p) => {
-      const s = cityState[p.district];
-      const jam = s.problem > 0.15 ? s.problem : 0;
-      const base = KIND_COLOR[p.kind];
-      // queue order: the furthest-along particles take the front slots
-      const idx = Array.from({ length: F.per }, (_, k) => n + k).sort((a, b) => F.u[b] - F.u[a]);
-      idx.forEach((i, rank) => {
-        const speed = (0.035 + (i % 5) * 0.004) * (60 / Math.max(20, p.path.length));
-        let next = F.u[i] + speed * dt * 4;
-        // queue behind the bottleneck; anything already past its slot simply waits
-        if (jam > 0) next = Math.min(next, Math.max(F.u[i], 0.9 - rank * 0.022));
-        if (next >= 1) next -= 1;
-        F.u[i] = next;
-        const useAlt = p.alt && s.fixed > 0.5 && i % 2 === 0;
-        (useAlt ? p.alt! : p.path).curve.getPointAt(next, T.p);
-        T.m.compose(T.p, T.q, T.s);
-        F.mesh.setMatrixAt(i, T.m);
-        const queued = jam > 0 && next > 0.9 - F.per * 0.022 - 0.01;
-        T.c.copy(base).lerp(JAM_RED, queued ? jam : 0).multiplyScalar(0.55 + 0.45 * Math.max(s.lit, 0.35));
-        F.mesh.setColorAt(i, T.c);
-      });
-      n += F.per;
-    });
-    for (let k = 0; k < F.avenueCount; k++, n++) {
-      F.u[n] = (F.u[n] + 0.02 * dt * (k % 2 ? 1 : -1) + 1) % 1;
-      F.avenue.curve.getPointAt(F.u[n], T.p);
-      T.p.x += k % 2 ? 0.35 : -0.35;
-      T.m.compose(T.p, T.q, T.s);
-      F.mesh.setMatrixAt(n, T.m);
-      F.mesh.setColorAt(n, T.c.copy(KIND_COLOR.goods).multiplyScalar(0.5 + 0.3 * Math.sin(t + k)));
-    }
-    F.mesh.instanceMatrix.needsUpdate = true;
-    if (F.mesh.instanceColor) F.mesh.instanceColor.needsUpdate = true;
-  });
 
   return (
     <group>
-      <mesh geometry={ground.geo} material={ground.mat} frustumCulled={false} />
-      {ground.roads.map((g, i) => (
-        <mesh key={i} geometry={g} material={ground.roadMat} frustumCulled={false} />
-      ))}
-      <primitive object={buildings.mesh} />
-      <primitive object={flows.mesh} />
+      <mesh geometry={built.farGeo} material={built.farMat} receiveShadow />
+      <mesh geometry={built.groundGeo} material={built.groundMat} receiveShadow />
+      <mesh geometry={built.roadGeo} material={built.roadMat} receiveShadow />
+      <mesh geometry={built.railGeo} material={built.railMat} position={[RAIL_X - 0.22, 0.05, (GROUND.maxZ + GROUND.minZ) / 2]} />
+      <mesh geometry={built.railGeo} material={built.railMat} position={[RAIL_X + 0.22, 0.05, (GROUND.maxZ + GROUND.minZ) / 2]} />
+      <primitive object={built.sleepers} />
+      {blocks && <CityBlocks geos={geos} data={built.data} material={built.material} />}
     </group>
+  );
+}
+
+/** Every static building, tree and lamp, plus the towers that spell the name. */
+function CityBlocks({ geos, data, material }: { geos: Geometries; data: CityData; material: THREE.Material }) {
+  const built = useMemo(() => ({ stat: createBatch(geos, data.placements, material), towers: buildTowers(geos, data, material) }), [geos, data, material]);
+
+  useEffect(
+    () => () => {
+      releaseBatch(built.stat.mesh);
+      releaseBatch(built.towers.mesh);
+    },
+    [built],
+  );
+
+  const ref = useRef(built);
+  useEffect(() => {
+    ref.current = built;
+  }, [built]);
+  const anim = useRef({ rise: -1, title: -1, c: new THREE.Color(), letter: new THREE.Color(LETTER_TINT), m: new THREE.Matrix4(), q: new THREE.Quaternion(), p: new THREE.Vector3(), s: new THREE.Vector3(), y: new THREE.Vector3(0, 1, 0) });
+
+  useFrame(() => {
+    const b = ref.current;
+    const A = anim.current;
+    // The name rises out of the city as it loads, then melts back into the skyline.
+    const rise = 1 - Math.pow(1 - THREE.MathUtils.clamp((frame.time - 0.25) / 2.6, 0, 1), 3);
+    const title = 1 - THREE.MathUtils.smoothstep(frame.chapter, 1.15, 1.95);
+    if (Math.abs(rise - A.rise) < 1e-4 && Math.abs(title - A.title) < 1e-4) return;
+    A.rise = rise;
+    A.title = title;
+    const towers = data.towers;
+    for (let i = 0; i < towers.length; i++) {
+      const t = towers[i];
+      // ripple outward from the centre as they rise
+      const delay = Math.min(0.5, Math.hypot(t.x, (t.z - 47) * 1.6) / 40);
+      const r = THREE.MathUtils.clamp((rise - delay) / (1 - delay), 0, 1);
+      const h = (t.letter ? THREE.MathUtils.lerp(t.h, t.letterH, title) : t.h) * Math.max(0.02, r);
+      const modelH = MODELS[t.m].size[1];
+      A.q.setFromAxisAngle(A.y, t.ry);
+      A.p.set(t.x, 0, t.z);
+      A.s.set(1, Math.max(0.01, h / modelH), 1);
+      b.towers.mesh.setMatrixAt(b.towers.instances[i], A.m.compose(A.p, A.q, A.s));
+      // letters glow teal while they spell the name
+      if (t.letter) b.towers.mesh.setColorAt(b.towers.instances[i], A.c.setHex(t.tint).lerp(A.letter, title));
+    }
+  });
+
+  return (
+    <>
+      <primitive object={built.stat.mesh} />
+      <primitive object={built.towers.mesh} />
+    </>
   );
 }

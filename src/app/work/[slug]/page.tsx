@@ -38,7 +38,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
         <header className="mt-10 grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <p className="label flex flex-wrap items-center gap-3">
-              <span className={cs.kind === "Client project" ? "text-[color:var(--color-lime)]" : "text-[color:var(--color-cyan)]"}>{cs.kind}</span>
+              <span className={cs.kind === "Client project" ? "text-[color:var(--color-lime-ink)]" : "text-[color:var(--color-cyan)]"}>{cs.kind}</span>
               <span aria-hidden className="text-[color:var(--color-fg-3)]">·</span>
               <span className="text-[color:var(--color-fg-2)]">{cs.sector}</span>
             </p>
@@ -50,7 +50,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               <div key={f.label} className="bg-[color:var(--color-ink-2)] p-5">
                 <dt className="sr-only">{f.label}</dt>
                 <dd>
-                  <span className="block text-[2rem] leading-none font-medium tracking-[-0.03em] tabular-nums">{f.value}</span>
+                  <span data-count className="block text-[2rem] leading-none font-medium tracking-[-0.03em] tabular-nums">{f.value}</span>
                   <span className="label mt-2 block text-[color:var(--color-fg-3)]">{f.label}</span>
                 </dd>
               </div>
@@ -82,7 +82,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               </ul>
             </section>
             <section aria-labelledby="outcome" className="glass p-7">
-              <h2 id="outcome" className="label text-[color:var(--color-lime)]">Outcome</h2>
+              <h2 id="outcome" className="label text-[color:var(--color-lime-ink)]">Outcome</h2>
               <p className="mt-4 text-[1.1875rem] leading-relaxed text-[color:var(--color-fg)]">{cs.outcome}</p>
             </section>
           </div>

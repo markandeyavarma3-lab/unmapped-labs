@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { CAMERA_KEYS, LAST_CHAPTER, PORTRAIT_TITLE_KEYS } from "./landmarks";
 import { mulberry32 } from "./terrain-math";
 import { City } from "./City";
 import { Districts } from "./Districts";
+import { Life } from "./Life";
+import { Environment } from "./Environment";
+import { ProcessBlock, PROCESS_KEYS } from "./ProcessBlock";
 import { updateCityState } from "./city-state";
-import { hexToVec3, particleFragment, particleVertex } from "./shaders";
 import { world } from "./world-store";
 import { frame } from "./frame-state";
 import { ViewLayer } from "./WorldRenderer";
-import { subscribeViewAnchors, viewAnchors, type ViewId } from "./views";
+import { islandState, subscribeViewAnchors, viewAnchors, type ViewId } from "./views";
 import { ParticleMorph } from "./ParticleMorph";
-import { ProcessIsland } from "./ProcessIsland";
 
 export type Tier = "high" | "low";
 
@@ -63,44 +64,63 @@ function useAnchorNear(id: ViewId, enabled: boolean) {
   return near;
 }
 
-/** Same idea for main-scene content tied to a chapter range. */
-function useChapterNear(chapter: number, enabled: boolean) {
-  const [near, setNear] = useState(false);
-  useFrame(() => {
-    if (enabled && !near && frame.chapter > chapter) setNear(true);
-  });
-  return near;
-}
-
-export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) {
-  const stage = useStagedMount(3);
+export function Scene({ tier, introDelay, onReady }: { tier: Tier; introDelay: number; onReady: () => void }) {
   const phone = tier === "low";
-  // Desktop: heavy views build in idle time after the opening settles, never mid-scroll.
-  // Phones: build each one only as you approach it, keeping the load window clear.
-  const morphIdle = useIdleReady(2200);
-  const islandIdle = useIdleReady(4200);
+  const morphIdle = useIdleReady(2600);
   const morphNear = useAnchorNear("morph", phone);
-  const islandNear = useAnchorNear("island", phone);
   const morphReady = phone ? morphNear : morphIdle;
-  const islandReady = phone ? islandNear : islandIdle;
 
   return (
     <>
-      <CameraRig tier={tier} introDelay={introDelay} />
-      <City tier={tier} introDelay={introDelay} />
-      {stage >= 2 && <Districts />}
-      {stage >= 3 && tier === "high" && <Particles />}
+      <Environment tier={tier} />
+      <Suspense fallback={null}>
+        <CityScene tier={tier} introDelay={introDelay} onReady={onReady} />
+      </Suspense>
       {morphReady && (
         <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
           <ParticleMorph tier={tier} />
         </ViewLayer>
       )}
-      {islandReady && (
-        <ViewLayer id="island" fov={36} position={[0, 4, 6]}>
-          <ProcessIsland tier={tier} />
-        </ViewLayer>
-      )}
     </>
+  );
+}
+
+/**
+ * Everything that needs the model library; mounts once it has loaded. The
+ * city stays hidden until every material has compiled in parallel
+ * (KHR_parallel_shader_compile), so a cold shader cache never stalls a frame.
+ */
+function CityScene({ tier, introDelay, onReady }: { tier: Tier; introDelay: number; onReady: () => void }) {
+  const stage = useStagedMount(5);
+  const group = useRef<THREE.Group>(null);
+  const [compiled, setCompiled] = useState(false);
+  const started = useRef(false);
+  const frames = useRef(0);
+  const done = useRef(false);
+  useFrame((state, delta) => {
+    if (stage >= 5 && !started.current && group.current) {
+      started.current = true;
+      state.gl
+        .compileAsync(group.current, state.camera, state.scene)
+        .catch(() => {})
+        .then(() => setCompiled(true));
+    }
+    if (!compiled) return;
+    frame.time += Math.min(delta, 1 / 20);
+    if (!done.current && ++frames.current > 2) {
+      done.current = true;
+      onReady();
+    }
+  });
+  return (
+    <group ref={group} visible={compiled}>
+      <CameraRig tier={tier} introDelay={introDelay} />
+      <City tier={tier} />
+      {stage >= 2 && <Districts tier={tier} />}
+      {stage >= 3 && <Life tier={tier} />}
+      {stage >= 4 && <ProcessBlock />}
+      {stage >= 5 && tier === "high" && <Motes />}
+    </group>
   );
 }
 
@@ -110,29 +130,29 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
 
 function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
   const curves = useMemo(() => {
-    const pos = new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => new THREE.Vector3(...k.pos)), false, "centripetal");
-    const target = new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => new THREE.Vector3(...k.target)), false, "centripetal");
-    return { pos, target };
+    const v = (a: [number, number, number]) => new THREE.Vector3(...a);
+    return {
+      pos: new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => v(k.pos)), false, "centripetal"),
+      target: new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => v(k.target)), false, "centripetal"),
+      pPos: new THREE.CatmullRomCurve3(PROCESS_KEYS.map((k) => v(k.pos)), false, "centripetal"),
+      pTarget: new THREE.CatmullRomCurve3(PROCESS_KEYS.map((k) => v(k.target)), false, "centripetal"),
+      portraitPos: PORTRAIT_TITLE_KEYS.map((k) => v(k.pos)),
+      portraitTarget: PORTRAIT_TITLE_KEYS.map((k) => v(k.target)),
+    };
   }, []);
-
-  const portrait = useMemo(
-    () => ({
-      pos: PORTRAIT_TITLE_KEYS.map((k) => new THREE.Vector3(...k.pos)),
-      target: PORTRAIT_TITLE_KEYS.map((k) => new THREE.Vector3(...k.target)),
-    }),
-    [],
-  );
 
   const scratch = useRef({
     pos: new THREE.Vector3(),
     target: new THREE.Vector3(),
-    pPos: new THREE.Vector3(),
-    pTarget: new THREE.Vector3(),
+    a: new THREE.Vector3(),
+    b: new THREE.Vector3(),
     fwd: new THREE.Vector3(),
     right: new THREE.Vector3(),
     up: new THREE.Vector3(0, 1, 0),
     parallax: new THREE.Vector2(),
     offset: 0,
+    process: 0,
+    pProgress: 0,
   });
 
   // Track whether a fine pointer has actually moved (touch never counts).
@@ -168,38 +188,69 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     const aspect = size.width / size.height;
     if (aspect < 0.9 && f.chapter < 2) {
       const k = clamp01(f.chapter);
-      tmp.pPos.lerpVectors(portrait.pos[0], portrait.pos[1], k);
-      tmp.pTarget.lerpVectors(portrait.target[0], portrait.target[1], k);
+      tmp.a.lerpVectors(curves.portraitPos[0], curves.portraitPos[1], k);
+      tmp.b.lerpVectors(curves.portraitTarget[0], curves.portraitTarget[1], k);
       const w = 1 - THREE.MathUtils.smoothstep(f.chapter, 1, 2);
-      tmp.pos.lerp(tmp.pPos, w);
-      tmp.target.lerp(tmp.pTarget, w);
+      tmp.pos.lerp(tmp.a, w);
+      tmp.target.lerp(tmp.b, w);
     }
 
-    // Pointer parallax in camera space, damped.
+    // Cinematic: while lingering on a district or a project, orbit slowly around it.
+    if (f.chapter > 4.5 && f.chapter < 11.5) {
+      const local = f.chapter - Math.round(f.chapter);
+      const angle = local * 0.7;
+      tmp.a.subVectors(tmp.pos, tmp.target).applyAxisAngle(tmp.up, angle);
+      tmp.pos.copy(tmp.target).add(tmp.a);
+    }
+
+    // The process takes over while its section fills the screen: fly the block's own path.
+    const anchor = viewAnchors.island;
+    let pw = 0;
+    if (anchor) {
+      const r = anchor.getBoundingClientRect();
+      const H = size.height;
+      pw = THREE.MathUtils.smoothstep(Math.min((H - r.top) / H, r.bottom / H), 0.35, 0.95);
+    }
+    tmp.process = THREE.MathUtils.damp(tmp.process, pw, 3.2, dt);
+    tmp.pProgress = THREE.MathUtils.damp(tmp.pProgress, islandState.progress, 3, dt);
+    f.process = tmp.process;
+    if (tmp.process > 0.001) {
+      const pu = clamp01(tmp.pProgress / 4);
+      curves.pPos.getPoint(pu, tmp.a);
+      curves.pTarget.getPoint(pu, tmp.b);
+      const w = easeOutCubic(tmp.process);
+      tmp.pos.lerp(tmp.a, w);
+      tmp.target.lerp(tmp.b, w);
+    }
+
+    // Pointer parallax in camera space, damped; a gentle handheld drift.
     const live = pointerLive.current && tier === "high";
     tmp.parallax.x = THREE.MathUtils.damp(tmp.parallax.x, live ? state.pointer.x : 0, 2.2, dt);
     tmp.parallax.y = THREE.MathUtils.damp(tmp.parallax.y, live ? state.pointer.y : 0, 2.2, dt);
     tmp.fwd.subVectors(tmp.target, tmp.pos).normalize();
     tmp.right.crossVectors(tmp.fwd, tmp.up).normalize();
-    tmp.pos.addScaledVector(tmp.right, tmp.parallax.x * 0.9);
-    tmp.pos.y += tmp.parallax.y * 0.45 + Math.sin(t * 0.17) * 0.18;
-    tmp.pos.addScaledVector(tmp.right, Math.sin(t * 0.11) * 0.3);
+    const dist = tmp.pos.distanceTo(tmp.target);
+    const sway = Math.min(1, dist / 20);
+    tmp.pos.addScaledVector(tmp.right, tmp.parallax.x * 0.9 * sway + Math.sin(t * 0.11) * 0.3 * sway);
+    tmp.pos.y += (tmp.parallax.y * 0.45 + Math.sin(t * 0.17) * 0.18) * sway;
 
     // Entrance: descend from high above while the name rises out of the city.
-    const arrive = 1 - Math.pow(1 - f.introT, 3);
+    const arrive = easeOutCubic(f.introT);
     tmp.pos.y += (1 - arrive) * 16;
     tmp.pos.z += (1 - arrive) * 14;
 
     cam.position.copy(tmp.pos);
     cam.lookAt(tmp.target);
+    f.target.copy(tmp.target);
+    f.camDist = cam.position.distanceTo(tmp.target);
 
     // Framing: wider lens on portrait screens; on wide screens, shift the
-    // hero composition right so the headline owns the left column.
+    // composition right where the copy sits on the left.
     const fov = aspect < 0.8 ? 60 : aspect < 1.2 ? 50 : 40;
-    // Shift the scene right where copy sits on the left: the hero and the territories.
     const heroWeight = Math.max(
       1 - clamp01(Math.abs(f.chapter - 2) / 0.9),
       THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 11.4, 11.9)) * 0.85,
+      tmp.process * 0.8,
     );
     const targetOffset = aspect > 1.2 ? size.width * 0.13 * heroWeight : 0;
     tmp.offset = THREE.MathUtils.damp(tmp.offset, targetOffset, 4, dt);
@@ -207,7 +258,7 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     cam.setViewOffset(size.width, size.height, -tmp.offset, 0, size.width, size.height);
 
     // Story state for every district derives from the smoothed chapter.
-    f.introT = easeOutCubic(clamp01((t - introDelay) / 3.2));
+    f.introT = easeOutCubic(clamp01((f.time - introDelay * 0.4) / 3.2));
     f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, LAST_CHAPTER - 0.6, LAST_CHAPTER - 0.05), 3, dt);
     updateCityState(f.chapter, f.finale);
   });
@@ -216,38 +267,58 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Atmospheric particles (high tier only)                             */
+/* Golden motes drifting in the low sun (high tier only)              */
 /* ------------------------------------------------------------------ */
 
-function Particles() {
+const moteVertex = /* glsl */ `
+  attribute float aPhase;
+  uniform float uTime; uniform float uScale;
+  varying float vAlpha;
+  void main() {
+    vec3 p = position;
+    p.x += sin(uTime * 0.21 + aPhase * 30.0) * 0.8;
+    p.y += sin(uTime * 0.33 + aPhase * 17.0) * 0.5;
+    p.z += cos(uTime * 0.17 + aPhase * 23.0) * 0.8;
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = 0.07 * uScale / -mv.z;
+    vAlpha = (0.35 + 0.65 * fract(aPhase * 7.0)) * (0.6 + 0.4 * sin(uTime * 1.3 + aPhase * 40.0));
+  }
+`;
+const moteFragment = /* glsl */ `
+  varying float vAlpha;
+  void main() {
+    float d = length(gl_PointCoord - 0.5);
+    float a = (1.0 - smoothstep(0.1, 0.5, d)) * vAlpha;
+    if (a < 0.02) discard;
+    gl_FragColor = vec4(1.0, 0.93, 0.7, a);
+    #include <colorspace_fragment>
+  }
+`;
+
+function Motes() {
   const points = useRef<THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>>(null);
   const { geometry, material } = useMemo(() => {
-    const count = 650;
+    const count = 700;
     const rand = mulberry32(42);
     const pos = new Float32Array(count * 3);
     const phase = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      const x = (rand() - 0.5) * 80;
-      const z = 62 - rand() * 135;
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = 1.2 + rand() * 9;
-      pos[i * 3 + 2] = z;
+      pos[i * 3] = (rand() - 0.5) * 70;
+      pos[i * 3 + 1] = 0.6 + rand() * 7;
+      pos[i * 3 + 2] = 60 - rand() * 135;
       phase[i] = rand();
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geometry.setAttribute("aPhase", new THREE.BufferAttribute(phase, 1));
     const material = new THREE.ShaderMaterial({
-      vertexShader: particleVertex,
-      fragmentShader: particleFragment,
+      vertexShader: moteVertex,
+      fragmentShader: moteFragment,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 },
-        uPixelRatio: { value: 1 },
-        uColor: { value: new THREE.Vector3(...hexToVec3("#b9d4dc")) },
-      },
+      uniforms: { uTime: { value: 0 }, uScale: { value: 1 } },
     });
     return { geometry, material };
   }, []);
@@ -264,7 +335,8 @@ function Particles() {
     if (!points.current) return;
     const u = points.current.material.uniforms;
     u.uTime.value = state.clock.elapsedTime;
-    u.uPixelRatio.value = state.gl.getPixelRatio();
+    const fov = (state.camera as THREE.PerspectiveCamera).fov;
+    u.uScale.value = (state.size.height * state.gl.getPixelRatio()) / (2 * Math.tan(THREE.MathUtils.degToRad(fov) / 2));
   });
 
   return <points ref={points} geometry={geometry} material={material} frustumCulled={false} />;

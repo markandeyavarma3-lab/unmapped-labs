@@ -59,7 +59,7 @@ export function TitleSequence() {
       <div aria-hidden data-chapter="1" className="pointer-events-none absolute top-[105vh] h-px w-px" />
 
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-between overflow-hidden pt-[calc(var(--header-h)+1.5rem)] pb-8">
-        <p aria-hidden className="label fade-up flex items-center gap-3 text-[color:var(--color-fg-3)]" style={{ "--i": 0 } as React.CSSProperties}>
+        <p aria-hidden className="label fade-up flex items-center gap-3 rounded-full bg-[color:var(--color-ink-2)]/90 px-4 py-2 text-[color:var(--color-fg-2)] shadow-[0_10px_30px_-16px_rgba(80,54,24,0.6)]" style={{ "--i": 0 } as React.CSSProperties}>
           <span className="tabular-nums">Survey 001</span>
           <span className="h-px w-6 bg-[color:var(--color-line)]" />
           <span>Independent exploration lab</span>
@@ -80,7 +80,7 @@ export function TitleSequence() {
         </div>
 
         {/* Tagline, drawn in survey lines as you scroll. */}
-        <div ref={taglineWrap} aria-hidden className="relative mt-auto mb-[9vh] w-full max-w-[min(90vw,52rem)] opacity-0 max-sm:mb-[14vh]">
+        <div ref={taglineWrap} aria-hidden className="relative mt-auto mb-[9vh] w-full max-w-[min(90vw,52rem)] bg-[radial-gradient(closest-side,rgba(255,253,248,0.92),rgba(255,253,248,0.55)_60%,transparent)] opacity-0 max-sm:mb-[14vh]">
           <svg viewBox="0 0 1000 120" className="h-auto w-full overflow-visible">
             <text
               ref={tagline}
@@ -94,11 +94,11 @@ export function TitleSequence() {
           </svg>
         </div>
 
-        <div ref={cue} aria-hidden className="label flex flex-col items-center gap-3 text-[color:var(--color-fg-3)]">
+        <div ref={cue} aria-hidden className="label flex flex-col items-center gap-3 text-[color:var(--color-fg-2)] [&>span:last-child]:rounded-full">
           <span className="relative block h-9 w-px overflow-hidden bg-[color:var(--color-line)]">
             <span className="absolute inset-x-0 top-0 h-3 animate-[scroll-cue_2.2s_var(--ease-in-out-quart)_infinite] bg-[color:var(--color-cyan)]" />
           </span>
-          Scroll to light up the city
+          <span className="rounded-full bg-[color:var(--color-ink-2)]/90 px-4 py-2 shadow-[0_10px_30px_-16px_rgba(80,54,24,0.6)]">Scroll to explore the city</span>
         </div>
       </div>
     </section>
