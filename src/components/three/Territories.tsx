@@ -42,7 +42,7 @@ const lineFragment = /* glsl */ `
   }
 `;
 
-const lineMaterial = (color: THREE.Color) =>
+export const lineMaterial = (color: THREE.Color) =>
   new THREE.ShaderMaterial({
     vertexShader: lineVertex,
     fragmentShader: lineFragment,
@@ -53,7 +53,7 @@ const lineMaterial = (color: THREE.Color) =>
   });
 
 /** Ground-hugging polylines → one LineSegments geometry; aT orders the draw-in. */
-function groundLines(polys: [number, number][][], lift = 0.06, sampleStep = 0.25) {
+export function groundLines(polys: [number, number][][], lift = 0.06, sampleStep = 0.25) {
   const pos: number[] = [];
   const t: number[] = [];
   polys.forEach((poly, pi) => {

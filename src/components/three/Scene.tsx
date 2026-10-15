@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import {
   CAMERA_KEYS,
+  DISSOLVE,
   LAST_CHAPTER,
   NODES,
   PATHS,
@@ -14,6 +15,8 @@ import {
 import { TERRAIN, terrainHeight, mulberry32 } from "./terrain-math";
 import { TitleRelief } from "./TitleRelief";
 import { Territories } from "./Territories";
+import { WorkSites } from "./WorkSites";
+import { SystemNetwork } from "./SystemNetwork";
 import { makeTerrainMaterial, updateTerrainUniforms } from "./terrain-material";
 import {
   hexToVec3,
@@ -101,15 +104,28 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
   const territoriesNear = useChapterNear(3, phone);
   const morphReady = phone ? morphNear : morphIdle;
   const islandReady = phone ? islandNear : islandIdle;
+  const networkIdle = useIdleReady(6500);
+  const networkNear = useChapterNear(8, phone);
+  const networkReady = phone ? networkNear : networkIdle;
+  const workNear = useChapterNear(7, phone);
+
   return (
     <>
       <CameraRig tier={tier} introDelay={introDelay} />
-      <Terrain tier={tier} />
-      <TitleRelief tier={tier} introDelay={introDelay} />
-      {stage >= 2 && <Paths />}
-      {stage >= 3 && <SurveyNodes />}
-      {stage >= 3 && (!phone || territoriesNear) && <Territories />}
+      {/* The land: stops rendering entirely once it has dissolved into the network. */}
+      <ShowWhile test={() => frame.dissolve < 0.999}>
+        <Terrain tier={tier} />
+        <TitleRelief tier={tier} introDelay={introDelay} />
+        {/* Survey details vanish first as the land starts to break. */}
+        <ShowWhile test={() => frame.dissolve < 0.3}>
+          {stage >= 2 && <Paths />}
+          {stage >= 3 && <SurveyNodes />}
+          {stage >= 3 && (!phone || territoriesNear) && <Territories />}
+          {stage >= 3 && (!phone || workNear) && <WorkSites />}
+        </ShowWhile>
+      </ShowWhile>
       {stage >= 4 && tier === "high" && <Particles />}
+      {networkReady && <SystemNetwork tier={tier} />}
       {morphReady && (
         <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
           <ParticleMorph tier={tier} />
@@ -122,6 +138,15 @@ export function Scene({ tier, introDelay }: { tier: Tier; introDelay: number }) 
       )}
     </>
   );
+}
+
+/** A group whose visibility is re-evaluated every frame (no React renders). */
+function ShowWhile({ test, children }: { test: () => boolean; children: React.ReactNode }) {
+  const ref = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (ref.current) ref.current.visible = test();
+  });
+  return <group ref={ref}>{children}</group>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -219,7 +244,8 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     // Shift the scene right where copy sits on the left: the hero and the territories.
     const heroWeight = Math.max(
       1 - clamp01(Math.abs(f.chapter - 2) / 0.9),
-      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 9, 9.6)) * 0.85,
+      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 11, 11.6)) * 0.85,
+      THREE.MathUtils.smoothstep(f.chapter, 11.8, 12.3) * 0.9,
     );
     const targetOffset = aspect > 1.2 ? size.width * 0.13 * heroWeight : 0;
     tmp.offset = THREE.MathUtils.damp(tmp.offset, targetOffset, 4, dt);
@@ -229,7 +255,8 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     // Path draw-in and node discovery derive from the smoothed chapter.
     const introT = easeOutCubic(clamp01((t - introDelay) / 3.2));
     f.introT = introT;
-    f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, 12.4, 12.95), 3, dt);
+    f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, LAST_CHAPTER - 0.6, LAST_CHAPTER - 0.05), 3, dt);
+    f.dissolve = THREE.MathUtils.smoothstep(f.chapter, DISSOLVE.from, DISSOLVE.to);
     PATHS.forEach((p, i) => {
       const raw = clamp01((f.chapter - p.span[0]) / (p.span[1] - p.span[0]));
       f.draws[i] = raw * clamp01(introT * 1.4 - 0.3);

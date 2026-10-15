@@ -83,6 +83,7 @@ export function makeTerrainMaterial(range: [number, number], title = false) {
       uFog: { value: new THREE.Vector2(...FOG) },
       uSweep: { value: -1 },
       uFinale: { value: 0 },
+      uDissolve: { value: 0 },
       uRise: { value: 0 },
       uTitleGlow: { value: 0 },
       uTitleGain: { value: 1 },
@@ -97,6 +98,7 @@ export function updateTerrainUniforms(u: Record<string, THREE.IUniform>, time: n
   u.uIntro.value = f.introT;
   u.uSweep.value = f.introT < 1 ? f.introT : -1;
   u.uFinale.value = f.finale;
+  u.uDissolve.value = f.dissolve;
   (u.uFocus.value as THREE.Vector2).set(f.focusX, f.focusZ);
   (u.uPointer.value as THREE.Vector2).set(f.pointerX, f.pointerZ);
   u.uPointerStrength.value = f.pointerStrength;

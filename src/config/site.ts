@@ -9,7 +9,7 @@ export const site = {
   statement: "We explore what hasn't been mapped.",
   description:
     "Unmapped Labs is an independent exploration initiative studying real-world systems — agriculture, logistics, healthcare, energy and beyond — to uncover overlooked problems and discover what could work better.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://unmappedlabs.in").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unmappedlabs.in").replace(/\/$/, ""),
   email: "contact@unmappedlabs.in",
   closingLine: "There is always more to map.",
 } as const;
@@ -25,8 +25,9 @@ export const socials: { label: string; href: string }[] = [
 
 export const nav = [
   { id: "approach", label: "Approach" },
+  { id: "work", label: "Work" },
+  { id: "services", label: "Services" },
   { id: "focus", label: "Focus Areas" },
-  { id: "notes", label: "Field Notes" },
   { id: "about", label: "About" },
 ] as const;
 

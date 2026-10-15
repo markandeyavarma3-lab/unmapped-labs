@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { onScroll } from "@/components/motion/scroll-engine";
-import { nodeLabel, setWorldPaused, world } from "./world-store";
+import { nodeLabel, serviceLabels, setWorldPaused, world } from "./world-store";
+import { services } from "@/content/site-content";
 import { setWorldMode, setWorldReady } from "./views";
 import type { Tier } from "./Scene";
 
@@ -129,6 +130,21 @@ export function WorldLayer() {
           <span data-coords className="label text-[color:var(--color-fg-3)]" />
         </div>
       </div>
+      {/* Service hub labels on the systems network */}
+      {services.items.map((sv, k) => (
+        <div
+          key={sv.index}
+          ref={(el) => {
+            serviceLabels[k] = el;
+          }}
+          className="absolute top-0 left-0 z-[1] opacity-0"
+        >
+          <div className="ml-3 flex -translate-y-1/2 items-center gap-2 border border-[color:var(--color-lime)]/40 bg-[color:var(--color-ink)]/92 px-2.5 py-1.5 whitespace-nowrap">
+            <span className="label tabular-nums text-[color:var(--color-lime)]">{sv.index}</span>
+            <span className="label text-[color:var(--color-fg)]">{sv.title}</span>
+          </div>
+        </div>
+      ))}
       {/* Vignette keeps text legible at the edges of every composition. */}
       <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_70%_40%,transparent_35%,rgba(8,11,14,0.75)_100%)]" />
     </div>

@@ -10,7 +10,7 @@ export async function FieldNotes() {
   const latest = notes.slice(0, 3);
 
   return (
-    <section id="notes" data-chapter="10" aria-labelledby="notes-heading" className="relative py-[var(--section-y)]">
+    <section id="notes" data-chapter="13" aria-labelledby="notes-heading" className="relative py-[var(--section-y)]">
       <div className="container-site">
         <div className="flex flex-wrap items-end justify-between gap-8">
           <SectionHeading id="notes-heading" label={copy.label} heading={copy.heading} intro={copy.intro} />

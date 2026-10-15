@@ -128,8 +128,133 @@ export const focus = {
   ] satisfies FocusArea[],
 };
 
+export type CaseStudy = {
+  slug: string;
+  name: string;
+  kind: "Client project" | "Lab project";
+  sector: string;
+  oneLiner: string;
+  problem: string;
+  insight: string;
+  built: string[];
+  outcome: string;
+  /** Only real, checkable figures from the work itself. */
+  facts: { value: string; label: string }[];
+  stack: string[];
+  process: { stage: string; note: string }[];
+};
+
+export const work = {
+  label: "04 — Selected work",
+  heading: "Ground we've already mapped.",
+  intro:
+    "Two pieces of work, one for a client and one of our own. Every figure below comes from the systems themselves — nothing rounded up, nothing invented.",
+  cases: [
+    {
+      slug: "flowmatch",
+      name: "FlowMatch",
+      kind: "Client project",
+      sector: "Agriculture · Pump distribution",
+      oneLiner: "The right KSB agricultural pump for a borewell — matched by water flow and depth, with exact prices, in seconds.",
+      problem:
+        "Choosing an agricultural pump meant reading KSB's performance booklet by hand: hundreds of pump and motor combinations, each with its own operating curve, then cross-checking a separate confidential price list. Slow, and easy to get wrong in front of a farmer.",
+      insight:
+        "The real question a customer brings is simple — how much water, from how deep. Everything else in the catalogue is detail that should be shown, not asked. And the data had to stay on the dealer's machine.",
+      built: [
+        "A deterministic extractor that reads the catalogue and price-list PDFs geometrically and turns them into structured data.",
+        "A local database of every pump variant and operating point, linked to purchasable price options.",
+        "A search that asks only for flow, depth and optional horsepower, ranks results without bias toward price, and explains every near-match.",
+        "A built-in correctness check: every operating point scanned must land in exactly one result bucket — which caught a real bug silently dropping about 4% of rows.",
+      ],
+      outcome:
+        "A local-first selector that turns a catalogue lookup into a two-field search, keeps confidential prices on the dealer's own computer, and shows its working for every recommendation.",
+      facts: [
+        { value: "8,163", label: "operating points extracted" },
+        { value: "919", label: "pump–motor variants" },
+        { value: "123", label: "performance tables read" },
+        { value: "66", label: "automated tests" },
+      ],
+      stack: ["Python PDF extraction", "Next.js", "TypeScript", "SQLite · Drizzle", "Zod", "Vitest"],
+      process: [
+        { stage: "Observe", note: "How pumps were actually being chosen at the counter." },
+        { stage: "Map", note: "Catalogue structure, price list, and where the two disagreed." },
+        { stage: "Understand", note: "Flow and depth are the only true inputs." },
+        { stage: "Build", note: "Extractor, database and a two-field search." },
+        { stage: "Validate", note: "An invariant that accounts for every row." },
+      ],
+    },
+    {
+      slug: "deal-lens",
+      name: "Deal Lens",
+      kind: "Lab project",
+      sector: "Markets · Public disclosures",
+      oneLiner: "Who really trades India's bulk and block deals — every session since 2005, labelled.",
+      problem:
+        "India's exchanges publish every bulk and block deal, but as raw daily files: no history, no idea who the participants really are, and no way to tell a fund house from a high-frequency firm round-tripping the same stock.",
+      insight:
+        "The disclosures only become information once each participant is identified and grouped. More than half of bulk deals turned out to be same-day round trips — noise that hides the activity worth studying.",
+      built: [
+        "A research platform that collects NSE and BSE disclosures every night and rebuilds a clean warehouse.",
+        "Participant labelling: mutual funds grouped by fund house, foreign institutions, promoters and high-frequency firms.",
+        "A free, static, data-only website for analysts and students — company histories, participant footprints, a screener.",
+        "Pre-registered research with published negative results, and a test that proves no trading code exists.",
+      ],
+      outcome:
+        "Two decades of disclosures turned into a navigable, labelled map of institutional activity — honest about what the data can and cannot say. It never gives investment advice.",
+      facts: [
+        { value: "243,929", label: "deals labelled" },
+        { value: "5,110", label: "trading sessions since 2005" },
+        { value: "32,881", label: "participants identified" },
+        { value: "54.8%", label: "of bulk deals are same-day round trips" },
+      ],
+      stack: ["Python", "Postgres warehouse", "Astro", "Nightly pipelines", "Pre-registered research"],
+      process: [
+        { stage: "Observe", note: "What the exchanges actually publish, and what's missing." },
+        { stage: "Map", note: "Every source, every participant, every gap in history." },
+        { stage: "Understand", note: "Round-trip noise versus real institutional activity." },
+        { stage: "Build", note: "Warehouse, labelling and a static public site." },
+        { stage: "Validate", note: "Pre-registered findings, including the negative ones." },
+      ],
+    },
+  ] satisfies CaseStudy[],
+};
+
+export type Service = { index: string; title: string; body: string; deliverables: string[] };
+
+export const services = {
+  label: "05 — What we do",
+  heading: "Once the system is understood, this is how we help.",
+  intro: "Four kinds of work, usually in this order — and only the ones the problem actually needs.",
+  items: [
+    {
+      index: "S1",
+      title: "Field research & mapping",
+      body: "We go to where the work happens, talk to the people doing it, and map how the system really runs — flows, dependencies, bottlenecks and the gaps nobody has written down.",
+      deliverables: ["Process maps", "Bottleneck reports", "Opportunity briefs"],
+    },
+    {
+      index: "S2",
+      title: "Websites & lead systems",
+      body: "Sites that explain what a business does to the people who need it, with the plumbing behind them — lead capture, dashboards and follow-up that someone will actually use.",
+      deliverables: ["Websites", "Lead dashboards", "Landing pages"],
+    },
+    {
+      index: "S3",
+      title: "Internal tools & software",
+      body: "Tools shaped around how a business already works: quoting, billing, catalogues, selectors — often local-first, so they run where the work is.",
+      deliverables: ["Quoting & billing", "Selectors & catalogues", "Admin tools"],
+    },
+    {
+      index: "S4",
+      title: "Data, research & automation",
+      body: "Pulling structure out of PDFs and public records, building research platforms, and automating the repetitive parts — with the checks that prove it's right.",
+      deliverables: ["Data extraction", "Research platforms", "Automation & ML"],
+    },
+  ] satisfies Service[],
+};
+
 export const notes = {
-  label: "04 — Field notes",
+  label: "06 — Field notes",
   heading: "Notes from the unmapped.",
   intro:
     "Observations, questions, and ideas gathered while exploring the systems that shape how things work.",
@@ -140,7 +265,7 @@ export const notes = {
 };
 
 export const principles = {
-  label: "05 — Philosophy",
+  label: "07 — Philosophy",
   heading: "Understand first. Solve thoughtfully.",
   items: [
     { title: "Research before assumptions", body: "Start from what is observed, not what is expected." },
@@ -159,7 +284,7 @@ export const principles = {
 };
 
 export const about = {
-  label: "06 — About",
+  label: "08 — About",
   heading: "Curiosity with a practical purpose.",
   body: [
     "Unmapped Labs is an exploration-driven initiative focused on understanding industries, investigating real-world challenges, and discovering opportunities for better solutions.",
@@ -170,7 +295,7 @@ export const about = {
 };
 
 export const contact = {
-  label: "07 — Contact",
+  label: "09 — Contact",
   heading: "Found something worth exploring?",
   body: "Have a problem worth understanding, an industry worth exploring, or an idea worth investigating? Start a conversation.",
   areas: [

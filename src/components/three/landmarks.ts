@@ -19,12 +19,20 @@ export const CHAPTER = {
   territoryC: 7,
   territoryD: 8,
   territoryE: 9,
-  notes: 10,
-  philosophy: 11,
-  about: 12,
-  contact: 13,
+  workA: 10,
+  workB: 11,
+  services: 12,
+  notes: 13,
+  philosophy: 14,
+  about: 15,
+  contact: 16,
 } as const;
-export const LAST_CHAPTER = 13;
+export const LAST_CHAPTER = 16;
+
+/** The land dissolves into the systems network across this chapter range. */
+export const DISSOLVE = { from: 11.35, to: 12.05 } as const;
+/** Centre of the systems network the land becomes. */
+export const NETWORK_CENTER: V3 = [0, 9, -46];
 
 /* ---- Focus territories: regions of the map with their own settlements ---- */
 
@@ -44,6 +52,16 @@ export const TERRITORIES: Territory[] = [
   territory("open", -56, 11),
 ];
 
+/* ---- Selected work: two more mapped regions at the far end of the valley ---- */
+
+export type WorkSiteId = "flowmatch" | "deal-lens";
+export type WorkSite = { id: WorkSiteId; x: number; z: number; y: number; side: 1 | -1 };
+const site = (id: WorkSiteId, z: number, offset: number): WorkSite => {
+  const x = vx(z) + offset;
+  return { id, x, z, y: terrainHeight(x, z), side: offset > 0 ? 1 : -1 };
+};
+export const WORK_SITES: WorkSite[] = [site("flowmatch", -66, -9), site("deal-lens", -76, 9)];
+
 const overlook = (t: Territory): { pos: V3; target: V3 } => ({
   pos: [t.x - t.side * 7.5, t.y + 8.5, t.z + 11],
   target: [t.x, t.y + 0.5, t.z],
@@ -57,10 +75,17 @@ export const CAMERA_KEYS: { pos: V3; target: V3 }[] = [
   /* 4 approach */ { pos: [vx(8) - 2, 4.2, 8], target: [vx(-8), 0.6, -8] },
   /* 5–9 territories */
   ...TERRITORIES.map(overlook),
-  /* 10 notes   */ { pos: [vx(-46) + 14, 13, -40], target: [vx(-60), 0, -62] },
-  /* 11 philosophy — the whole map from above */ { pos: [vx(-8), 50, 4], target: [vx(-12), 0, -12] },
-  /* 12 about — a summit, looking back over everything */ { pos: [-27, 15, -32], target: [2, 0, 12] },
-  /* 13 contact — the final pull-back */ { pos: [vx(-62) - 8, 19, -68], target: [vx(-4) + 2, 0, -2] },
+  /* 10–11 selected work */
+  ...WORK_SITES.map((w) => ({
+    pos: [w.x - w.side * 8, w.y + 7.5, w.z + 10] as V3,
+    target: [w.x, w.y + 0.6, w.z] as V3,
+  })),
+  /* 12–16: the systems network the land has become */
+  /* 12 services   */ { pos: [NETWORK_CENTER[0] + 5, NETWORK_CENTER[1] + 14, NETWORK_CENTER[2] + 23], target: NETWORK_CENTER },
+  /* 13 notes      */ { pos: [NETWORK_CENTER[0] + 24, NETWORK_CENTER[1] + 6, NETWORK_CENTER[2] + 16], target: NETWORK_CENTER },
+  /* 14 philosophy — inside the layers */ { pos: [NETWORK_CENTER[0] + 9, NETWORK_CENTER[1] - 1, NETWORK_CENTER[2] + 8], target: [NETWORK_CENTER[0], NETWORK_CENTER[1] + 1, NETWORK_CENTER[2]] },
+  /* 15 about — above the whole system */ { pos: [NETWORK_CENTER[0] - 6, NETWORK_CENTER[1] + 30, NETWORK_CENTER[2] + 12], target: NETWORK_CENTER },
+  /* 16 contact — pull back: everything connected */ { pos: [NETWORK_CENTER[0] - 20, NETWORK_CENTER[1] + 10, NETWORK_CENTER[2] + 36], target: NETWORK_CENTER },
 ];
 
 /** Portrait screens frame the stacked title from higher up. */
@@ -79,8 +104,7 @@ export const SURVEY_DISCS: SurveyDisc[] = [
   { x: vx(3), z: 3, r: 19, from: 2.3, to: 3.4 },
   { x: vx(-8), z: -8, r: 18, from: 3.3, to: 4.4 },
   ...TERRITORIES.slice(0, 4).map((t, i) => ({ x: t.x, z: t.z, r: 15, from: 4.5 + i, to: 5.4 + i })),
-  { x: vx(-14), z: -14, r: 40, from: 10.2, to: 11.3 },
-  { x: vx(-58), z: -58, r: 26, from: 12.2, to: 13 },
+  ...WORK_SITES.map((w, i) => ({ x: w.x, z: w.z, r: 15, from: 9.5 + i, to: 10.4 + i })),
 ];
 
 /** The corner that stays unmapped — "there is always more to map". */
@@ -119,7 +143,7 @@ export const PATHS: { from: string; to: string; span: [number, number]; seed: nu
   { from: "discover", to: "understand", span: [5.4, 7.0], seed: 5 },
   { from: "understand", to: "n6", span: [7.0, 8.5], seed: 6 },
   { from: "n6", to: "n7", span: [8.5, 10.2], seed: 7 },
-  { from: "investigate", to: "discover", span: [11, 12.6], seed: 8 },
+  { from: "investigate", to: "discover", span: [9.4, 11], seed: 8 },
 ];
 
 export const nodeById = (id: string) => {

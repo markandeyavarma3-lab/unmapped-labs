@@ -22,6 +22,9 @@ if (typeof window !== "undefined") {
   for (const e of ["scroll", "pointermove", "pointerdown", "wheel", "keydown", "touchmove"]) window.addEventListener(e, mark, { passive: true });
 }
 
+/** DOM labels for the four service hubs of the systems network, positioned by the scene. */
+export const serviceLabels: (HTMLElement | null)[] = [];
+
 /** The single DOM label for survey nodes; lives outside the canvas, positioned by the scene. */
 export const nodeLabel = { el: null as HTMLDivElement | null };
 

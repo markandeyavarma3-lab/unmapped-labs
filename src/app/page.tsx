@@ -7,6 +7,8 @@ import { IntroSection } from "@/components/sections/IntroSection";
 import { Approach } from "@/components/sections/Approach";
 import { FocusAreas } from "@/components/sections/FocusAreas";
 import { FieldNotes } from "@/components/sections/FieldNotes";
+import { SelectedWork } from "@/components/sections/SelectedWork";
+import { WhatWeDo } from "@/components/sections/WhatWeDo";
 import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
@@ -35,6 +37,8 @@ export default function Home() {
         <Approach />
 
         <FocusAreas />
+        <SelectedWork />
+        <WhatWeDo />
         <FieldNotes />
 
         <Principles />

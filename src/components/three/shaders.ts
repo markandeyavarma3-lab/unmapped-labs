@@ -58,6 +58,7 @@ export const terrainFragment = /* glsl */ `
   uniform vec2  uFog;            // near, far
   uniform float uSweep;          // 0 → 1 during the entrance; < 0 when done
   uniform float uFinale;         // 0 → 1 at Contact
+  uniform float uDissolve;       // 0 → 1: the land breaks apart into the systems network
   #ifdef TITLE
   uniform float uRise;
   uniform float uTitleGlow;
@@ -169,6 +170,15 @@ export const terrainFragment = /* glsl */ `
     col += lit * isoLine(vLetter * 3.2, 1.0) * slope * uRise * 0.35 * uTitleGain;
     col += uCyan * top * uTitleGlow * 0.06 * (0.6 + 0.4 * sin(xz.x * 0.6 - uTime * 1.6));
     #endif
+
+    // Dissolve: the land breaks apart cell by cell, each fragment's edge glowing as it goes.
+    if (uDissolve > 0.0) {
+      float n = fbm(xz * 0.32 + 3.1);
+      float cut = uDissolve * 1.3 - 0.15;
+      if (n < cut) discard;
+      float edge = 1.0 - smoothstep(0.0, 0.05, n - cut);
+      col += uCyan * edge * 1.6 * step(0.001, uDissolve);
+    }
 
     // Atmosphere.
     float fog = smoothstep(uFog.x, uFog.y + uFinale * 35.0, dist);

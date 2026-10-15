@@ -4,7 +4,7 @@ import { LayerDiagram } from "./LayerDiagram";
 
 export function Principles() {
   return (
-    <section id="philosophy" data-chapter="11" aria-labelledby="philosophy-heading" className="relative py-[var(--section-y)]">
+    <section id="philosophy" data-chapter="14" aria-labelledby="philosophy-heading" className="relative py-[var(--section-y)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(8,11,14,0.8)_16%,rgba(8,11,14,0.8)_84%,transparent)]"
