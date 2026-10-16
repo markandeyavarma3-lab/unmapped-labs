@@ -16,27 +16,39 @@ import { MODELS, type ModelName } from "./models.generated";
 export type DistrictId = "farms" | "logistics" | "healthcare" | "energy" | "markets" | "open";
 export type FixType = "software" | "hardware" | "process" | "data";
 
+/**
+ * A district is a large site (a commercial farm, a container yard, a hospital
+ * campus, an industrial plant…) on a rectangle of land between a side avenue
+ * and the ring road. Its gates open onto lanes from the side avenue.
+ */
 export type District = {
   id: DistrictId;
+  x0: number;
+  x1: number;
+  z0: number;
+  z1: number;
+  /** Centre, and a radius that covers the rectangle (for coarse checks). */
   x: number;
   z: number;
   r: number;
-  /** Chapter at which the district "lights up" (is understood). */
-  chapter: number;
-  /** Where its flow jams: the district's gate on its access street. */
-  jam: [number, number];
-  /** The right fix for its example problem (none for the uncharted district). */
-  fix: FixType | null;
+  /** Lanes (z) from the side avenue into the site. */
+  gates: number[];
 };
 
+const site = (id: DistrictId, x0: number, x1: number, z0: number, z1: number, gates: number[]): District => ({
+  id, x0, x1, z0, z1, gates, x: (x0 + x1) / 2, z: (z0 + z1) / 2, r: Math.hypot(x1 - x0, z1 - z0) / 2,
+});
+
 export const DISTRICTS: Record<DistrictId, District> = {
-  farms: { id: "farms", x: -17, z: 10, r: 9, chapter: 5, jam: [-8.6, 10], fix: "software" },
-  logistics: { id: "logistics", x: 18, z: 2, r: 8, chapter: 6, jam: [8.8, 2], fix: "process" },
-  healthcare: { id: "healthcare", x: -16, z: -22, r: 7.5, chapter: 7, jam: [-8.6, -22], fix: "data" },
-  energy: { id: "energy", x: 17, z: -30, r: 8.5, chapter: 8, jam: [8.8, -30], fix: "hardware" },
-  open: { id: "open", x: -16, z: -52, r: 7.5, chapter: 9, jam: [-8.6, -52], fix: null },
-  markets: { id: "markets", x: 15, z: -52, r: 6.5, chapter: 11, jam: [8.8, -52], fix: "data" },
+  farms: site("farms", -26.4, -10.6, -3, 31, [10]),
+  logistics: site("logistics", 10.6, 26.4, -3, 31, [10]),
+  healthcare: site("healthcare", -26.4, -10.6, -35.5, -9, [-14, -30]),
+  energy: site("energy", 10.6, 26.4, -40, -9, [-22]),
+  open: site("open", -26.4, -10.6, -58.5, -41, [-52]),
+  markets: site("markets", 10.6, 20, -58.5, -46, [-52]),
 };
+/** Inside a district's rectangle (grown by `pad`)? */
+export const inSite = (d: District, x: number, z: number, pad = 0) => x > d.x0 - pad && x < d.x1 + pad && z > d.z0 - pad && z < d.z1 + pad;
 export const DISTRICT_LIST = Object.values(DISTRICTS);
 
 /* ------------------------------------------------------------------ */
@@ -58,8 +70,25 @@ export const Z_STREETS = [36, 28, 20, 10, 2, -6, -14, -22, -30, -38, -45, -52, -
 export const BOULEVARD_Z = 36;
 export const AVENUE_END = -66;
 
+/** Ground extent (the sea and the far fields continue past it). */
+export const GROUND = { minX: -64, maxX: 64, minZ: -96, maxZ: 84 };
+
+/** The river from the northern hills, across the city's northern edge to the sea (x, z). */
+export const RIVER_CITY: [number, number][] = [
+  [0.23, GROUND.maxZ + 0.5],
+  [1.6, 81.2],
+  [7, 79.4],
+  [16, 78.6],
+  [24, 79.2],
+  [RING_X, 79.4],
+  [34, 79.6],
+  [40, 79.6],
+];
+export const RIVER_CITY_W = 2.6;
+
+/** Does an axis-aligned segment cross any district (grown by `pad`)? */
 const segHitsDistrict = (x1: number, z1: number, x2: number, z2: number, pad: number) =>
-  DISTRICT_LIST.some((d) => distToSegment(d.x, d.z, x1, z1, x2, z2) < d.r + pad);
+  DISTRICT_LIST.some((d) => Math.max(x1, x2) > d.x0 - pad && Math.min(x1, x2) < d.x1 + pad && Math.max(z1, z2) > d.z0 - pad && Math.min(z1, z2) < d.z1 + pad);
 
 function buildRoads(): Road[] {
   const roads: Road[] = [
@@ -70,16 +99,19 @@ function buildRoads(): Road[] {
     [RING_X, BOULEVARD_Z, RING_X, -60, 1.0, "street"],
     [-RING_X, BOULEVARD_Z, RING_X, BOULEVARD_Z, 1.2, "street"],
     [-RING_X, -60, RING_X, -60, 1.0, "street"],
+    // north, out to the hills (it climbs the valley from here: hill-terrain.ts)
+    [RING_X, BOULEVARD_Z, RING_X, GROUND.maxZ, 1.0, "street"],
   ];
   for (const z of Z_STREETS) {
     if (z === BOULEVARD_Z || z === -60) continue;
     roads.push([-SIDE_X, z, SIDE_X, z, 1.0, "street"]);
     // Out to the ring road through the suburbs, unless a district is in the way.
     for (const side of [-1, 1]) {
-      const d = DISTRICT_LIST.find((dd) => dd.jam[1] === z && Math.sign(dd.jam[0]) === side);
+      const d = DISTRICT_LIST.find((dd) => dd.gates.includes(z) && Math.sign(dd.x) === side);
       if (d) {
-        // a district's access street: gate (jam) → its heart
-        roads.push([side * SIDE_X, z, d.x - side * 2.2, z, 0.9, "lane"]);
+        // a district's gate road, a little way into the site
+        const edge = side > 0 ? d.x0 : d.x1;
+        roads.push([side * SIDE_X, z, edge + side * 1.6, z, 0.9, "lane"]);
       } else if (!segHitsDistrict(side * (SIDE_X + 1), z, side * RING_X, z, 0.4)) {
         roads.push([side * SIDE_X, z, side * RING_X, z, 0.8, "lane"]);
       }
@@ -89,8 +121,6 @@ function buildRoads(): Road[] {
 }
 export const ROADS: Road[] = buildRoads();
 
-/** Ground extent (the sea and the far fields continue past it). */
-export const GROUND = { minX: -64, maxX: 64, minZ: -96, maxZ: 84 };
 
 /** The block the five-step process plays out in (east of the avenue, between z 20 and 28). */
 export const PROCESS_BLOCK = {
@@ -202,7 +232,7 @@ class Occupancy {
   }
 }
 
-export const inDistrict = (x: number, z: number, pad = 0) => DISTRICT_LIST.find((d) => Math.hypot(x - d.x, z - d.z) < d.r + pad) ?? null;
+export const inDistrict = (x: number, z: number, pad = 0) => DISTRICT_LIST.find((d) => inSite(d, x, z, pad)) ?? null;
 
 export type CityData = {
   title: TitleShape;
@@ -237,11 +267,13 @@ export function buildCity(layout: TitleLayout, density = 1): CityData {
     occ.mark(Math.min(x1, x2) - h, Math.min(z1, z2) - h, Math.max(x1, x2) + h, Math.max(z1, z2) + h);
   }
   // Districts build their own scenes; the process block is its own scene too.
-  for (const d of DISTRICT_LIST) {
-    for (let a = 0; a < Math.PI * 2; a += 0.05)
-      for (let r = 0; r < d.r; r += 0.4) occ.mark(d.x + Math.cos(a) * r, d.z + Math.sin(a) * r, d.x + Math.cos(a) * r, d.z + Math.sin(a) * r);
-  }
+  for (const d of DISTRICT_LIST) occ.mark(d.x0, d.z0, d.x1, d.z1);
   occ.mark(PROCESS_BLOCK.minX, PROCESS_BLOCK.minZ, PROCESS_BLOCK.maxX, PROCESS_BLOCK.maxZ);
+  // The river.
+  for (let i = 0; i < RIVER_CITY.length - 1; i++) {
+    const [ax, az] = RIVER_CITY[i], [bx, bz] = RIVER_CITY[i + 1];
+    for (let t = 0; t <= 1; t += 0.05) occ.mark(ax + (bx - ax) * t - 2.4, az + (bz - az) * t - 2.4, ax + (bx - ax) * t + 2.4, az + (bz - az) * t + 2.4);
+  }
   // The sea and the railway.
   occ.mark(COAST_X - 1.2, GROUND.minZ, GROUND.maxX, GROUND.maxZ);
   occ.mark(RAIL_X - 0.9, GROUND.minZ, RAIL_X + 0.9, GROUND.maxZ);
@@ -442,12 +474,3 @@ export function buildCity(layout: TitleLayout, density = 1): CityData {
 
 /** Traffic keeps left (as in India): southbound on the avenue's west half. */
 export const LANE = 0.4;
-
-/** Logistics' fix (process): past the gate, a second lane to a second dock. Trucks split once it exists. */
-export const LOGISTICS_BYPASS: [number, number][] = [
-  [-LANE, BOULEVARD_Z - 1],
-  [-LANE, DISTRICTS.logistics.z - 0.25],
-  [DISTRICTS.logistics.jam[0] + 1.4, DISTRICTS.logistics.z - 0.25],
-  [DISTRICTS.logistics.jam[0] + 1.4, DISTRICTS.logistics.z + 2.6],
-  [DISTRICTS.logistics.x - 3.0, DISTRICTS.logistics.z + 2.6],
-];

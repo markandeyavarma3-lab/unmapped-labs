@@ -1,5 +1,6 @@
 import { services } from "@/content/site-content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { CHAPTER } from "@/components/three/chapters";
 
 /**
  * Services: research always comes first, then whichever of the four kinds of
@@ -7,7 +8,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
  */
 export function WhatWeDo() {
   return (
-    <section id="services" data-chapter="12" aria-labelledby="services-heading" className="relative py-[var(--section-y)]">
+    <section id="services" data-chapter={CHAPTER.services} aria-labelledby="services-heading" className="relative py-[var(--section-y)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[90vh] bg-[linear-gradient(180deg,transparent,rgba(247,242,233,0.82)_22%,rgba(247,242,233,0.82)_70%,transparent)] lg:bg-[linear-gradient(90deg,rgba(247,242,233,0.85),rgba(247,242,233,0.4)_50%,transparent_75%)]"

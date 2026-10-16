@@ -3,22 +3,19 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-  BOULEVARD_Z, COAST_X, DISTRICTS, LANE, LOGISTICS_BYPASS, PROCESS_BLOCK, RAIL_X, ROADS, SIDE_X, SIDEWALK, inDistrict, type AnyModel,
-} from "./city-layout";
-import { buildDistrictScenes } from "./district-scenes";
-import { cityState } from "./city-state";
+import { BOULEVARD_Z, COAST_X, LANE, PROCESS_BLOCK, RAIL_X, ROADS, SIDE_X, SIDEWALK, inDistrict, type AnyModel } from "./city-layout";
+import { CHIMNEYS, HELIPAD } from "./districts/layout";
 import { frame } from "./frame-state";
-import { islandState } from "./views";
+import { MAIN_GREEN, islandState } from "./views";
 import { createDynamicBatch, createPaletteMaterial, useModels, releaseBatch } from "./models";
 import { mulberry32 } from "./terrain-math";
 import type { Tier } from "./Scene";
 
 /**
- * Everything that moves: traffic that keeps left and waits at the lights,
- * trucks queueing at the logistics gate, patients at the hospital, a tractor
- * in the fields, an ambulance, a helicopter, the train, boats, birds, people
- * on the sidewalks and smoke from the power station.
+ * Everything that moves in the city at large: traffic that keeps left and
+ * waits at the lights, a helicopter on the hospital's roof, the train, boats,
+ * birds, people on the sidewalks and smoke from the plant. (Each large site
+ * moves its own trucks, patients and crews: districts/*.)
  */
 
 const CAR_MODELS: AnyModel[] = ["car-sedan", "car-sedan-sports", "car-hatchback-sports", "car-suv", "car-suv-luxury", "car-taxi", "car-taxi", "car-van", "car-delivery", "car-police", "car-truck", "car-garbage-truck"];
@@ -30,11 +27,13 @@ const SHIRTS = [0xe4483c, 0x2f74c8, 0xf2b33d, 0x3b9c6a, 0xf4f1ea, 0x8e5ac8, 0xff
 
 /** True while traffic along this axis has green at the junction (x, z). Exported for the process block. */
 export function signalGreen(vertical: boolean, x: number, z: number, t: number) {
-  // A slow green wave down the avenue.
   if (frame.process > 0.2 && Math.abs(x - PROCESS_BLOCK.junction[0]) < 0.1 && Math.abs(z - PROCESS_BLOCK.junction[1]) < 0.1) {
-    // The process block's junction: stuck on red until the fix is validated.
-    if (islandState.progress < 3.55) return false;
+    // The process block's junction: the main road (vertical) gets a quarter of the cycle until it's re-timed.
+    const main = islandState.progress > MAIN_GREEN.retimedAt ? MAIN_GREEN.after : MAIN_GREEN.before;
+    const cycle = (t % 12) / 12;
+    return vertical ? cycle < main : cycle > main + 0.04;
   }
+  // A slow green wave down the avenue.
   const cycle = (t + x * 0.13 + z * 0.09) % 12;
   return vertical ? cycle < 6 : cycle >= 6;
 }
@@ -79,28 +78,6 @@ function buildLanes(rand: () => number, density: number) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Paths (story agents, tractor, ambulance)                           */
-/* ------------------------------------------------------------------ */
-
-type Path = { pts: THREE.Vector3[]; seg: number[]; len: number };
-const makePath = (pts: [number, number][]): Path => {
-  const v = pts.map(([x, z]) => new THREE.Vector3(x, 0, z));
-  const seg = [0];
-  for (let i = 1; i < v.length; i++) seg.push(seg[i - 1] + v[i].distanceTo(v[i - 1]));
-  return { pts: v, seg, len: seg[seg.length - 1] };
-};
-/** Point and heading at distance d along a path. */
-function along(p: Path, d: number, out: THREE.Vector3) {
-  d = Math.min(Math.max(d, 0), p.len - 1e-4);
-  let i = 1;
-  while (i < p.seg.length - 1 && p.seg[i] < d) i++;
-  const a = p.pts[i - 1], b = p.pts[i];
-  const t = (d - p.seg[i - 1]) / Math.max(1e-6, p.seg[i] - p.seg[i - 1]);
-  out.lerpVectors(a, b, t);
-  return Math.atan2(b.x - a.x, b.z - a.z);
-}
-
-/* ------------------------------------------------------------------ */
 /* Smoke                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -136,38 +113,15 @@ export function Life({ tier }: { tier: Tier }) {
   const built = useMemo(() => {
     const rand = mulberry32(2024);
     const density = tier === "high" ? 1 : 0.55;
-    const scenes = buildDistrictScenes();
     const lanes = buildLanes(rand, density);
     const carCount = lanes.reduce((n, l) => n + l.cars.length, 0);
 
-    const L = DISTRICTS.logistics, Hc = DISTRICTS.healthcare;
-    // Logistics trucks come down the east side avenue, queue at the gate, then dock.
-    const zl = L.z - 0.25;
-    const truckMain = makePath([[SIDE_X - 0.27, zl + 9], [SIDE_X - 0.27, zl], [L.jam[0], zl], [L.x - 2.6, zl]]);
-    const truckAlt = makePath([[SIDE_X - 0.27, zl + 9], [SIDE_X - 0.27, zl], [LOGISTICS_BYPASS[2][0], zl], [LOGISTICS_BYPASS[3][0], LOGISTICS_BYPASS[3][1]], [LOGISTICS_BYPASS[4][0], LOGISTICS_BYPASS[4][1]]]);
-    const truckGate = 9 + (L.jam[0] - SIDE_X);
-    const trucks = Array.from({ length: tier === "high" ? 9 : 6 }, (_, i) => ({ u: (i / 9) * truckMain.len, id: -1, alt: i % 2 === 0, m: (["car-truck", "car-delivery", "car-truck-flat", "car-delivery-flat"] as const)[i % 4] }));
-
-    // Patients walk down the west side avenue's sidewalk to the hospital's door.
-    const pz = Hc.z + 0.75;
-    const walk = makePath([[-SIDE_X - 0.75, pz - 8], [-SIDE_X - 0.75, pz], [scenes.hospitalDoor[0], pz]]);
-    const patientGate = 8 + (-SIDE_X - 0.75 - Hc.jam[0]);
-    const patients = Array.from({ length: tier === "high" ? 26 : 16 }, (_, i) => ({ u: (i / 26) * walk.len, v: 0.22 + rand() * 0.08 }));
-
-    // Tractor: laps around the fields. Ambulance: shuttles between the bay and the avenue.
-    const f = scenes.fields;
-    const tractorPath = makePath([[f[0].x0 - 0.3, f[0].z0 - 0.3], [f[1].x1 + 0.3, f[1].z0 - 0.3], [f[3].x1 + 0.3, f[3].z1 + 0.3], [f[2].x0 - 0.3, f[2].z1 + 0.3], [f[0].x0 - 0.3, f[0].z0 - 0.3]]);
-    const ambPath = makePath([[scenes.hospitalDoor[0] + 0.6, Hc.z - 0.25], [-SIDE_X - 0.4, Hc.z - 0.25]]);
-
-    const models: AnyModel[] = [...CAR_MODELS, "car-truck", "car-delivery", "car-truck-flat", "car-delivery-flat", "car-tractor", "car-ambulance", "proc-heli", "proc-rotor", "proc-loco", "proc-coach", "proc-wagon0", "proc-wagon1", "proc-wagon2", "proc-boat0", "proc-boat1", "proc-boat2", "proc-boat3"];
+    const models: AnyModel[] = [...CAR_MODELS, "proc-heli", "proc-rotor", "proc-loco", "proc-coach", "proc-wagon0", "proc-wagon1", "proc-wagon2", "proc-boat0", "proc-boat1", "proc-boat2", "proc-boat3"];
     const trainLen = 8;
     const boatCount = tier === "high" ? 10 : 6;
     const material = createPaletteMaterial(tier);
-    const batch = createDynamicBatch(geos, models, carCount + trucks.length + 6 + trainLen + boatCount, material);
+    const batch = createDynamicBatch(geos, models, carCount + 2 + trainLen + boatCount, material);
     for (const lane of lanes) for (const c of lane.cars) c.id = batch.add(CAR_MODELS[Math.floor(rand() * CAR_MODELS.length)]);
-    for (const tr of trucks) tr.id = batch.add(tr.m);
-    const tractor = batch.add("car-tractor");
-    const ambulance = batch.add("car-ambulance");
     const heli = batch.add("proc-heli");
     const rotor = batch.add("proc-rotor");
     const train = Array.from({ length: trainLen }, (_, i) => batch.add(i === 0 ? "proc-loco" : i < 4 ? "proc-coach" : (`proc-wagon${i % 3}` as AnyModel)));
@@ -188,14 +142,14 @@ export function Life({ tier }: { tier: Tier }) {
         walkers.push({ h, c, a0, a1, u: a0 + rand() * (a1 - a0), v: (rand() < 0.5 ? -1 : 1) * (0.12 + rand() * 0.1) });
       }
     }
-    const people = new THREE.InstancedMesh(geos["proc-person"], material, walkers.length + patients.length);
+    const people = new THREE.InstancedMesh(geos["proc-person"], material, walkers.length);
     people.castShadow = true;
     const col = new THREE.Color();
-    for (let i = 0; i < walkers.length + patients.length; i++) people.setColorAt(i, col.setHex(SHIRTS[Math.floor(rand() * SHIRTS.length)]));
+    for (let i = 0; i < walkers.length; i++) people.setColorAt(i, col.setHex(SHIRTS[Math.floor(rand() * SHIRTS.length)]));
 
     // Birds: a few flocks wheeling over the city.
     const flocks = [
-      { x: -4, z: 30, r: 9, y: 7, sp: 0.18 },
+      { x: -12, z: 46, r: 9, y: 9, sp: 0.18 },
       { x: 14, z: -10, r: 12, y: 9, sp: -0.14 },
       { x: -18, z: -40, r: 10, y: 8, sp: 0.16 },
       { x: 34, z: -20, r: 8, y: 6, sp: 0.2 },
@@ -207,9 +161,9 @@ export function Life({ tier }: { tier: Tier }) {
     // Smoke from the power station's chimneys.
     const perChimney = tier === "high" ? 26 : 14;
     const smokeGeo = new THREE.BufferGeometry();
-    const n = scenes.chimneys.length * perChimney;
+    const n = CHIMNEYS.length * perChimney;
     const origin = new Float32Array(n * 3), phase = new Float32Array(n);
-    scenes.chimneys.forEach(([x, y, z], c) => {
+    CHIMNEYS.forEach(([x, y, z], c) => {
       for (let i = 0; i < perChimney; i++) {
         origin.set([x, y, z], (c * perChimney + i) * 3);
         phase[c * perChimney + i] = i / perChimney + rand() * 0.02;
@@ -223,7 +177,7 @@ export function Life({ tier }: { tier: Tier }) {
     smoke.frustumCulled = false;
 
     return {
-      scenes, lanes, batch, material, trucks, truckMain, truckAlt, truckGate, patients, walk, patientGate, tractor, tractorPath, ambulance, ambPath,
+      lanes, batch, material,
       heli, rotor, train, boats, walkers, people, flocks, birdsPer, birdOffsets, birds, smoke, smokeGeo, smokeMat,
     };
   }, [geos, tier]);
@@ -281,42 +235,16 @@ export function Life({ tier }: { tier: Tier }) {
         const a = lane.dir > 0 ? lane.a0 + car.u : lane.a1 - car.u;
         const fade = THREE.MathUtils.clamp(Math.min(car.u, lane.len - car.u) / 0.5, 0, 1);
         const ry = lane.h ? (lane.dir > 0 ? Math.PI / 2 : -Math.PI / 2) : lane.dir > 0 ? 0 : Math.PI;
-        set(car.id, lane.h ? a : lane.c, 0, lane.h ? lane.c : a, ry, car.s * fade);
+        const cx = lane.h ? a : lane.c, cz = lane.h ? lane.c : a;
+        const hz = islandState.hide;
+        const hidden = hz.on && cx > hz.x0 && cx < hz.x1 && cz > hz.z0 && cz < hz.z1;
+        set(car.id, cx, 0, cz, ry, hidden ? 0.0001 : car.s * fade);
       }
-    }
-
-    /* Logistics: trucks queue at the single gate until the second lane exists. */
-    const logi = cityState.logistics;
-    const jam = logi.problem > 0.15;
-    const order = b.trucks.map((_, i) => i).sort((i, k) => b.trucks[k].u - b.trucks[i].u);
-    order.forEach((i, rank) => {
-      const tr = b.trucks[i];
-      const path = tr.alt && logi.fixed > 0.5 ? b.truckAlt : b.truckMain;
-      let next = tr.u + 0.75 * dt;
-      if (jam && tr.u < b.truckGate + 0.01) next = Math.min(next, Math.max(tr.u, b.truckGate - rank * 0.68));
-      if (next >= path.len) next = 0;
-      tr.u = next;
-      const ry = along(path, next, T.p);
-      const fade = THREE.MathUtils.clamp(Math.min(next, path.len - next) / 0.5, 0, 1);
-      set(tr.id, T.p.x, 0, T.p.z, ry, 0.2 * fade);
-    });
-
-    /* Tractor laps the fields; the ambulance shuttles. */
-    {
-      const d = (t * 0.38) % b.tractorPath.len;
-      const ry = along(b.tractorPath, d, T.p);
-      set(b.tractor, T.p.x, 0, T.p.z, ry, 0.2);
-      const L = b.ambPath.len;
-      const k = (t * 0.6) % (L * 2 + 6);
-      const dd = k < L ? k : k < L + 3 ? L : k < L * 2 + 3 ? L * 2 + 3 - k : 0;
-      const r2 = along(b.ambPath, dd, T.p) + (k >= L + 3 && k < L * 2 + 3 ? Math.PI : 0);
-      const fade = THREE.MathUtils.clamp((L - dd) / 0.5, 0, 1);
-      set(b.ambulance, T.p.x, 0, T.p.z, r2, 0.2 * fade);
     }
 
     /* Helicopter: rests on the hospital's roof, takes off, circles the city, lands. */
     {
-      const hp = b.scenes.helipad;
+      const hp = HELIPAD;
       const cyc = t % 34;
       let x = hp.x, y = hp.y, z = hp.z, ry = 0, tilt = 0;
       if (cyc > 9 && cyc < 31) {
@@ -363,21 +291,6 @@ export function Life({ tier }: { tier: Tier }) {
       const bob = Math.abs(Math.sin(t * 9 + i)) * 0.012;
       T.q.setFromAxisAngle(T.y, w.h ? (w.v > 0 ? Math.PI / 2 : -Math.PI / 2) : w.v > 0 ? 0 : Math.PI);
       P.setMatrixAt(i, T.m.compose(T.p.set(w.h ? w.u : w.c, bob, w.h ? w.c : w.u), T.q, T.s.setScalar(fade)));
-    });
-    const health = cityState.healthcare;
-    const pile = health.problem > 0.15;
-    const pord = b.patients.map((_, i) => i).sort((i, k) => b.patients[k].u - b.patients[i].u);
-    pord.forEach((i, rank) => {
-      const p = b.patients[i];
-      let next = p.u + p.v * dt;
-      // a crowd at the gate: rows of three, shuffling
-      if (pile && p.u < b.patientGate + 0.01) next = Math.min(next, Math.max(p.u, b.patientGate - Math.floor(rank / 3) * 0.16));
-      if (next >= b.walk.len) next = 0;
-      p.u = next;
-      along(b.walk, next, T.p);
-      const lateral = pile && next >= b.patientGate - 3 && next <= b.patientGate + 0.02 ? ((rank % 3) - 1) * 0.12 : 0;
-      const fade = THREE.MathUtils.clamp(Math.min(next, b.walk.len - next) / 0.3, 0, 1);
-      P.setMatrixAt(b.walkers.length + i, T.m.compose(T.p.set(T.p.x + lateral, Math.abs(Math.sin(t * 9 + i)) * 0.01, T.p.z + lateral), T.q.identity(), T.s.setScalar(fade)));
     });
     P.instanceMatrix.needsUpdate = true;
 

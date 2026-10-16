@@ -32,7 +32,7 @@ for (const [x1, z1, x2, z2, w] of ROADS) out += `<line x1="${r(sx(x1))}" y1="${r
 out += `</g><g stroke="#565a62" stroke-linecap="square">`;
 for (const [x1, z1, x2, z2, w] of ROADS) out += `<line x1="${r(sx(x1))}" y1="${r(sz(z1))}" x2="${r(sx(x2))}" y2="${r(sz(z2))}" stroke-width="${r(w * s)}"/>`;
 out += `</g>`;
-for (const d of DISTRICT_LIST) out += `<circle cx="${r(sx(d.x))}" cy="${r(sz(d.z))}" r="${r(d.r * s)}" fill="#ffffff" fill-opacity=".12" stroke="#0f8a8f" stroke-opacity=".5" stroke-dasharray="6 8"/>`;
+for (const d of DISTRICT_LIST) out += `<rect x="${r(sx(d.x0))}" y="${r(sz(d.z1))}" width="${r((d.x1 - d.x0) * s)}" height="${r((d.z1 - d.z0) * s)}" fill="#ffffff" fill-opacity=".12" stroke="#0f8a8f" stroke-opacity=".5" stroke-dasharray="6 8"/>`;
 let buildings = "", trees = "";
 for (const p of placements) {
   if (!inFrame(p.x, p.z)) continue;

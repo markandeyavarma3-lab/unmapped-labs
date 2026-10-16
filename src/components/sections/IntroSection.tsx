@@ -1,15 +1,15 @@
 import { intro } from "@/content/site-content";
-import { MorphSequence } from "./MorphSequence";
+import { CHAPTER } from "@/components/three/chapters";
 
 export function IntroSection() {
   return (
     <section
       id="intro"
-      data-chapter="3"
+      data-chapter={CHAPTER.intro}
       aria-labelledby="intro-heading"
       className="relative pt-[var(--section-y)]"
     >
-      {/* Veil only behind the copy — the morph stage below stays clear. */}
+      {/* Veil behind the copy. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[min(100%,58rem)] bg-[linear-gradient(180deg,transparent_0%,rgba(247,242,233,0.7)_25%,rgba(247,242,233,0.7)_70%,transparent_100%)]"
@@ -40,10 +40,6 @@ export function IntroSection() {
             </p>
           ))}
         </div>
-      </div>
-
-      <div className="relative mt-[clamp(3rem,8vw,6rem)]">
-        <MorphSequence />
       </div>
     </section>
   );

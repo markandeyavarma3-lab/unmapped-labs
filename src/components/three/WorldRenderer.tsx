@@ -5,6 +5,7 @@ import { createPortal, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { subscribeViewAnchors, viewAnchors, viewRects, viewVisible, type ViewId } from "./views";
 import { world } from "./world-store";
+import { flushCallouts } from "./callouts";
 
 type ViewEntry = { scene: THREE.Scene; camera: THREE.PerspectiveCamera };
 const registry: Partial<Record<ViewId, ViewEntry>> = {};
@@ -66,6 +67,7 @@ export function WorldRenderer() {
   const frameNo = useRef(0);
   useFrame((state) => {
     state.gl.autoClear = false;
+    flushCallouts(state.camera, state.size.width, state.size.height);
     const idle = performance.now() - world.lastActive > 2500;
     if (idle && frameNo.current++ % 2 === 1) return;
     renderWorld(state.gl, null, state.scene, state.camera);

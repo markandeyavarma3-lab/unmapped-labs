@@ -94,27 +94,20 @@ export function paintGround(title: TitleShape, scale = 1, blotches = 2600) {
   rect(-RING_X, BOULEVARD_Z, RING_X, BOULEVARD_Z + 2.8, "#e7dccb");
 
   // District grounds.
-  const disc = (x: number, z: number, r: number, fill: string) => {
-    g.fillStyle = fill;
-    g.beginPath();
-    g.arc(X(x), Z(z), r * K, 0, Math.PI * 2);
-    g.fill();
-  };
+  // District sites: each scene lays its own ground on top; this is the base colour of the plot.
   const D = DISTRICTS;
-  disc(D.logistics.x, D.logistics.z, D.logistics.r, "#d4ccbe");
-  // gravel under the power station only; a forecourt at the hospital; the markets' plaza
-  rect(D.energy.x - 1.2, D.energy.z - 6.4, D.energy.x + 6.6, D.energy.z - 0.6, "#d8ccb4");
-  rect(D.energy.x - 5.4, D.energy.z - 2.4, D.energy.x - 3.0, D.energy.z - 0.6, "#cfc6b6");
-  rect(D.healthcare.x - 3.2, D.healthcare.z - 4.6, D.healthcare.x + 4.4, D.healthcare.z + 4.6, "#e9e1d4");
-  rect(D.healthcare.x - 2.8, D.healthcare.z - 4.2, D.healthcare.x - 0.2, D.healthcare.z + 4.2, "#a8cd70");
-  disc(D.markets.x + 1, D.markets.z, D.markets.r * 0.8, "#e5d9c6");
-  disc(D.open.x, D.open.z, D.open.r, "#d9c29c");
+  rect(D.farms.x0, D.farms.z0, D.farms.x1, D.farms.z1, "#9fc265");
+  rect(D.logistics.x0, D.logistics.z0, D.logistics.x1, D.logistics.z1, "#cfc8ba");
+  rect(D.healthcare.x0, D.healthcare.z0, D.healthcare.x1, D.healthcare.z1, "#e9e1d4");
+  rect(D.energy.x0, D.energy.z0, D.energy.x1, D.energy.z1, "#d4cab6");
+  rect(D.markets.x0, D.markets.z0, D.markets.x1, D.markets.z1, "#e5d9c6");
+  rect(D.open.x0, D.open.z0, D.open.x1, D.open.z1, "#d9c29c");
   for (let i = 0; i < 300; i++) {
-    const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * D.open.r;
+    const x = D.open.x0 + rand() * (D.open.x1 - D.open.x0), z = D.open.z0 + rand() * (D.open.z1 - D.open.z0);
     g.globalAlpha = 0.25;
     g.fillStyle = rand() < 0.5 ? "#c9ab80" : "#e4d0ab";
     g.beginPath();
-    g.ellipse(X(D.open.x + Math.cos(a) * r), Z(D.open.z + Math.sin(a) * r), K * (0.3 + rand()), K * (0.2 + rand() * 0.6), rand() * 3, 0, Math.PI * 2);
+    g.ellipse(X(x), Z(z), K * (0.3 + rand()), K * (0.2 + rand() * 0.6), rand() * 3, 0, Math.PI * 2);
     g.fill();
   }
   g.globalAlpha = 1;

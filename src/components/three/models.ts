@@ -124,6 +124,9 @@ export function createDynamicBatch(geos: Geometries, models: AnyModel[], maxInst
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   mesh.sortObjects = false;
+  // Things that move: the whole-batch bounding sphere is computed once and cached, so it would
+  // freeze wherever the instances happened to be on the first frame. Cull per instance instead.
+  mesh.frustumCulled = false;
   return {
     mesh,
     add(m: AnyModel, tint = 0xffffff) {

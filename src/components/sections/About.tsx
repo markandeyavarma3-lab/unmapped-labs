@@ -1,6 +1,7 @@
 import { about, focus } from "@/content/site-content";
 import { getNotes } from "@/lib/notes";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { CHAPTER } from "@/components/three/chapters";
 
 export async function About() {
   const published = (await getNotes()).length;
@@ -14,7 +15,7 @@ export async function About() {
   ];
 
   return (
-    <section id="about" data-chapter="15" aria-labelledby="about-heading" className="relative py-[var(--section-y)]">
+    <section id="about" data-chapter={CHAPTER.about} aria-labelledby="about-heading" className="relative py-[var(--section-y)]">
       <div className="container-site grid gap-14 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-5">
           <SectionHeading id="about-heading" label={about.label} heading={about.heading} />

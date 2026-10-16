@@ -1,21 +1,23 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { CAMERA_KEYS, LAST_CHAPTER, PORTRAIT_TITLE_KEYS } from "./landmarks";
+import { CAMERA_KEYS, CHAPTER, DIVE_KEYS, FIRST_CHAPTER, LAST_CHAPTER, PORTRAIT_TITLE_KEYS, STORY_FOCUS } from "./landmarks";
 import { mulberry32 } from "./terrain-math";
 import { City } from "./City";
 import { Districts } from "./Districts";
 import { Life } from "./Life";
 import { Environment } from "./Environment";
-import { ProcessBlock, PROCESS_KEYS } from "./ProcessBlock";
-import { updateCityState } from "./city-state";
+import { ProcessBlock, PROCESS_STAGES, processCamera } from "./ProcessBlock";
+import { updateCaseState } from "./city-state";
+import { STORY_CHAPTER, STORY_IDS, storySmooth, updateStory } from "./story";
+import { Hills } from "./Hills";
+import { Projects } from "./Projects";
+import { Interaction, orbit } from "./Interaction";
 import { world } from "./world-store";
 import { frame } from "./frame-state";
-import { ViewLayer } from "./WorldRenderer";
-import { islandState, subscribeViewAnchors, viewAnchors, type ViewId } from "./views";
-import { ParticleMorph } from "./ParticleMorph";
+import { islandState, viewAnchors } from "./views";
 
 export type Tier = "high" | "low";
 
@@ -34,53 +36,13 @@ function useStagedMount(stages: number) {
   return stage;
 }
 
-/** True once the browser has been idle `delay` ms after mount — for building heavy scenes off the scroll path. */
-function useIdleReady(delay: number) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let idleId = 0;
-    const timer = window.setTimeout(() => {
-      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 50));
-      idleId = ric(() => setReady(true), { timeout: 2000 }) as number;
-    }, delay);
-    return () => {
-      window.clearTimeout(timer);
-      (window.cancelIdleCallback ?? window.clearTimeout)(idleId);
-    };
-  }, [delay]);
-  return ready;
-}
-
-/** True once a view's anchor comes within ~1.5 screens of the viewport (and stays true). */
-function useAnchorNear(id: ViewId, enabled: boolean) {
-  const [near, setNear] = useState(false);
-  const anchor = useSyncExternalStore(subscribeViewAnchors, () => viewAnchors[id], () => null);
-  useEffect(() => {
-    if (!enabled || !anchor || near) return;
-    const io = new IntersectionObserver((e) => e.some((x) => x.isIntersecting) && setNear(true), { rootMargin: "150% 0px 150% 0px" });
-    io.observe(anchor);
-    return () => io.disconnect();
-  }, [anchor, enabled, near]);
-  return near;
-}
-
 export function Scene({ tier, introDelay, onReady }: { tier: Tier; introDelay: number; onReady: () => void }) {
-  const phone = tier === "low";
-  const morphIdle = useIdleReady(2600);
-  const morphNear = useAnchorNear("morph", phone);
-  const morphReady = phone ? morphNear : morphIdle;
-
   return (
     <>
       <Environment tier={tier} />
       <Suspense fallback={null}>
         <CityScene tier={tier} introDelay={introDelay} onReady={onReady} />
       </Suspense>
-      {morphReady && (
-        <ViewLayer id="morph" fov={38} position={[0, 0, 11.5]}>
-          <ParticleMorph tier={tier} />
-        </ViewLayer>
-      )}
     </>
   );
 }
@@ -116,9 +78,12 @@ function CityScene({ tier, introDelay, onReady }: { tier: Tier; introDelay: numb
     <group ref={group} visible={compiled}>
       <CameraRig tier={tier} introDelay={introDelay} />
       <City tier={tier} />
+      <Hills tier={tier} />
       {stage >= 2 && <Districts tier={tier} />}
       {stage >= 3 && <Life tier={tier} />}
       {stage >= 4 && <ProcessBlock />}
+      {stage >= 4 && <Projects tier={tier} />}
+      {stage >= 5 && <Interaction />}
       {stage >= 5 && tier === "high" && <Motes />}
     </group>
   );
@@ -134,8 +99,8 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     return {
       pos: new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => v(k.pos)), false, "centripetal"),
       target: new THREE.CatmullRomCurve3(CAMERA_KEYS.map((k) => v(k.target)), false, "centripetal"),
-      pPos: new THREE.CatmullRomCurve3(PROCESS_KEYS.map((k) => v(k.pos)), false, "centripetal"),
-      pTarget: new THREE.CatmullRomCurve3(PROCESS_KEYS.map((k) => v(k.target)), false, "centripetal"),
+      divePos: new THREE.CatmullRomCurve3(DIVE_KEYS.map((k) => v(k.pos)), false, "centripetal"),
+      diveTarget: new THREE.CatmullRomCurve3(DIVE_KEYS.map((k) => v(k.target)), false, "centripetal"),
       portraitPos: PORTRAIT_TITLE_KEYS.map((k) => v(k.pos)),
       portraitTarget: PORTRAIT_TITLE_KEYS.map((k) => v(k.target)),
     };
@@ -151,6 +116,7 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     up: new THREE.Vector3(0, 1, 0),
     parallax: new THREE.Vector2(),
     offset: 0,
+    lift: 0,
     process: 0,
     pProgress: 0,
   });
@@ -180,9 +146,30 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
 
     // Chapter, smoothed so scroll jumps become camera glides.
     f.chapter = THREE.MathUtils.damp(f.chapter, world.chapter, 2.6, dt);
-    const u = clamp01(f.chapter / LAST_CHAPTER);
-    curves.pos.getPoint(u, tmp.pos);
-    curves.target.getPoint(u, tmp.target);
+    const u = clamp01((f.chapter - FIRST_CHAPTER) / (LAST_CHAPTER - FIRST_CHAPTER));
+    if (f.chapter < 0) {
+      // the dive from the hills into the city has its own path
+      const d = clamp01(f.chapter + 1);
+      curves.divePos.getPoint(d, tmp.pos);
+      curves.diveTarget.getPoint(d, tmp.target);
+    } else {
+      curves.pos.getPoint(u, tmp.pos);
+      curves.target.getPoint(u, tmp.target);
+    }
+
+    // Flights between the districts and projects arc up and look ahead, like a real flight.
+    if (f.chapter > CHAPTER.approach && f.chapter < CHAPTER.services) {
+      const c0 = Math.floor(f.chapter);
+      const fr = f.chapter - c0;
+      if (fr > 0.001) {
+        const a = CAMERA_KEYS[c0 - FIRST_CHAPTER], b = CAMERA_KEYS[c0 + 1 - FIRST_CHAPTER];
+        const span = Math.hypot(b.target[0] - a.target[0], b.target[2] - a.target[2]);
+        const arc = Math.sin(Math.PI * fr);
+        tmp.pos.y += arc * Math.min(14, span * 0.42);
+        tmp.b.set(b.target[0], b.target[1], b.target[2]);
+        tmp.target.lerp(tmp.b, arc * 0.3);
+      }
+    }
 
     // Portrait screens frame the stacked title from higher up.
     const aspect = size.width / size.height;
@@ -190,15 +177,19 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
       const k = clamp01(f.chapter);
       tmp.a.lerpVectors(curves.portraitPos[0], curves.portraitPos[1], k);
       tmp.b.lerpVectors(curves.portraitTarget[0], curves.portraitTarget[1], k);
-      const w = 1 - THREE.MathUtils.smoothstep(f.chapter, 1, 2);
+      const w = THREE.MathUtils.smoothstep(f.chapter, -0.25, -0.02) * (1 - THREE.MathUtils.smoothstep(f.chapter, 1, 2));
       tmp.pos.lerp(tmp.a, w);
       tmp.target.lerp(tmp.b, w);
     }
 
-    // Cinematic: while lingering on a district or a project, orbit slowly around it.
-    if (f.chapter > 4.5 && f.chapter < 11.5) {
-      const local = f.chapter - Math.round(f.chapter);
-      const angle = local * 0.7;
+    // Cinematic: while a district or project story plays, orbit slowly around it with the scroll.
+    updateStory(dt);
+    let angle = 0;
+    for (const id of STORY_IDS) {
+      const near = 1 - THREE.MathUtils.smoothstep(Math.abs(f.chapter - STORY_CHAPTER[id]), 0.15, 0.6);
+      if (near > 0) angle += (storySmooth[id] - 0.5) * 0.5 * near;
+    }
+    if (angle !== 0) {
       tmp.a.subVectors(tmp.pos, tmp.target).applyAxisAngle(tmp.up, angle);
       tmp.pos.copy(tmp.target).add(tmp.a);
     }
@@ -215,12 +206,38 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     tmp.pProgress = THREE.MathUtils.damp(tmp.pProgress, islandState.progress, 3, dt);
     f.process = tmp.process;
     if (tmp.process > 0.001) {
-      const pu = clamp01(tmp.pProgress / 4);
-      curves.pPos.getPoint(pu, tmp.a);
-      curves.pTarget.getPoint(pu, tmp.b);
+      processCamera(THREE.MathUtils.clamp(tmp.pProgress, 0, PROCESS_STAGES - 1), tmp.a, tmp.b);
       const w = easeOutCubic(tmp.process);
       tmp.pos.lerp(tmp.a, w);
       tmp.target.lerp(tmp.b, w);
+    }
+
+    // Drag to look around (Interaction.tsx): yaw about the target, pitch about the camera's right.
+    if (orbit.yaw !== 0 || orbit.pitch !== 0) {
+      tmp.a.subVectors(tmp.pos, tmp.target).applyAxisAngle(tmp.up, orbit.yaw);
+      tmp.right.crossVectors(tmp.a, tmp.up).normalize();
+      tmp.a.applyAxisAngle(tmp.right, -orbit.pitch);
+      if (tmp.a.y < 1.2) tmp.a.y = 1.2;
+      tmp.pos.copy(tmp.target).add(tmp.a);
+    }
+
+    // Portrait screens: stories and the process pull back a little so their focus fits the narrow frame.
+    let storyNear = 0;
+    const narrow = 1 - THREE.MathUtils.smoothstep(aspect, 0.8, 1.2);
+    for (const id of STORY_IDS) {
+      const k = 1 - THREE.MathUtils.smoothstep(Math.abs(f.chapter - STORY_CHAPTER[id]), 0.3, 0.8);
+      storyNear = Math.max(storyNear, k);
+      if (narrow > 0 && k > 0) {
+        // slide the whole shot so the story's focus sits in the middle of the frame
+        tmp.b.set(...STORY_FOCUS[id]).sub(tmp.target).multiplyScalar(k * narrow);
+        tmp.target.add(tmp.b);
+        tmp.pos.add(tmp.b);
+      }
+    }
+    if (narrow > 0) {
+      const back = 1 + narrow * Math.max(storyNear * 0.22, tmp.process * 0.3);
+      tmp.a.subVectors(tmp.pos, tmp.target).multiplyScalar(back);
+      tmp.pos.copy(tmp.target).add(tmp.a);
     }
 
     // Pointer parallax in camera space, damped; a gentle handheld drift.
@@ -247,20 +264,25 @@ function CameraRig({ tier, introDelay }: { tier: Tier; introDelay: number }) {
     // Framing: wider lens on portrait screens; on wide screens, shift the
     // composition right where the copy sits on the left.
     const fov = aspect < 0.8 ? 60 : aspect < 1.2 ? 50 : 40;
-    const heroWeight = Math.max(
-      1 - clamp01(Math.abs(f.chapter - 2) / 0.9),
-      THREE.MathUtils.smoothstep(f.chapter, 4.5, 5) * (1 - THREE.MathUtils.smoothstep(f.chapter, 11.4, 11.9)) * 0.85,
-      tmp.process * 0.8,
-    );
+    // Stories: shifted while their card is up, centred once it slides away.
+    let card = 0;
+    for (const id of STORY_IDS) {
+      const near = 1 - THREE.MathUtils.smoothstep(Math.abs(f.chapter - STORY_CHAPTER[id]), 0.3, 0.8);
+      card = Math.max(card, near * (1 - THREE.MathUtils.smoothstep(storySmooth[id], 0.08, 0.2)));
+    }
+    const heroWeight = Math.max(1 - clamp01(Math.abs(f.chapter - 2) / 0.9), card * 0.85, tmp.process * 0.8);
     const targetOffset = aspect > 1.2 ? size.width * 0.13 * heroWeight : 0;
     tmp.offset = THREE.MathUtils.damp(tmp.offset, targetOffset, 4, dt);
+    // …and on narrow screens, lift it above the card or step bar at the bottom.
+    const lift = narrow * size.height * Math.max(storyNear * 0.07, tmp.process * 0.14);
+    tmp.lift = THREE.MathUtils.damp(tmp.lift, lift, 4, dt);
     if (cam.fov !== fov) cam.fov = fov;
-    cam.setViewOffset(size.width, size.height, -tmp.offset, 0, size.width, size.height);
+    cam.setViewOffset(size.width, size.height, -tmp.offset, tmp.lift, size.width, size.height);
 
     // Story state for every district derives from the smoothed chapter.
     f.introT = easeOutCubic(clamp01((f.time - introDelay * 0.4) / 3.2));
-    f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, LAST_CHAPTER - 0.6, LAST_CHAPTER - 0.05), 3, dt);
-    updateCityState(f.chapter, f.finale);
+    f.finale = THREE.MathUtils.damp(f.finale, THREE.MathUtils.smoothstep(f.chapter, CHAPTER.contact - 0.6, CHAPTER.contact - 0.05), 3, dt);
+    updateCaseState(f.chapter);
   });
 
   return null;

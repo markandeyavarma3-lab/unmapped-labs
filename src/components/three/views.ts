@@ -8,11 +8,11 @@
  * view's scene with the view's camera into that rectangle.
  */
 
-export type ViewId = "morph" | "island";
+export type ViewId = "island";
 
 type Listener = () => void;
 
-export const viewAnchors: Record<ViewId, HTMLElement | null> = { morph: null, island: null };
+export const viewAnchors: Record<ViewId, HTMLElement | null> = { island: null };
 const anchorListeners = new Set<Listener>();
 
 export function setViewAnchor(id: ViewId, el: HTMLElement | null) {
@@ -28,19 +28,22 @@ export function subscribeViewAnchors(l: Listener) {
 }
 
 /** Each view's on-screen rectangle (CSS px, top-left origin), refreshed every frame by the renderer. */
-export const viewRects: Record<ViewId, { x: number; y: number; w: number; h: number } | null> = { morph: null, island: null };
+export const viewRects: Record<ViewId, { x: number; y: number; w: number; h: number } | null> = { island: null };
 
 /** Whether each view was drawn this frame — content skips its per-frame work when not. */
-export const viewVisible: Record<ViewId, boolean> = { morph: false, island: false };
+export const viewVisible: Record<ViewId, boolean> = { island: false };
 
-/** Morph sequence: 0 (Unknown) … 5 (Build). */
-export const morphState = { progress: 0 };
-
-/** Process island: 0 (Observe) … 4 (Validate), plus DOM labels positioned by the scene. */
+/** Process block: 0 (Unknown) … 5 (Validate). */
 export const islandState = {
   progress: 0,
-  labels: [] as (HTMLElement | null)[],
+  /** Right edge of the stage card (CSS px), so scene callouts stay clear of it. */
+  cardRight: 0,
+  /** The main road's southbound approach, where the process block runs its own queue; city traffic keeps out while it's on. */
+  hide: { x0: 6.95, x1: 7.5, z0: 15.0, z1: 29.5, on: false },
 };
+
+/** The process junction's signal: the share of the cycle the main road gets, before and after re-timing. */
+export const MAIN_GREEN = { before: 0.25, after: 0.55, retimedAt: 4.15 };
 
 /* ------------------------------------------------------------------ */
 /* World mode — lets DOM sections swap 2D fallbacks for live 3D       */

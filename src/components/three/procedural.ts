@@ -246,6 +246,29 @@ export const stake = () => merge([box(0.04, 0.3, 0.04, 0xf4f1ea), box(0.05, 0.06
 /** Market umbrella stall. */
 export const stall = (col: number) => merge([box(0.5, 0.22, 0.32, 0xc99a63), cyl(0.012, 0.012, 0.45, 0x5a4b3c, 0, 0.22, 0), place(paint(new THREE.ConeGeometry(0.42, 0.14, 8), col), 0, 0.73, 0)]);
 
+/** An auto-rickshaw (three-wheeler): green-and-yellow body, black canopy. Faces +z, ~0.4 long. */
+export function autoRickshaw() {
+  const p: Part[] = [];
+  p.push(box(0.24, 0.13, 0.3, 0x2f8a4e, 0, 0.05, -0.04)); // rear body
+  p.push(box(0.18, 0.12, 0.12, 0xf2c230, 0, 0.05, 0.16)); // nose
+  p.push(box(0.26, 0.03, 0.34, 0x1f2428, 0, 0.3, -0.02)); // canopy
+  for (const [x, z] of [[-0.11, 0.1], [0.11, 0.1], [-0.11, -0.16], [0.11, -0.16]]) p.push(box(0.015, 0.13, 0.015, 0x1f2428, x, 0.18, z));
+  p.push(box(0.2, 0.08, 0.02, 0x9cc8d8, 0, 0.2, 0.13)); // windscreen
+  for (const x of [-0.11, 0.11]) p.push(place(paint(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 10), 0x22262a), x, 0.045, -0.12, 0, 0, Math.PI / 2));
+  p.push(place(paint(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 10), 0x22262a), 0, 0.045, 0.18, 0, 0, Math.PI / 2));
+  return merge(p);
+}
+
+/** A motorbike with its rider. Faces +z, ~0.26 long. */
+export function motorbike() {
+  const p: Part[] = [];
+  p.push(box(0.05, 0.06, 0.24, 0x30363d, 0, 0.05, 0));
+  for (const z of [-0.1, 0.1]) p.push(place(paint(new THREE.CylinderGeometry(0.04, 0.04, 0.025, 10), 0x22262a), 0, 0.04, z, 0, 0, Math.PI / 2));
+  p.push(cyl(0.035, 0.04, 0.1, 0xe4483c, 0, 0.11, -0.02, 6)); // rider
+  p.push(place(paint(new THREE.SphereGeometry(0.032, 8, 6), 0x2b2f35), 0, 0.24, -0.01)); // helmet
+  return merge(p);
+}
+
 /** Every procedural piece, keyed like the kit models ("proc-…"). */
 export function buildProcGeometries(): Record<string, THREE.BufferGeometry> {
   const crane = towerCrane();
@@ -274,6 +297,8 @@ export function buildProcGeometries(): Record<string, THREE.BufferGeometry> {
     "proc-cross": redCross(),
     "proc-borewell": borewell(),
     "proc-person": person(),
+    "proc-auto": autoRickshaw(),
+    "proc-bike": motorbike(),
     "proc-bird": bird(),
     "proc-stake": stake(),
     "proc-stall0": stall(0xe0442f),

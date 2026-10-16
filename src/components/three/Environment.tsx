@@ -5,16 +5,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { frame } from "./frame-state";
 import { COAST_X } from "./city-layout";
+import { sky as light, updateSky } from "./time-of-day";
 import type { Tier } from "./Scene";
 
 /**
- * Golden hour, all day: a low warm sun with long soft shadows that follow
- * the camera, a peach-to-blue sky, warm haze, and the sea along the east coast.
+ * The light of the journey (see time-of-day.ts): morning on the hills, day
+ * in the city, golden hour, then sunset. Soft shadows follow the camera; the
+ * sky, haze and sea pick up the light of the moment.
  */
-
-/** Direction *toward* the sun: low in the south-west, so shadows stretch away from the viewer. */
-export const SUN_DIR = new THREE.Vector3(-0.62, 0.42, 0.66).normalize();
-export const HAZE = new THREE.Color("#f3cfa0");
 
 const skyVertex = /* glsl */ `
   varying vec3 vDir;
@@ -91,11 +89,11 @@ export function Environment({ tier }: { tier: Tier }) {
         side: THREE.BackSide,
         depthWrite: false,
         uniforms: {
-          uSun: { value: SUN_DIR.clone() },
-          uHorizon: { value: new THREE.Color("#ffd8a8") },
-          uMid: { value: new THREE.Color("#f9c9a0") },
-          uZenith: { value: new THREE.Color("#8fb4d6") },
-          uGlow: { value: new THREE.Color("#ffd27a") },
+          uSun: { value: light.sun },
+          uHorizon: { value: light.horizon },
+          uMid: { value: light.mid },
+          uZenith: { value: light.zenith },
+          uGlow: { value: light.glow },
         },
       }),
     );
@@ -127,7 +125,7 @@ export function Environment({ tier }: { tier: Tier }) {
 
   useEffect(() => {
     const { scene } = get();
-    scene.fog = new THREE.Fog(HAZE.clone(), 40, 160);
+    scene.fog = new THREE.Fog(light.haze.clone(), 40, 160);
     scene.add(built.sun.target);
     return () => {
       scene.fog = null;
@@ -147,7 +145,13 @@ export function Environment({ tier }: { tier: Tier }) {
   const texel = useRef(new THREE.Vector3());
 
   useFrame((state) => {
-    const { sun, sky, seaUniforms } = ref.current;
+    const { sun, sky, hemi, seaUniforms } = ref.current;
+    updateSky(frame.chapter);
+    sun.color.copy(light.sunColor);
+    sun.intensity = light.sunIntensity;
+    hemi.color.copy(light.hemiSky);
+    hemi.groundColor.copy(light.hemiGround);
+    hemi.intensity = light.hemiIntensity;
     sky.position.copy(state.camera.position);
     seaUniforms.uTime.value = state.clock.elapsedTime;
 
@@ -170,12 +174,13 @@ export function Environment({ tier }: { tier: Tier }) {
     t.z = Math.round(t.z / step) * step;
     t.y = 0;
     sun.target.position.copy(t);
-    sun.position.copy(t).addScaledVector(SUN_DIR, 100);
+    sun.position.copy(t).addScaledVector(light.sun, 100);
     sun.target.updateMatrixWorld();
 
     // Haze scales with the view, so the wide shots stay clear and the close-ups get depth.
     const fog = state.scene.fog as THREE.Fog | null;
     if (fog) {
+      fog.color.copy(light.haze);
       fog.near = frame.camDist * 1.1 + 6;
       fog.far = frame.camDist * 3.2 + 70;
     }

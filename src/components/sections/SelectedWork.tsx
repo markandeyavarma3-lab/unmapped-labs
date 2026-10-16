@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { work } from "@/content/site-content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import type { StoryId } from "@/components/three/story";
+import { StoryStop } from "./StoryStop";
+
+const STORY: Record<string, StoryId> = { flowmatch: "flowmatch", "deal-lens": "deallens" };
 
 /**
- * Two case studies as places on the map. Each row is a journey stop: the
- * camera flies to the project's site while its card is read.
+ * Two case studies as places on the map. Each is a pinned stop: the camera
+ * holds on the project's site while the city acts out what was built, in
+ * four steps.
  */
 export function SelectedWork() {
   return (
@@ -20,52 +25,55 @@ export function SelectedWork() {
         </p>
       </div>
 
-      <ol className="relative mt-[8vh]">
-        {work.cases.map((cs, i) => (
-          <li key={cs.slug} id={`work-${cs.slug}`} className="relative flex min-h-[140svh] items-center">
-              {/* The journey reaches this stop when the card is centred on screen. */}
-              <span aria-hidden data-chapter={10 + i} className="pointer-events-none absolute top-1/2 h-px w-px" />
-            <div className="container-site">
-              <article className="reveal-card glass max-w-[34rem] p-7 sm:p-9">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span
-                    className={`label border px-2.5 py-1 ${
-                      cs.kind === "Client project"
-                        ? "border-[color:var(--color-lime)]/50 text-[color:var(--color-lime-ink)]"
-                        : "border-[color:var(--color-cyan)]/50 text-[color:var(--color-cyan)]"
-                    }`}
-                  >
-                    {cs.kind}
-                  </span>
-                  <span className="label text-[color:var(--color-fg-3)]">{cs.sector}</span>
-                </div>
-                <h3 className="mt-6 text-[clamp(2.2rem,1.6rem+2.4vw,3.4rem)] leading-none font-medium tracking-[-0.04em]">{cs.name}</h3>
-                <p className="mt-4 text-[1.0625rem] leading-relaxed text-[color:var(--color-fg-2)]">{cs.oneLiner}</p>
-
-                <dl className="mt-7 grid grid-cols-2 gap-px border border-[color:var(--color-line)] bg-[color:var(--color-line)]">
-                  {cs.facts.map((f) => (
-                    <div key={f.label} className="bg-[color:var(--color-ink-2)] p-4">
-                      <dt className="sr-only">{f.label}</dt>
-                      <dd>
-                        <span data-count className="block text-[1.75rem] leading-none font-medium tracking-[-0.03em] tabular-nums text-[color:var(--color-fg)]">{f.value}</span>
-                        <span className="label mt-2 block text-[color:var(--color-fg-3)]">{f.label}</span>
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                <Link
-                  href={`/work/${cs.slug}`}
-                  className="group mt-7 inline-flex items-center gap-2 text-[15px] font-medium text-[color:var(--color-fg)]"
+      <ol className="relative mt-[6vh]">
+        {work.cases.map((cs) => (
+          <StoryStop key={cs.slug} id={STORY[cs.slug]} domId={`work-${cs.slug}`} tag={cs.kind} title={cs.name} beats={cs.beats}>
+            <article className="glass p-6 sm:p-7">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span
+                  className={`label border px-2.5 py-1 ${
+                    cs.kind === "Client project"
+                      ? "border-[color:var(--color-lime)]/50 text-[color:var(--color-lime-ink)]"
+                      : "border-[color:var(--color-cyan)]/50 text-[color:var(--color-cyan)]"
+                  }`}
                 >
-                  <span className="link-underline pb-0.5">Read the case study</span>
-                  <span aria-hidden className="transition-transform duration-[var(--duration-hover)] group-hover:translate-x-1">
-                    →
-                  </span>
-                </Link>
-              </article>
-            </div>
-          </li>
+                  {cs.kind}
+                </span>
+                <span className="label text-[color:var(--color-fg-3)]">{cs.sector}</span>
+              </div>
+              <h3 className="mt-5 text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none font-medium tracking-[-0.04em]">{cs.name}</h3>
+              <p className="mt-3 text-base leading-relaxed text-[color:var(--color-fg-2)]">{cs.oneLiner}</p>
+
+              <dl className="mt-5 grid grid-cols-2 gap-px border border-[color:var(--color-line)] bg-[color:var(--color-line)]">
+                {cs.facts.map((f) => (
+                  <div key={f.label} className="bg-[color:var(--color-ink-2)] p-3.5">
+                    <dt className="sr-only">{f.label}</dt>
+                    <dd>
+                      <span data-count className="block text-[1.5rem] leading-none font-medium tracking-[-0.03em] tabular-nums text-[color:var(--color-fg)]">{f.value}</span>
+                      <span className="label mt-2 block text-[color:var(--color-fg-3)]">{f.label}</span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              <Link
+                href={`/work/${cs.slug}`}
+                className="group mt-5 inline-flex items-center gap-2 text-[15px] font-medium text-[color:var(--color-fg)]"
+              >
+                <span className="link-underline pb-0.5">Read the case study</span>
+                <span aria-hidden className="transition-transform duration-[var(--duration-hover)] group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+              <ol className="sr-only motion-reduce:not-sr-only motion-reduce:mt-5 motion-reduce:flex motion-reduce:flex-col motion-reduce:gap-2 motion-reduce:text-[15px]">
+                {cs.beats.map((b) => (
+                  <li key={b.label}>
+                    <strong className="font-medium">{b.label}:</strong> {b.text}
+                  </li>
+                ))}
+              </ol>
+            </article>
+          </StoryStop>
         ))}
       </ol>
     </section>

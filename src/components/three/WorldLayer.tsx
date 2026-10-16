@@ -6,6 +6,7 @@ import { onScroll } from "@/components/motion/scroll-engine";
 import { cityLabels, serviceLabels, setWorldPaused, world } from "./world-store";
 import { fixLabels, services, type FixType } from "@/content/site-content";
 import { setWorldMode, setWorldReady } from "./views";
+import { calloutEls } from "./callouts";
 import type { Tier } from "./Scene";
 
 const World = dynamic(() => import("./World"), { ssr: false });
@@ -55,7 +56,7 @@ function useChapterScroll(enabled: boolean) {
       anchors = Array.from(document.querySelectorAll<HTMLElement>("[data-chapter]"))
         .map((el) => ({ y: Math.max(0, el.getBoundingClientRect().top + y0 - half), c: Number(el.dataset.chapter) }))
         .sort((a, b) => a.y - b.y);
-      if (anchors[0]?.c === 0) anchors[0].y = 0;
+      if (anchors.length) anchors[0].y = 0; // the journey starts at the very top
     };
 
     const update = (y: number) => {
@@ -123,20 +124,7 @@ export function WorldLayer() {
             }} />
         </div>
       )}
-      {/* The focused district's problem (red) and the fork of possible fixes. */}
-      <div
-        ref={(el) => {
-          cityLabels.problem = el;
-        }}
-        className="city-problem absolute top-0 left-0 z-[1] opacity-0"
-      >
-        <div className="-translate-x-1/2 -translate-y-full pb-3">
-          <div className="flex max-w-[17rem] items-start gap-2 rounded-xl border border-[color:var(--color-red)]/40 bg-[color:var(--color-ink-2)]/95 px-3 py-2 shadow-[0_10px_30px_-14px_rgba(120,40,20,0.55)]">
-            <span className="mt-1 h-1.5 w-1.5 shrink-0 rotate-45 bg-[color:var(--color-red)]" />
-            <span data-text className="text-[12.5px] leading-snug text-[color:var(--color-fg)]" />
-          </div>
-        </div>
-      </div>
+      {/* The fork of possible fixes at the focused district. */}
       {(Object.keys(fixLabels) as FixType[]).map((k, i) => (
         <div
           key={k}
@@ -162,6 +150,23 @@ export function WorldLayer() {
             <span className="label tabular-nums text-[color:var(--color-lime-ink)]">{sv.index}</span>
             <span className="label text-[color:var(--color-fg)]">{sv.title}</span>
           </div>
+        </div>
+      ))}
+      {/* Narration pinned to the scene (callouts.ts). */}
+      {calloutEls.map((_, k) => (
+        <div
+          key={`c${k}`}
+          ref={(el) => {
+            calloutEls[k] = el;
+          }}
+          data-tone="ink"
+          className="callout absolute top-0 left-0 z-[2] opacity-0"
+        >
+          <div className="callout-body">
+            <span className="callout-dot" />
+            <span data-text />
+          </div>
+          <span className="callout-stem" />
         </div>
       ))}
       {/* Vignette keeps text legible at the edges of every composition. */}

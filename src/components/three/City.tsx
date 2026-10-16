@@ -8,7 +8,6 @@ import { MODELS } from "./models.generated";
 import { createBatch, createPaletteMaterial, useModels, type Geometries, releaseBatch } from "./models";
 import { paintGround } from "./ground-paint";
 import { frame } from "./frame-state";
-import { pitPlanes } from "./ProcessBlock";
 import type { Tier } from "./Scene";
 
 /**
@@ -87,7 +86,7 @@ function buildRoadGeometry() {
 }
 
 function roadMaterial() {
-  const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.92, clippingPlanes: pitPlanes, clipIntersection: true });
+  const mat = new THREE.MeshStandardMaterial({ color: "#ffffff", roughness: 0.92 });
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nattribute vec2 aRoadUv; attribute vec3 aRoad; varying vec2 vRoadUv; varying vec3 vRoad;")
@@ -170,12 +169,12 @@ export function City({ tier }: { tier: Tier }) {
     const groundGeo = new THREE.PlaneGeometry(GROUND.maxX - GROUND.minX, GROUND.maxZ - GROUND.minZ);
     groundGeo.rotateX(-Math.PI / 2);
     groundGeo.translate((GROUND.minX + GROUND.maxX) / 2, 0, (GROUND.minZ + GROUND.maxZ) / 2);
-    const groundMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, clippingPlanes: pitPlanes, clipIntersection: true });
+    const groundMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1 });
     // Beyond the painted ground: plain fields fading into the haze.
     const farGeo = new THREE.PlaneGeometry(900, 900);
     farGeo.rotateX(-Math.PI / 2);
     farGeo.translate(-150, -0.02, 0);
-    const farMat = new THREE.MeshStandardMaterial({ color: "#a3c46a", roughness: 1, clippingPlanes: pitPlanes, clipIntersection: true });
+    const farMat = new THREE.MeshStandardMaterial({ color: "#a3c46a", roughness: 1 });
 
     const roadGeo = buildRoadGeometry();
     const roadMat = roadMaterial();
@@ -247,8 +246,10 @@ function CityBlocks({ geos, data, material }: { geos: Geometries; data: CityData
   useFrame(() => {
     const b = ref.current;
     const A = anim.current;
-    // The name rises out of the city as it loads, then melts back into the skyline.
-    const rise = 1 - Math.pow(1 - THREE.MathUtils.clamp((frame.time - 0.25) / 2.6, 0, 1), 3);
+    // The name rises out of the city as the camera dives in from the hills, then melts back into the skyline.
+    const loaded = THREE.MathUtils.clamp((frame.time - 0.25) / 2.6, 0, 1);
+    const arrived = THREE.MathUtils.clamp((frame.chapter + 0.4) / 0.36, 0, 1);
+    const rise = 1 - Math.pow(1 - Math.min(loaded, arrived), 3);
     const title = 1 - THREE.MathUtils.smoothstep(frame.chapter, 1.15, 1.95);
     if (Math.abs(rise - A.rise) < 1e-4 && Math.abs(title - A.title) < 1e-4) return;
     A.rise = rise;

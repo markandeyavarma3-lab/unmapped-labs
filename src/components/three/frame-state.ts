@@ -6,7 +6,7 @@ import * as THREE from "three";
  */
 export const frame = {
   /** Smoothed journey chapter. */
-  chapter: 0,
+  chapter: -1,
   /** 0 → 1 over the entrance. */
   introT: 0,
   /** 0 → 1 as the visitor reaches Contact: the whole city celebrates. */

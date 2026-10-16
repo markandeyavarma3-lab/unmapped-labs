@@ -4,13 +4,14 @@ import { getNotes } from "@/lib/notes";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { NotesEmpty } from "@/components/notes/NotesEmpty";
+import { CHAPTER } from "@/components/three/chapters";
 
 export async function FieldNotes() {
   const notes = await getNotes();
   const latest = notes.slice(0, 3);
 
   return (
-    <section id="notes" data-chapter="13" aria-labelledby="notes-heading" className="relative py-[var(--section-y)]">
+    <section id="notes" data-chapter={CHAPTER.notes} aria-labelledby="notes-heading" className="relative py-[var(--section-y)]">
       <div className="container-site">
         <div className="flex flex-wrap items-end justify-between gap-8">
           <SectionHeading id="notes-heading" label={copy.label} heading={copy.heading} intro={copy.intro} />

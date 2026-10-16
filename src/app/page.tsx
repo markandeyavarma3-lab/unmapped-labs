@@ -12,6 +12,8 @@ import { WhatWeDo } from "@/components/sections/WhatWeDo";
 import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
+import { Epilogue } from "@/components/sections/Epilogue";
+import { SoundToggle } from "@/components/motion/Sound";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -30,6 +32,7 @@ export default function Home() {
     <>
       <Intro />
       <WorldLayer />
+      <SoundToggle />
       <main id="main" tabIndex={-1} className="relative z-[var(--z-content)]">
         <TitleSequence />
         <Hero />
@@ -46,6 +49,7 @@ export default function Home() {
         <About />
 
         <Contact />
+        <Epilogue />
       </main>
       <script
         type="application/ld+json"

@@ -352,16 +352,19 @@ html[data-intro="on"] {
 
 /* ---------------- Title sequence ---------------------------------- */
 .title-track {
-  height: 230vh;
+  height: 390vh;
 }
-.ghost-title {
+.hills-title {
   font-size: clamp(3.4rem, 1rem + 11vw, 11.5rem);
   line-height: 0.9;
   font-weight: 500;
   letter-spacing: -0.055em;
   text-transform: uppercase;
-  color: transparent;
-  -webkit-text-stroke: 1px rgb(21 25 29 / 0.55);
+  color: var(--color-fg);
+  text-shadow:
+    0 1px 0 rgb(255 250 240 / 0.6),
+    0 0 40px rgb(255 236 206 / 0.9),
+    0 0 90px rgb(255 226 186 / 0.7);
 }
 .tagline-text {
   font-family: var(--font-sans);
@@ -382,46 +385,6 @@ html[data-intro="on"] {
   }
 }
 
-/* ---------------- Morph sequence ---------------------------------- */
-.morph-track {
-  height: 380vh;
-}
-@media (max-width: 767px) {
-  .morph-track {
-    height: 320vh;
-  }
-}
-.morph-step {
-  transition: opacity 0.5s var(--ease-out-quart);
-}
-.morph-step[data-state="ahead"] {
-  opacity: 0.35;
-}
-.morph-dot {
-  border-color: var(--color-fg-3);
-  background: var(--color-ink);
-  transition:
-    background-color 0.4s var(--ease-out-quart),
-    border-color 0.4s var(--ease-out-quart),
-    transform 0.5s var(--ease-out-expo),
-    box-shadow 0.5s var(--ease-out-quart);
-}
-.morph-step[data-state="passed"] .morph-dot {
-  border-color: var(--color-cyan);
-  background: var(--color-cyan);
-}
-.morph-step[data-state="current"] .morph-dot {
-  border-color: var(--color-cyan);
-  background: var(--color-cyan);
-  transform: scale(1.35) rotate(45deg);
-  box-shadow: 0 0 0 5px rgb(11 124 129 / 0.15), 0 0 18px rgb(11 124 129 / 0.35);
-}
-.morph-step[data-state="current"] .morph-dot.is-last,
-.morph-step[data-state="passed"] .morph-dot.is-last {
-  border-color: var(--color-lime);
-  background: var(--color-lime);
-  box-shadow: 0 0 0 5px rgb(199 243 107 / 0.3), 0 0 22px rgb(140 200 40 / 0.55);
-}
 .swap-word {
   animation: word-in 0.8s var(--ease-out-expo) both;
 }
@@ -438,20 +401,6 @@ html[data-intro="on"] {
     clip-path: inset(-10% -100% -10% 0);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .morph-track {
-    height: auto;
-  }
-  .morph-stage {
-    position: relative;
-    height: auto;
-  }
-  .morph-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: 2rem;
-  }
-}
-
 /* ---------------- City labels ------------------------------------- */
 .city-fork > span {
   color: var(--color-fg-2);
@@ -475,60 +424,154 @@ html[data-intro="on"] {
   opacity: 0.45;
 }
 
+/* ---------------- Pinned stories (districts, projects) ------------ */
+.story-stop {
+  height: 320svh;
+}
+.story-hold-end {
+  /* when the stop's bottom meets the viewport's bottom */
+  top: 270svh;
+}
+.story-card {
+  transition:
+    transform 0.8s var(--ease-out-expo),
+    opacity 0.5s var(--ease-out-quart),
+    visibility 0s linear 0s;
+}
+.story-card[data-away] {
+  transform: translate3d(calc(-100% - 8vw), 0, 0);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform 0.8s var(--ease-out-expo),
+    opacity 0.5s var(--ease-out-quart),
+    visibility 0s linear 0.8s;
+}
+.story-bar {
+  transform: translate3d(0, 110%, 0);
+  opacity: 0;
+  transition:
+    transform 0.7s var(--ease-out-expo),
+    opacity 0.4s var(--ease-out-quart);
+}
+.story-bar[data-on] {
+  transform: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-stop {
+    height: auto;
+    padding-block: 4rem;
+  }
+  .story-stage {
+    position: relative;
+    height: auto;
+  }
+  .story-bar {
+    display: none;
+  }
+}
+
+/* ---------------- Touching the city ------------------------------ */
+@media (hover: hover) and (pointer: fine) {
+  .story-stage,
+  .process-track > .sticky {
+    cursor: grab;
+  }
+  html.is-orbiting,
+  html.is-orbiting * {
+    cursor: grabbing !important;
+    user-select: none;
+  }
+  html.is-hotspot body {
+    cursor: pointer;
+  }
+}
+
+/* ---------------- Sound toggle ---------------------------------- */
+.sound-bars > span {
+  height: 3px;
+  transition: height 0.3s var(--ease-out-quart);
+}
+.sound-bars.is-on > span {
+  animation: sound-bar 0.9s ease-in-out calc(var(--i) * -0.22s) infinite alternate;
+}
+@keyframes sound-bar {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 12px;
+  }
+}
+
+/* ---------------- Scene callouts --------------------------------- */
+.callout {
+  will-change: transform, opacity;
+  transition: opacity 0.25s linear;
+}
+.callout-body {
+  position: absolute;
+  bottom: 26px;
+  left: 0;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 17rem;
+  width: max-content;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: rgb(255 253 248 / 0.96);
+  color: var(--color-fg);
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 28px -14px rgb(80 54 24 / 0.6);
+}
+.callout-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  rotate: 45deg;
+  background: var(--color-fg-3);
+}
+.callout-stem {
+  position: absolute;
+  left: -0.5px;
+  bottom: 0;
+  width: 1px;
+  height: 26px;
+  background: linear-gradient(0deg, transparent, var(--color-fg-3));
+}
+.callout[data-tone="red"] .callout-body {
+  border-color: rgb(224 72 52 / 0.45);
+}
+.callout[data-tone="red"] .callout-dot {
+  background: var(--color-red);
+}
+.callout[data-tone="teal"] .callout-dot {
+  background: var(--color-cyan);
+}
+.callout[data-tone="lime"] .callout-body {
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  color: var(--color-on-accent);
+}
+.callout[data-tone="lime"] .callout-dot {
+  background: var(--color-on-accent);
+}
+
 /* ---------------- Process takeover ------------------------------- */
 .process-track {
-  height: 560vh;
+  height: 660vh;
 }
 @media (prefers-reduced-motion: reduce) {
   .process-track {
     height: 100vh;
   }
-}
-
-/* ---------------- Process stages & island labels ----------------- */
-.stage-item .stage-bar {
-  transform: scaleX(0);
-  transition: transform 0.9s var(--ease-out-expo);
-}
-.stage-item[data-on] .stage-bar {
-  transform: scaleX(1);
-}
-.stage-item .stage-title,
-.stage-item .stage-body {
-  transition:
-    opacity 0.6s var(--ease-out-quart),
-    transform 0.8s var(--ease-out-expo);
-}
-html.js .stage-item:not([data-on]) .stage-title {
-  opacity: 0.42;
-  transform: translateX(-6px);
-}
-html.js .stage-item:not([data-on]) .stage-body {
-  opacity: 0.55;
-}
-.island-label > span {
-  color: var(--color-fg-2);
-  transition:
-    color 0.3s,
-    border-color 0.3s,
-    background-color 0.3s;
-}
-.island-label:hover > span,
-.island-label:focus-visible > span {
-  color: var(--color-fg);
-  border-color: var(--color-fg-2);
-}
-.island-label > span {
-  border-radius: 999px;
-  box-shadow: 0 8px 24px -12px rgb(80 54 24 / 0.5);
-}
-.island-label[data-active="true"] > span {
-  color: var(--color-on-accent);
-  background: var(--color-lime);
-  border-color: var(--color-lime);
-}
-.island-label[data-active="true"] > span > span:first-child {
-  color: rgb(17 22 12 / 0.6);
 }
 
 /* ---------------- Mobile menu ------------------------------------- */

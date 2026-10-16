@@ -1,8 +1,9 @@
 # Unmapped Labs — website
 
 *Mapping the unknown.* The official site for Unmapped Labs: a single cinematic
-scroll through a procedural 3D terrain that goes from unknown, to mapped, to
-connected. Field Notes get their own routes.
+scroll that starts on the hills above a miniature city, dives into it, plays
+out how we work in its blocks and districts, and leaves over the hills on the
+far side. Field Notes get their own routes.
 
 Live domain (once deployed): **https://unmappedlabs.in**
 
@@ -84,24 +85,70 @@ fix the problem actually needs*.
 - **Look** (`Environment.tsx`, `ground-paint.ts`): a low warm sun with soft
   shadows that follow the camera, a peach-to-blue sky, haze that scales with
   the shot, an animated sea, a painted ground and shader road markings.
-- **Districts** (`district-scenes.ts`, `Districts.tsx`): full scenes for farms,
-  logistics, healthcare, energy, markets and the uncharted lots, each playing
-  its story from `city-state.ts`: a red bottleneck → a scan → a fork of
-  **Software / Hardware / Process / Data & AI** → the right fix arrives
-  (irrigation spreading from the canal, a second dock lane, an arrivals
-  forecast, sensors on the line, a data lens).
+- **Hills** (`hill-terrain.ts`, `Hills.tsx`): two faceted ranges with pine
+  woods, villages and their fields, clouds and birds, north and south of the
+  city. A river runs down the northern valley, across the city's edge and
+  out to sea; a road with traffic climbs beside it. The journey starts on
+  the northern ridge (chapter −1), dives low along the river into the city
+  (`DIVE_KEYS` in `landmarks.ts`), and ends over the southern hills
+  (chapter 17, the `Epilogue` section).
+- **Time of day** (`time-of-day.ts`): morning on the first hills, day in the
+  city, golden hour near the end, sunset over the far hills. Sun, sky, haze
+  and fill light blend by chapter.
+- **Interaction** (`Interaction.tsx`, mouse only): drag to look around while
+  a story or the process holds the camera (it eases back); hover a district
+  while the camera roams and click to jump to its story.
+- **Sound** (`motion/Sound.tsx`): off by default; a toggle under the header.
+  All generated with Web Audio (wind and birds on the hills, a city hum,
+  a tick on each step). The choice is remembered.
+- **Pinned stories** (`story.ts`, `sections/StoryStop.tsx`): each district and
+  each project pins while the camera holds on it, and scrolling plays its
+  story in four beats (Problem → Diagnose → Fix → Result). The card
+  introduces the stop, then slides away and leaves a step bar that narrates
+  the current beat. Copy for the beats and in-scene callouts lives in
+  `site-content.ts` (`beats`, `scene`).
+- **Large sites and real cases** (`districts/`, `cases.ts`, `Districts.tsx`):
+  a commercial farm, a container yard, a hospital campus and an industrial
+  plant, each a rectangle of land between a side avenue and the ring road
+  (`DISTRICTS` in `city-layout.ts`, details in `districts/layout.ts`). Each
+  case is its own pinned story, worked the way the work is really done: our
+  team (teal shirts) on site with real instruments — tally counters, a
+  pressure gauge and catch cans, a clamp meter, an ultrasonic leak detector,
+  a power logger — then a chart built from what they logged, the fix the
+  problem actually needs, and the result. Cases: harvest waiting in the heat,
+  uneven drip irrigation, inefficient pump sets (farm); boxes buried in the
+  yard (logistics); late discharges, the 9 am outpatient crush (hospital);
+  compressed-air leaks, a demand charge set by the 6 am start (plant).
+  Problems, methods and "typical" figures come from the sources listed on
+  each case in `site-content.ts`; the settings are illustrative, not client
+  work. A fork of **Software / Hardware / Process / Data & AI** rises over
+  each problem and the right one is chosen. To add a case: its copy in
+  `focus.areas[].cases`, its id in `STORY_ORDER` (`chapters.ts`), its focus
+  and camera in `cases.ts`, its animation in the site's `districts/*.tsx`.
+- **Projects** (`Projects.tsx`): FlowMatch (catalogue pages → operating points
+  → flow and depth → one match) and Deal Lens (raw slips → labelled lanes →
+  round trips fall away → a timeline since 2005), using only the projects'
+  real figures.
+- **Callouts** (`callouts.ts`): short labels pinned to points in the scene,
+  laid out once per frame into a small DOM pool.
 - **Life** (`Life.tsx`): traffic that keeps left and stops at signals, trucks
   queueing at the logistics gate, patients at the hospital, a tractor, an
   ambulance, a helicopter, a train, boats, birds, people and chimney smoke.
-- **Process** (`ProcessBlock.tsx`): the five steps play out in one block as
-  the Approach section pins: drone → blueprint → x-ray cutaway of the street
-  → crane installs the fix → traffic flows. The camera flies the block's own
-  path while that section fills the screen.
-- **Journey** (`landmarks.ts`): 17 camera keyframes with slow orbits around
-  each district. Page sections anchor them with `data-chapter`.
-- **Morph** (`ParticleMorph.tsx`, `morph-shapes.ts`): golden particles go
-  dust → farm → truck route → hospital → power grid → city, drawn as a view
-  inside the same canvas (`WorldRenderer.tsx`, `views.ts`).
+- **Process** (`ProcessBlock.tsx`): one evening jam at one junction, worked
+  the way it's really done, filmed in one steady orbit (`processCamera`) with
+  a shockwave "hit" as each step starts: Unknown (the queue backs up; people
+  have theories) → Observe (tally counters, a stopwatch on the signal, a
+  camera on a tripod) → Map (a hand-drawn turning-movement sketch; flows on
+  the road) → Understand (the main road gets a quarter of the green for three
+  quarters of the traffic; autos stop on the corner) → Build (a new timing
+  plan loaded at the controller cabinet; the auto stand moved to the side
+  street) → Validate (re-counted; evening delay down by the typical ~13% from
+  US FHWA signal-retiming evaluations). The queue is simulated against the
+  signal (`MAIN_GREEN` in `views.ts`), so it really shortens after re-timing.
+- **Journey** (`chapters.ts`, `landmarks.ts`): one camera key per chapter,
+  from the northern hills (−1) to the southern hills; the order of chapters
+  lives in `chapters.ts`. Page sections anchor them with `data-chapter`; a pinned
+  story anchors its chapter twice so the camera holds while it plays.
 - **Performance:** pixel density capped at 1.4 (1.0 on phones) and adapting
   down under load; per-instance culling; half-rate rendering while idle;
   layers mount over several frames; phones get fewer houses, trees and cars.
@@ -167,6 +214,7 @@ it's best effort. Move it to a shared store (e.g. Upstash) if abuse appears.
   map; the mobile menu traps focus, closes on Escape and returns focus.
 - `prefers-reduced-motion`: no WebGL, no intro, no smooth scroll, no scrubbed
   animations. Everything is shown complete.
+- Pinned stories don't pin: every beat is listed in the card instead.
 - The intro (particles assemble the logo, then burst away) shows once per
   browser, only on the home page, can be skipped (button, Escape, click), runs as
   a tiny inline 2D-canvas script before the app loads, and dismisses itself with

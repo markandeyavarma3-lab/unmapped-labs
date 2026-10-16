@@ -1,10 +1,11 @@
 import { principles } from "@/content/site-content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { LayerDiagram } from "./LayerDiagram";
+import { CHAPTER } from "@/components/three/chapters";
 
 export function Principles() {
   return (
-    <section id="philosophy" data-chapter="14" aria-labelledby="philosophy-heading" className="relative py-[var(--section-y)]">
+    <section id="philosophy" data-chapter={CHAPTER.philosophy} aria-labelledby="philosophy-heading" className="relative py-[var(--section-y)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(247,242,233,0.8)_16%,rgba(247,242,233,0.8)_84%,transparent)]"

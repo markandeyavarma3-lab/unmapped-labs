@@ -70,7 +70,6 @@ export default function World({
       // Until the sky draws: the page's warm haze.
       onCreated={({ gl }) => {
         gl.setClearColor("#f3e6d2");
-        gl.localClippingEnabled = true; // the process block cuts the street open
       }}
     >
       <PauseController />

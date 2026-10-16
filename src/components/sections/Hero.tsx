@@ -1,12 +1,13 @@
 import { hero } from "@/content/site-content";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { BtnLabel } from "@/components/ui/BtnLabel";
+import { CHAPTER } from "@/components/three/chapters";
 
 export function Hero() {
   return (
     <section
       id="explore"
-      data-chapter="2"
+      data-chapter={CHAPTER.hero}
       aria-labelledby="hero-heading"
       className="relative flex min-h-[100svh] flex-col justify-end overflow-clip"
     >

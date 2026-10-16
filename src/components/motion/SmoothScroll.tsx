@@ -7,6 +7,16 @@ import Lenis from "lenis";
 const LenisContext = createContext<() => Lenis | null>(() => null);
 export const useLenis = () => useContext(LenisContext);
 
+/** The live Lenis instance, for code outside React (the 3D world's hotspots). */
+let current: Lenis | null = null;
+
+/** Smooth-scrolls the page to an absolute y (CSS px). */
+export function scrollToY(y: number) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (current && !reduce) current.scrollTo(y, { duration: 1.8, force: true, easing: (t) => 1 - Math.pow(1 - t, 4) });
+  else window.scrollTo({ top: y });
+}
+
 /** Scrolls to an in-page hash and hands keyboard focus to the target. */
 export function scrollToHash(hash: string, lenis: Lenis | null) {
   const target = hash === "#top" ? document.body : document.querySelector<HTMLElement>(hash);
@@ -49,10 +59,12 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       autoRaf: true,
     });
     lenisRef.current = instance;
+    current = instance;
 
     return () => {
       instance.destroy();
       lenisRef.current = null;
+      current = null;
     };
   }, []);
 

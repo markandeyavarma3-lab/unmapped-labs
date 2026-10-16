@@ -1,10 +1,11 @@
 import { approach } from "@/content/site-content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProcessMap } from "./ProcessMap";
+import { CHAPTER } from "@/components/three/chapters";
 
 export function Approach() {
   return (
-    <section id="approach" data-chapter="4" aria-labelledby="approach-heading" className="relative pt-[var(--section-y)]">
+    <section id="approach" data-chapter={CHAPTER.approach} aria-labelledby="approach-heading" className="relative pt-[var(--section-y)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[80vh] bg-[linear-gradient(180deg,transparent,rgba(247,242,233,0.72)_30%,transparent)]"
@@ -12,7 +13,7 @@ export function Approach() {
       <div className="container-site relative">
         <SectionHeading id="approach-heading" label={approach.label} heading={approach.heading} intro={approach.intro} />
       </div>
-      <ProcessMap stages={approach.stages} />
+      <ProcessMap stages={[approach.unknown, ...approach.stages]} caption={approach.scene.caption} />
     </section>
   );
 }

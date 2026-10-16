@@ -7,8 +7,8 @@
 type Listener = () => void;
 
 export const world = {
-  /** Float chapter index: 0 = hero … 5 = contact. Driven by the scroll engine. */
-  chapter: 0,
+  /** Float chapter index: −1 = the northern hills … 17 = the southern hills. Driven by the scroll engine. */
+  chapter: -1,
   /** True while an opaque editorial section fully covers the viewport. */
   paused: false,
   /** Label of the survey node under the pointer, for the cursor. */
@@ -27,8 +27,6 @@ export const serviceLabels: (HTMLElement | null)[] = [];
 
 /** City labels (DOM, outside the canvas), positioned by the scene each frame. */
 export const cityLabels = {
-  /** Red: what's going wrong in the focused district. */
-  problem: null as HTMLElement | null,
   /** The fork: Software / Hardware / Process / Data & AI. */
   fork: [] as (HTMLElement | null)[],
 };
