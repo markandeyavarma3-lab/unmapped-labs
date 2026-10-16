@@ -17,23 +17,24 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — ${site.tagline.replace(/\.$/, "")}`,
+    default: site.seoTitle,
     template: `%s — ${site.name}`,
   },
   description: site.description,
   applicationName: site.name,
+  keywords: ["operations research", "process mapping", "bottleneck analysis", "operations consulting India", "problem solving startup", "custom software", "IoT sensors", "data extraction", "agriculture", "logistics", "hospital patient flow", "energy efficiency"],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: site.name,
     locale: "en_IN",
     url: "/",
-    title: `${site.name} — ${site.tagline.replace(/\.$/, "")}`,
+    title: site.seoTitle,
     description: site.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — ${site.tagline.replace(/\.$/, "")}`,
+    title: site.seoTitle,
     description: site.description,
   },
   robots: { index: true, follow: true },

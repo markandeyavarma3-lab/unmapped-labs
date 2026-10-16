@@ -4,11 +4,11 @@
  */
 
 export const hero = {
-  eyebrow: "Unmapped Labs / Independent exploration",
-  heading: ["Explore what", "hasn't been mapped."],
-  body: "We study real-world systems, uncover overlooked problems, and discover opportunities to make things work better.",
-  primaryCta: { label: "Explore our approach", href: "#approach" },
-  secondaryCta: { label: "Start a conversation", href: "#contact" },
+  eyebrow: "Unmapped Labs / Research-first problem solving",
+  heading: ["See how it really runs.", "Then fix what's broken."],
+  body: "We study how your operation actually runs, then fix what's broken — with software, hardware, a better process or better data. We come to your site, find the real cause, and build the fix ourselves or bring in the right people to build it.",
+  primaryCta: { label: "Start a conversation", href: "#contact" },
+  secondaryCta: { label: "How we work", href: "#approach" },
 };
 
 export const intro = {
@@ -484,45 +484,83 @@ export type Service = { index: string; title: string; body: string; deliverables
 
 export const services = {
   label: "05 — What we do",
-  heading: "Research first. Then whichever fix the problem needs.",
+  heading: "Find where the hours go. Then win them back.",
   intro:
-    "Every engagement starts the same way: understanding the system. What comes after depends on what we find — sometimes software, sometimes hardware, sometimes just a better way of working.",
+    "Every engagement starts by understanding the system. What comes after depends on what we find — sometimes software, sometimes hardware, sometimes just a better way of working.",
   items: [
     {
       index: "00",
-      title: "Field research & mapping",
-      body: "We go to where the work happens, talk to the people doing it, and map how the system really runs — flows, dependencies, bottlenecks and the gaps nobody has written down. This decides everything else.",
-      deliverables: ["Process maps", "Bottleneck reports", "Opportunity briefs"],
+      title: "Find where your operation loses time and money",
+      body: "We come to your site, watch the work, talk to the people doing it and measure what really happens. You get a clear picture of where the bottleneck is, what causes it, and the options to fix it — before anyone builds anything.",
+      deliverables: ["On-site study", "Bottleneck map", "Options & costs"],
     },
     {
       index: "S1",
       fix: "software",
-      title: "Software & tools",
-      body: "Websites that bring customers, lead systems, quoting and billing, selectors and internal tools shaped around how a business already works.",
-      deliverables: ["Websites & lead systems", "Internal tools", "Selectors & catalogues"],
+      title: "Replace slow manual work with simple tools",
+      body: "Selectors, quoting and billing, internal dashboards, websites that bring in customers — shaped around how your team already works, so people actually use them.",
+      deliverables: ["Internal tools", "Selectors & catalogues", "Websites & lead systems"],
     },
     {
       index: "S2",
       fix: "hardware",
-      title: "Hardware & IoT",
-      body: "When the answer is physical, we advise on the right sensors, devices and controllers, and integrate them with the software that makes them useful. We don't manufacture hardware.",
-      deliverables: ["Device selection", "Sensor integration", "Monitoring"],
+      title: "See problems before they stop the line",
+      body: "Sensors, meters and controllers chosen for the job and wired to software that warns you in time. We select and integrate; for specialist installation we bring in and manage the right people.",
+      deliverables: ["Device selection", "Sensor integration", "Monitoring & alerts"],
     },
     {
       index: "S3",
       fix: "process",
-      title: "Process & operations",
-      body: "Sometimes the fix isn't technology at all: a different layout, a clearer handoff, a better schedule. We redesign the way work flows and help it stick.",
-      deliverables: ["Workflow redesign", "Layouts & schedules", "Handoff design"],
+      title: "Fix the flow without new technology",
+      body: "Often the cheapest fix is a better schedule, a clearer handoff or a different layout. We redesign how work moves and stay until it sticks.",
+      deliverables: ["Workflow redesign", "Schedules & layouts", "Handoffs"],
     },
     {
       index: "S4",
       fix: "data",
-      title: "Data & AI",
-      body: "Pulling structure out of PDFs and public records, forecasting, research platforms and automation — with the checks that prove the numbers are right.",
-      deliverables: ["Data extraction", "Forecasting", "Research platforms"],
+      title: "Turn records you already have into decisions",
+      body: "Pull structure out of PDFs, logs and spreadsheets; forecast demand; automate reports — with checks that prove the numbers are right.",
+      deliverables: ["Data extraction", "Forecasting", "Automated reports"],
     },
   ] satisfies Service[],
+};
+
+/** How an engagement runs, step by step. No prices: those follow the first call. */
+export const engagements = {
+  label: "06 — How we engage",
+  heading: "Start small. Prove it. Then go further.",
+  intro: "Every engagement begins with a free first conversation. Pricing comes after it, once we both know the size of the problem.",
+  steps: [
+    { index: "01", title: "First conversation", time: "30–45 minutes · free", body: "You tell us what's slowing you down. We ask questions, and tell you honestly whether we're the right people for it." },
+    { index: "02", title: "On-site diagnostic", time: "Usually 1–3 weeks", body: "We come to your site, observe, measure and talk to your team. You get a written report: the real cause, the evidence, and the options with rough costs." },
+    { index: "03", title: "Build or bring the fix", time: "Scoped to the problem", body: "We build software, data and process fixes ourselves. Where it needs hardware or specialists, we bring in the right people and manage the work for you." },
+    { index: "04", title: "Measure and support", time: "After it goes live", body: "We measure the result against where we started, so you can see whether it worked, and stay on to support what we built." },
+  ],
+  cta: { label: "Start with a free first conversation", href: "#contact" },
+};
+
+/**
+ * Client words. Nothing here is shown until `published` is true — replace each
+ * draft with a real quote (and the person's permission) first.
+ */
+export type Testimonial = { quote: string; name: string; role: string; published: boolean };
+export const testimonials: { label: string; heading: string; items: Testimonial[] } = {
+  label: "In their words",
+  heading: "What people we've worked with say.",
+  items: [
+    {
+      quote: "DRAFT — replace with a real quote. e.g. what changed at the counter after FlowMatch, in the client's own words.",
+      name: "Name Surname",
+      role: "Role, Company (FlowMatch client)",
+      published: false,
+    },
+    {
+      quote: "DRAFT — replace with a real quote from a collaborator or early conversation.",
+      name: "Name Surname",
+      role: "Role, Company",
+      published: false,
+    },
+  ],
 };
 
 export const notes = {
@@ -540,12 +578,9 @@ export const principles = {
   label: "07 — Philosophy",
   heading: "Understand first. Solve thoughtfully.",
   items: [
-    { title: "Research before assumptions", body: "Start from what is observed, not what is expected." },
-    { title: "Firsthand understanding", body: "Time with the people doing the work comes before proposals." },
-    { title: "Root causes over surface fixes", body: "A symptom treated in isolation tends to come back." },
-    { title: "Technology when appropriate", body: "Software is one possible answer — never the default one." },
-    { title: "Constraints are real", body: "Budgets, habits, regulation and infrastructure shape what can work." },
-    { title: "Findings lead to action", body: "Research is only useful if it informs a better next step." },
+    { title: "Understand before we build", body: "We start from what we observe on site, not from what we expect to find." },
+    { title: "Fix the cause, not the symptom", body: "A symptom treated on its own tends to come back. We look for why it happens." },
+    { title: "Technology only when it fits", body: "Software is one possible answer, never the default. Sometimes a schedule change does more." },
   ],
   layers: [
     { title: "Visible symptom", body: "What everyone notices" },
@@ -559,9 +594,9 @@ export const about = {
   label: "08 — About",
   heading: "Curiosity with a practical purpose.",
   body: [
-    "Unmapped Labs is an exploration-driven initiative focused on understanding industries, investigating real-world challenges, and discovering opportunities for better solutions.",
-    "The approach begins with curiosity and firsthand learning. By studying how people, processes, and systems work together, Unmapped Labs aims to identify meaningful problems before deciding how to address them.",
-    "The objective is not to build something merely because it can be built. It is to understand what is worth improving and determine what might genuinely help.",
+    "Unmapped Labs is a startup that solves operational problems. If something in your work is slow, wasteful or keeps breaking — or you simply want the work to be easier — we come to your place and study it properly.",
+    "We watch how the work actually happens, talk to the people doing it, and measure until we find the real cause. Then we fix it: we build the solution ourselves when it's software, data or process, and bring in and manage the right people when it needs hardware or specialist skills.",
+    "We don't build things just because they can be built. We build what the problem needs, and show you the before and after.",
   ],
   pullQuote: "Understand what exists. Discover what is missing.",
 };
@@ -575,8 +610,14 @@ export const epilogue = {
 
 export const contact = {
   label: "09 — Contact",
-  heading: "Found something worth exploring?",
-  body: "Have a problem worth understanding, an industry worth exploring, or an idea worth investigating? Start a conversation.",
+  heading: "What would you like to fix?",
+  body: "Tell us what's slowing you down, or what you'd like to make easier. Name, email and a few lines is enough — we'll take it from there.",
+  reply: "We read every message and reply as soon as we can.",
+  next: [
+    "We read your message and reply as soon as we can.",
+    "If it fits, we set up a free first conversation, by phone or video.",
+    "Then, if it's useful, we plan a visit to your site.",
+  ],
   areas: [
     "Agriculture & food systems",
     "Logistics & supply chains",

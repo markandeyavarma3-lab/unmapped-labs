@@ -16,7 +16,7 @@ export type ContactInput = {
 export type ContactField = keyof ContactInput;
 export type ContactErrors = Partial<Record<ContactField, string>>;
 
-export const CONTACT_FIELDS: ContactField[] = ["name", "organisation", "email", "area", "message"];
+export const CONTACT_FIELDS: ContactField[] = ["name", "email", "message", "organisation", "area"];
 
 /** Anti-spam fields that travel with the form but are not stored. */
 export const HONEYPOT_FIELD = "website";
@@ -45,9 +45,10 @@ export function validateContact(raw: Record<string, unknown>):
   if (!EMAIL.test(data.email) || data.email.length > 200)
     errors.email = "Please enter a valid email address, like name@example.com.";
 
-  if (!contact.areas.includes(data.area)) errors.area = "Please choose the area closest to your idea.";
+  // optional: empty, or one of the listed areas
+  if (data.area && !contact.areas.includes(data.area)) errors.area = "Please choose one of the listed areas.";
 
-  if (data.message.length < 20) errors.message = "A little more detail helps — at least 20 characters.";
+  if (data.message.length < 10) errors.message = "A few more words help — at least 10 characters.";
   else if (data.message.length > 4000) errors.message = "Please keep it under 4,000 characters.";
 
   return Object.keys(errors).length ? { ok: false, errors } : { ok: true, data };

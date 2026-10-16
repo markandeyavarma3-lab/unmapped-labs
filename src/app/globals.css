@@ -14,7 +14,7 @@
   --color-fg: #15191d;
   --color-fg-2: #454e57;
   --color-fg-3: #5c6570; /* ≥4.5:1 on the page for small labels */
-  --color-cyan: #0b7c81; /* teal: text-safe accent */
+  --color-cyan: #08767b; /* teal: text-safe accent */
   --color-cyan-bright: #65e4e8;
   --color-lime: #c7f36b; /* fills and highlights */
   --color-lime-ink: #4a7410; /* lime as text */
@@ -668,7 +668,8 @@ html.js .reveal:not([data-in]) .label-line {
 html.js .reveal-card:not([data-in]) {
   opacity: 0;
   transform: translate3d(calc(var(--dir, -1) * 56px), 28px, 0) scale(0.96);
-  clip-path: inset(0 0 100% 0 round 18px);
+  /* not 100%: a fully clipped card has no visible area, so the observer would never see it arrive */
+  clip-path: inset(0 0 80% 0 round 18px);
 }
 html.js .reveal-card[data-in] {
   clip-path: inset(0 0 0 0 round 18px);

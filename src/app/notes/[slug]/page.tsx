@@ -8,6 +8,9 @@ import { NoteCover } from "@/components/notes/NoteCover";
  * Cache Components requires at least one param at build time. With no notes
  * published yet we hand it a reserved draft slug, which always 404s.
  */
+/** Every note is generated at build time, so reading `params` here may block; that's expected. */
+export const instant = false;
+
 export async function generateStaticParams() {
   const notes = await getNotes();
   return notes.length ? notes.map((n) => ({ slug: n.slug })) : [{ slug: "_template" }];

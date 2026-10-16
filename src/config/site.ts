@@ -8,7 +8,9 @@ export const site = {
   tagline: "Mapping the unknown.",
   statement: "We explore what hasn't been mapped.",
   description:
-    "Unmapped Labs is an independent exploration initiative studying real-world systems — agriculture, logistics, healthcare, energy and beyond — to uncover overlooked problems and discover what could work better.",
+    "Unmapped Labs is a research-first problem-solving startup in India. We study how your operation actually runs — farms, warehouses and yards, hospitals, plants — find the real cause of what's slowing it down, and build the fix: software, hardware, process or data.",
+  /** Search title: what we are, in the words people search with. */
+  seoTitle: "Unmapped Labs — Operations Research & Problem-Solving Startup, India",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unmappedlabs.in").replace(/\/$/, ""),
   email: "contact@unmappedlabs.in",
   closingLine: "There is always more to map.",
@@ -27,6 +29,7 @@ export const nav = [
   { id: "approach", label: "Approach" },
   { id: "work", label: "Work" },
   { id: "services", label: "Services" },
+  { id: "engage", label: "How we engage" },
   { id: "focus", label: "Focus Areas" },
   { id: "about", label: "About" },
 ] as const;

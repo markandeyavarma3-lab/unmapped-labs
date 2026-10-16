@@ -121,9 +121,15 @@ export function ContactForm() {
           >
             <span aria-hidden className="block h-3 w-3 rotate-45 bg-[color:var(--color-lime)]" />
             <h3 className="text-[length:var(--text-h3)] font-medium tracking-[-0.02em]">Message received.</h3>
-            <p className="max-w-[28rem] leading-relaxed text-[color:var(--color-fg-2)]">
-              Thank you — it was delivered to our inbox. We read everything, and will reply to the address you gave.
-            </p>
+            <p className="max-w-[28rem] leading-relaxed text-[color:var(--color-fg-2)]">Thank you — it reached our inbox. Here's what happens next:</p>
+            <ol className="flex max-w-[28rem] flex-col gap-2 text-[15px] leading-relaxed text-[color:var(--color-fg)]">
+              {contact.next.map((n, i) => (
+                <li key={n} className="flex gap-3">
+                  <span className="label mt-0.5 tabular-nums text-[color:var(--color-cyan)]">{String(i + 1).padStart(2, "0")}</span>
+                  {n}
+                </li>
+              ))}
+            </ol>
             <button type="button" onClick={() => setStatus({ kind: "idle" })} className="link-underline label self-start pb-0.5 text-[color:var(--color-fg)]">
               Send another message
             </button>
@@ -142,21 +148,19 @@ export function ContactForm() {
             aria-describedby={`${uid}-status`}
           >
             {field("name", "Name", <input {...aria("name")} type="text" autoComplete="name" required className={input} />)}
-            {field("organisation", "Organisation", <input {...aria("organisation")} type="text" autoComplete="organization" className={input} />, true)}
             {field("email", "Email", <input {...aria("email")} type="email" autoComplete="email" inputMode="email" required className={input} />)}
-            {field("area", "Area of interest", <select {...aria("area")} required defaultValue="" className={`${input} cursor-pointer appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0aab5' stroke-width='1.5'/%3E%3C/svg%3E")] bg-[length:12px_8px] bg-[position:right_4px_center] bg-no-repeat pr-8`}>
-                <option value="" disabled>
-                  Choose one
-                </option>
+            <div className="sm:col-span-2">
+              {field("message", "What's slowing you down?", <textarea {...aria("message")} rows={5} required className={`${input} resize-y`} placeholder="A few lines is enough: what happens, where, and what you'd like to be easier." />)}
+            </div>
+            {field("organisation", "Organisation", <input {...aria("organisation")} type="text" autoComplete="organization" className={input} />, true)}
+            {field("area", "Area", <select {...aria("area")} defaultValue="" className={`${input} cursor-pointer appearance-none bg-[url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0aab5' stroke-width='1.5'/%3E%3C/svg%3E")] bg-[length:12px_8px] bg-[position:right_4px_center] bg-no-repeat pr-8`}>
+                <option value="">Not sure / skip</option>
                 {contact.areas.map((a) => (
                   <option key={a} value={a} className="bg-[color:var(--color-ink-2)]">
                     {a}
                   </option>
                 ))}
-              </select>)}
-            <div className="sm:col-span-2">
-              {field("message", "What's worth exploring?", <textarea {...aria("message")} rows={5} required className={`${input} resize-y`} placeholder="The problem, the industry, or the question you can't stop thinking about." />)}
-            </div>
+              </select>, true)}
 
             {/* Honeypot — invisible to people, irresistible to bots. */}
             <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -170,7 +174,15 @@ export function ContactForm() {
                   ? status.message
                   : status.kind === "sending"
                     ? "Sending…"
-                    : "We only use these details to reply to you."}
+                    : (
+                      <>
+                        {contact.reply} We only use these details to reply to you — see our{" "}
+                        <a href="/privacy" className="link-underline text-[color:var(--color-fg-2)]">
+                          privacy note
+                        </a>
+                        .
+                      </>
+                    )}
               </p>
               <button type="submit" className="btn btn-primary shrink-0" disabled={status.kind === "sending"} aria-busy={status.kind === "sending"}>
                 {status.kind === "sending" ? (

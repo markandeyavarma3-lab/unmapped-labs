@@ -14,7 +14,7 @@ export function Hero() {
       {/* Legibility veil on the text side only — the terrain stays clear on the right. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(247,242,233,0.82)_0%,rgba(247,242,233,0.45)_38%,transparent_62%)] max-md:bg-[linear-gradient(0deg,rgba(247,242,233,0.92)_0%,rgba(247,242,233,0.55)_45%,transparent_75%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(247,242,233,0.94)_0%,rgba(247,242,233,0.82)_42%,rgba(247,242,233,0.3)_68%,transparent_85%)] max-md:bg-[linear-gradient(0deg,rgba(247,242,233,0.95)_0%,rgba(247,242,233,0.88)_70%,rgba(247,242,233,0.55)_88%,rgba(247,242,233,0.25)_100%)]"
       />
 
       <div className="container-site relative pt-[calc(var(--header-h)+3rem)] pb-[clamp(2.5rem,7vh,5.5rem)]">
@@ -25,7 +25,7 @@ export function Hero() {
 
         <h2
           id="hero-heading"
-          className="mt-7 max-w-[13ch] text-[length:var(--text-display)] leading-[var(--text-display--line-height)] font-medium tracking-[var(--text-display--letter-spacing)] text-[color:var(--color-fg)]"
+          className="mt-7 max-w-[16ch] text-[length:var(--text-display)] leading-[var(--text-display--line-height)] font-medium tracking-[var(--text-display--letter-spacing)] text-[color:var(--color-fg)]"
         >
           {hero.heading.map((line, i) => (
             <span key={line} className="reveal-mask" style={{ "--d": i + 1 } as React.CSSProperties}>

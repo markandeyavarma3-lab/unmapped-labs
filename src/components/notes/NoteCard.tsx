@@ -2,7 +2,9 @@ import Link from "next/link";
 import { formatNoteDate, type Note } from "@/lib/notes";
 import { NoteCover } from "./NoteCover";
 
-export function NoteCard({ note }: { note: Note }) {
+/** `level`: the heading level that fits where the card sits (3 under a section heading, 2 on the notes index). */
+export function NoteCard({ note, level = 3 }: { note: Note; level?: 2 | 3 }) {
+  const H = level === 2 ? "h2" : "h3";
   return (
     <article className="group relative flex h-full flex-col">
       <div className="glint relative aspect-[16/10] overflow-hidden">
@@ -18,11 +20,11 @@ export function NoteCard({ note }: { note: Note }) {
           <span aria-hidden>·</span>
           <span>{note.readingMinutes} min read</span>
         </p>
-        <h3 className="text-[1.375rem] leading-snug font-medium tracking-[-0.02em]">
+        <H className="text-[1.375rem] leading-snug font-medium tracking-[-0.02em]">
           <Link href={`/notes/${note.slug}`} className="after:absolute after:inset-0">
             {note.title}
           </Link>
-        </h3>
+        </H>
         <p className="text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{note.summary}</p>
         <span aria-hidden className="mt-auto pt-2 text-sm font-medium text-[color:var(--color-cyan)] transition-transform duration-[var(--duration-hover)] group-hover:translate-x-1">
           Read note →

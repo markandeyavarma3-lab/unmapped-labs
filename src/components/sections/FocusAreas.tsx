@@ -83,7 +83,7 @@ export function FocusAreas() {
                         <p className="label mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[color:var(--color-fg-3)]">
                           <span>Sources:</span>
                           {cs.sources.map((src, i) => (
-                            <a key={src.href} href={src.href} target="_blank" rel="noopener noreferrer" title={src.label} className="link-underline normal-case text-[color:var(--color-fg-2)] hover:text-[color:var(--color-fg)]">
+                            <a key={src.href} href={src.href} target="_blank" rel="noopener noreferrer" title={src.label} className="link-underline -my-1.5 inline-block px-1 py-1.5 normal-case text-[color:var(--color-fg-2)] hover:text-[color:var(--color-fg)]">
                               [{i + 1}]<span className="sr-only"> {src.label}</span>
                             </a>
                           ))}

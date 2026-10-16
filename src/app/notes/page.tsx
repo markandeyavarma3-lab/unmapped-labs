@@ -42,7 +42,7 @@ export default async function NotesIndex() {
             <ul className="grid gap-px border border-[color:var(--color-line)] bg-[color:var(--color-line)] md:grid-cols-2 lg:grid-cols-3">
               {notes.map((n) => (
                 <li key={n.slug} className="bg-[color:var(--color-ink)]">
-                  <NoteCard note={n} />
+                  <NoteCard note={n} level={2} />
                 </li>
               ))}
             </ul>

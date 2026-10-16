@@ -13,7 +13,7 @@ export function Principles() {
       <div className="container-site relative grid gap-16 lg:grid-cols-12 lg:gap-8">
         <div className="lg:col-span-6">
           <SectionHeading id="philosophy-heading" label={principles.label} heading={principles.heading} />
-          <ol className="mt-14 grid gap-x-10 sm:grid-cols-2">
+          <ol className="mt-14 grid gap-x-10">
             {principles.items.map((p, i) => (
               <li
                 key={p.title}

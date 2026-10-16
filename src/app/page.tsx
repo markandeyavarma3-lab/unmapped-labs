@@ -9,6 +9,8 @@ import { FocusAreas } from "@/components/sections/FocusAreas";
 import { FieldNotes } from "@/components/sections/FieldNotes";
 import { SelectedWork } from "@/components/sections/SelectedWork";
 import { WhatWeDo } from "@/components/sections/WhatWeDo";
+import { Engagements } from "@/components/sections/Engagements";
+import { Testimonials } from "@/components/sections/Testimonials";
 import { Principles } from "@/components/sections/Principles";
 import { About } from "@/components/sections/About";
 import { Contact } from "@/components/sections/Contact";
@@ -24,6 +26,9 @@ const jsonLd = {
   description: site.description,
   email: site.email,
   logo: `${site.url}/icon.svg`,
+  areaServed: { "@type": "Country", name: "India" },
+  knowsAbout: ["Operations research", "Process mapping", "Bottleneck analysis", "Agriculture operations", "Logistics and container yards", "Hospital patient flow", "Industrial energy efficiency", "Custom software", "IoT and sensors", "Data extraction and forecasting"],
+  contactPoint: { "@type": "ContactPoint", contactType: "sales", email: site.email, areaServed: "IN", availableLanguage: ["English"] },
   ...(socials.length ? { sameAs: socials.map((s) => s.href) } : {}),
 };
 
@@ -42,6 +47,8 @@ export default function Home() {
         <FocusAreas />
         <SelectedWork />
         <WhatWeDo />
+        <Engagements />
+        <Testimonials />
         <FieldNotes />
 
         <Principles />

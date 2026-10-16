@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     `Name: ${name}`,
     organisation ? `Organisation: ${organisation}` : null,
     `Email: ${email}`,
-    `Area: ${area}`,
+    `Area: ${area || "(not given)"}`,
     "",
     message,
   ]
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       from,
       to: [to],
       replyTo: email,
-      subject: `New conversation — ${area} — ${name}`,
+      subject: `New conversation — ${area ? `${area} — ` : ""}${name}`,
       text,
       html: `<div style="font-family:system-ui,sans-serif;line-height:1.55;color:#0d1115">
         <p style="font:12px monospace;letter-spacing:.12em;text-transform:uppercase;color:#4a525b">Unmapped Labs · contact form</p>
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
           <tr><td style="padding:2px 16px 2px 0;color:#4a525b">Name</td><td>${escape(name)}</td></tr>
           ${organisation ? `<tr><td style="padding:2px 16px 2px 0;color:#4a525b">Organisation</td><td>${escape(organisation)}</td></tr>` : ""}
           <tr><td style="padding:2px 16px 2px 0;color:#4a525b">Email</td><td>${escape(email)}</td></tr>
-          <tr><td style="padding:2px 16px 2px 0;color:#4a525b">Area</td><td>${escape(area)}</td></tr>
+          <tr><td style="padding:2px 16px 2px 0;color:#4a525b">Area</td><td>${escape(area || "(not given)")}</td></tr>
         </table>
         <p style="white-space:pre-wrap">${escape(message)}</p>
       </div>`,

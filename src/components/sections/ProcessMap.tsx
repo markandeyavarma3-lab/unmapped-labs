@@ -155,7 +155,7 @@ export function ProcessMap({ stages, caption }: { stages: Stage[]; caption: stri
                 <span ref={fillRef} aria-hidden className="absolute top-[5px] right-0 left-0 h-px origin-left scale-x-0 bg-[linear-gradient(90deg,var(--color-cyan),var(--color-lime))]" />
                 <div className="relative flex justify-between">
                   {stages.map((st, i) => (
-                    <button key={st.index} type="button" tabIndex={-1} onClick={() => goTo(i)} className="group flex flex-col items-center gap-2">
+                    <button key={st.index} type="button" tabIndex={-1} onClick={() => goTo(i)} className="group -mx-3 -my-2 flex min-w-[44px] flex-col items-center gap-2 px-3 py-2">
                       <span
                         className={`block h-[11px] w-[11px] rotate-45 border transition-[background-color,border-color,transform] duration-300 group-hover:scale-125 ${
                           i === active

@@ -8,10 +8,10 @@ export async function About() {
 
   // Every value here is true today and updates itself as the lab grows.
   const status = [
-    { k: "Stage", v: "Early exploration" },
+    { k: "Stage", v: "Early-stage startup" },
     { k: "Initial focus", v: `${focus.areas.length - 1} areas, edges left open` },
     { k: "Field notes", v: published === 0 ? "None published yet" : `${published} published` },
-    { k: "Open to", v: "Conversations, field access, collaborators" },
+    { k: "Open to", v: "New problems, site visits, collaborators" },
   ];
 
   return (
