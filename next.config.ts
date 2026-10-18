@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      { source: "/notes", destination: "/insights#notes", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

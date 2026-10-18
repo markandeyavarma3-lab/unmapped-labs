@@ -14,6 +14,7 @@ export const site = {
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unmappedlabs.in").replace(/\/$/, ""),
   email: "contact@unmappedlabs.in",
   closingLine: "There is always more to map.",
+  footerLine: "A research-first problem-solving startup. We go on site, find the real cause, and fix it.",
 } as const;
 
 /**
@@ -25,13 +26,11 @@ export const socials: { label: string; href: string }[] = [
   { label: "X", href: "" },
 ].filter((s) => s.href.length > 0);
 
+/** Primary navigation (the header's call to action goes to /contact). */
 export const nav = [
-  { id: "approach", label: "Approach" },
-  { id: "work", label: "Work" },
-  { id: "services", label: "Services" },
-  { id: "engage", label: "How we engage" },
-  { id: "focus", label: "Focus Areas" },
-  { id: "about", label: "About" },
+  { href: "/services", label: "Services" },
+  { href: "/work", label: "Work" },
+  { href: "/insights", label: "Insights" },
+  { href: "/about", label: "About" },
 ] as const;
 
-export type NavId = (typeof nav)[number]["id"] | "contact";

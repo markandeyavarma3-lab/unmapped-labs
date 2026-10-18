@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { site } from "@/config/site";
+import { PageHeader } from "@/components/ui/Headings";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -30,7 +31,7 @@ const sections: { h: string; p: string[] }[] = [
     h: "What the site measures",
     p: [
       "We use Vercel Analytics and Speed Insights to count page views and check how fast the site loads. They don't use cookies and don't identify you personally.",
-      "The site remembers two small preferences in your browser — whether you've seen the opening animation, and whether you turned sound on. They never leave your device.",
+      "The site stores nothing in your browser.",
     ],
   },
   {
@@ -41,19 +42,12 @@ const sections: { h: string; p: string[] }[] = [
 
 export default function PrivacyPage() {
   return (
-    <main id="main" tabIndex={-1} className="relative z-[var(--z-content)] min-h-screen pt-[calc(var(--header-h)+clamp(4rem,10vw,8rem))] pb-[var(--section-y)]">
-      <div className="container-site max-w-[46rem]">
-        <p className="label flex items-center gap-3 text-[color:var(--color-fg-2)]">
-          <span aria-hidden className="h-px w-6 bg-[color:var(--color-cyan)]" />
-          Privacy
-        </p>
-        <h1 className="mt-6 text-[length:var(--text-h2)] leading-[var(--text-h2--line-height)] font-medium tracking-[var(--text-h2--letter-spacing)]">
-          What happens to what you send us.
-        </h1>
-        <p className="label mt-6 text-[color:var(--color-fg-2)]">Last updated: 16 October 2026</p>
+    <main id="main" tabIndex={-1}>
+      <PageHeader label="Privacy" title="What happens to what you send us." intro="Last updated: 16 October 2026" />
+      <div className="container-site max-w-[52rem] pb-[var(--section-y)]">
         {sections.map((s) => (
-          <section key={s.h} className="mt-12">
-            <h2 className="text-[1.375rem] font-medium tracking-[-0.02em]">{s.h}</h2>
+          <section key={s.h} className="border-t border-[color:var(--color-line)] py-8">
+            <h2 className="serif text-[1.6rem]">{s.h}</h2>
             {s.p.map((t) => (
               <p key={t} className="mt-3 text-[1.0625rem] leading-relaxed text-[color:var(--color-fg-2)]">
                 {t}

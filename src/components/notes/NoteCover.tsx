@@ -1,4 +1,4 @@
-import { simplex2 } from "@/components/three/terrain-math";
+import { simplex2 } from "@/lib/noise";
 import { contourSet, hashString } from "@/lib/contours";
 
 /**
@@ -25,12 +25,12 @@ export function NoteCover({ slug, label, className }: { slug: string; label?: st
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={className} aria-hidden preserveAspectRatio="xMidYMid slice">
       <rect width={W} height={H} fill="var(--color-ink)" />
-      <path d={minor} fill="none" stroke="#9fb3c4" strokeOpacity="0.16" />
-      <path d={major} fill="none" stroke="#9fb3c4" strokeOpacity="0.4" strokeWidth="1.2" />
+      <path d={minor} fill="none" stroke="#8a8f86" strokeOpacity="0.25" />
+      <path d={major} fill="none" stroke="#8a8f86" strokeOpacity="0.55" strokeWidth="1.2" />
       <circle cx={px} cy={py} r="16" fill="none" stroke="var(--color-cyan)" strokeOpacity="0.5" />
       <circle cx={px} cy={py} r="3.5" fill="var(--color-cyan)" />
       {label && (
-        <text x="20" y={H - 20} fill="#a0aab5" fontFamily="var(--font-mono)" fontSize="11" letterSpacing="1.5">
+        <text x="20" y={H - 20} fill="#5e646b" fontFamily="var(--font-mono)" fontSize="11" letterSpacing="1.5">
           {label}
         </text>
       )}

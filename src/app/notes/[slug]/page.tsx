@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatNoteDate, getNote, getNotes } from "@/lib/notes";
 import { NoteCover } from "@/components/notes/NoteCover";
+import { CtaBand } from "@/components/ui/CtaBand";
 
 /**
  * Cache Components requires at least one param at build time. With no notes
@@ -35,36 +36,30 @@ export default async function NotePage({ params }: PageProps<"/notes/[slug]">) {
   const { default: Body } = (await import(`@/content/notes/${slug}.mdx`)) as { default: React.ComponentType };
 
   return (
-    <main id="main" tabIndex={-1} className="relative z-[var(--z-content)] min-h-screen pt-[calc(var(--header-h)+clamp(3rem,8vw,6rem))] pb-[var(--section-y)]">
-      <article className="container-site">
-        <Link href="/notes" className="label link-underline pb-0.5 text-[color:var(--color-fg-2)]">
-          ← All field notes
-        </Link>
-        <header className="mt-10 max-w-[48rem]">
-          <p className="label flex flex-wrap gap-3 text-[color:var(--color-fg-2)]">
+    <main id="main" tabIndex={-1}>
+      <article>
+        <header className="container-site max-w-[52rem] pt-[clamp(2.5rem,2rem+4vw,5rem)]">
+          <Link href="/insights#notes" className="link-underline inline-block py-1 text-sm text-[color:var(--color-fg-2)]">
+            ← Field notes
+          </Link>
+          <p className="label mt-8 flex flex-wrap gap-x-3 gap-y-1 text-[color:var(--color-fg-3)]">
             <span className="text-[color:var(--color-cyan)]">{note.category}</span>
             <span aria-hidden>·</span>
             <time dateTime={note.date}>{formatNoteDate(note.date)}</time>
             <span aria-hidden>·</span>
             <span>{note.readingMinutes} min read</span>
           </p>
-          <h1 className="mt-6 text-[clamp(2.25rem,1.4rem+3.4vw,4.25rem)] leading-[1.02] font-medium tracking-[-0.035em] text-balance">{note.title}</h1>
-          <p className="mt-6 text-[length:var(--text-lead)] leading-[var(--text-lead--line-height)] text-[color:var(--color-fg-2)]">{note.summary}</p>
+          <h1 className="h-display mt-5">{note.title}</h1>
+          <p className="lead mt-6">{note.summary}</p>
         </header>
-        <NoteCover slug={note.slug} className="mt-12 aspect-[21/9] w-full" />
-        <div className="prose-note mx-auto mt-14 max-w-[var(--container-prose)]">
+        <div className="container-site max-w-[52rem]">
+          <NoteCover slug={note.slug} className="mt-12 aspect-[21/9] w-full rounded-md border border-[color:var(--color-line)]" />
+        </div>
+        <div className="prose-note container-site mt-12 max-w-[calc(var(--container-prose)+2*var(--gutter))] pb-[var(--section-y)]">
           <Body />
         </div>
-        {note.tags && note.tags.length > 0 && (
-          <ul className="label mx-auto mt-14 flex max-w-[var(--container-prose)] flex-wrap gap-2 text-[color:var(--color-fg-2)]" aria-label="Tags">
-            {note.tags.map((t) => (
-              <li key={t} className="border border-[color:var(--color-line)] px-2.5 py-1">
-                {t}
-              </li>
-            ))}
-          </ul>
-        )}
       </article>
+      <CtaBand />
     </main>
   );
 }
