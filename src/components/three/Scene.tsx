@@ -52,6 +52,48 @@ export function Scene({ tier, introDelay, onReady }: { tier: Tier; introDelay: n
  * city stays hidden until every material has compiled in parallel
  * (KHR_parallel_shader_compile), so a cold shader cache never stalls a frame.
  */
+/**
+ * Mounts heavy layers only when they're needed, so the first screens stay
+ * responsive: on phones when the journey gets within `lead` chapters of where
+ * the layer is first seen; on desktops also once the browser has been idle a
+ * while after the city appears. Each layer compiles its shaders in the
+ * background before it becomes visible, so mounting never stalls a frame.
+ */
+function Deferred({ tier, at, lead = 1.5, idleAfter, children }: { tier: Tier; at: number; lead?: number; idleAfter: number; children: React.ReactNode }) {
+  const [on, setOn] = useState(false);
+  const [shown, setShown] = useState(false);
+  const group = useRef<THREE.Group>(null);
+  const compiling = useRef(false);
+  useEffect(() => {
+    if (on || tier === "low") return;
+    let idle = 0;
+    const timer = window.setTimeout(() => {
+      const ric = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 50));
+      idle = ric(() => setOn(true), { timeout: 4000 }) as number;
+    }, idleAfter);
+    return () => {
+      window.clearTimeout(timer);
+      (window.cancelIdleCallback ?? window.clearTimeout)(idle);
+    };
+  }, [on, tier, idleAfter]);
+  useFrame((state) => {
+    if (!on && world.chapter > at - lead) setOn(true);
+    if (on && !shown && !compiling.current && group.current) {
+      compiling.current = true;
+      state.gl
+        .compileAsync(group.current, state.camera, state.scene)
+        .catch(() => {})
+        .then(() => setShown(true));
+    }
+  });
+  if (!on) return null;
+  return (
+    <group ref={group} visible={shown}>
+      {children}
+    </group>
+  );
+}
+
 function CityScene({ tier, introDelay, onReady }: { tier: Tier; introDelay: number; onReady: () => void }) {
   const stage = useStagedMount(5);
   const group = useRef<THREE.Group>(null);
@@ -79,13 +121,28 @@ function CityScene({ tier, introDelay, onReady }: { tier: Tier; introDelay: numb
       <CameraRig tier={tier} introDelay={introDelay} />
       <City tier={tier} />
       <Hills tier={tier} />
-      {stage >= 2 && <Districts tier={tier} />}
       {stage >= 3 && <Life tier={tier} />}
-      {stage >= 4 && <ProcessBlock />}
-      {stage >= 4 && <Projects tier={tier} />}
       {stage >= 5 && <Interaction />}
       {stage >= 5 && tier === "high" && <Motes />}
+      {compiled && <LaterLayers tier={tier} />}
     </group>
+  );
+}
+
+/** The heavy layers below the first screens, mounted as the journey approaches them (see Deferred). */
+function LaterLayers({ tier }: { tier: Tier }) {
+  return (
+    <>
+      <Deferred tier={tier} at={CHAPTER.approach} idleAfter={2500}>
+        <ProcessBlock />
+      </Deferred>
+      <Deferred tier={tier} at={CHAPTER.harvest} lead={2.5} idleAfter={4500}>
+        <Districts tier={tier} />
+      </Deferred>
+      <Deferred tier={tier} at={CHAPTER.flowmatch} idleAfter={6500}>
+        <Projects tier={tier} />
+      </Deferred>
+    </>
   );
 }
 

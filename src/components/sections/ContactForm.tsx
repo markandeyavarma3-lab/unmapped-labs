@@ -5,6 +5,7 @@ import { contact } from "@/content/site-content";
 import { site } from "@/config/site";
 import { CONTACT_FIELDS as FIELDS, HONEYPOT_FIELD, STARTED_FIELD, validateContact, type ContactErrors, type ContactField } from "@/lib/contact-schema";
 import { BtnLabel } from "@/components/ui/BtnLabel";
+import { track } from "@vercel/analytics";
 
 type Status =
   | { kind: "idle" }
@@ -27,6 +28,7 @@ export function ContactForm() {
   const uid = useId();
   const fid = (f: string) => `${uid}-${f}`;
 
+  const startedTyping = useRef(false);
   useEffect(() => {
     startedAt.current = Date.now();
   }, []);
@@ -72,10 +74,12 @@ export function ContactForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; fields?: Record<string, string> };
       if (res.ok && data.ok) {
+        track("contact_submitted", { area: parsed.data.area || "none" });
         setStatus({ kind: "sent" });
         formRef.current?.reset();
         return;
       }
+      track("contact_failed", { reason: data.error ?? "unknown" });
       if (data.fields) setErrors(data.fields as ContactErrors);
       setStatus({ kind: "error", message: SERVER_MESSAGES[data.error ?? ""] ?? SERVER_MESSAGES.send_failed });
     } catch {
@@ -140,6 +144,12 @@ export function ContactForm() {
             ref={formRef}
             noValidate
             onSubmit={onSubmit}
+            onInput={() => {
+              if (!startedTyping.current) {
+                startedTyping.current = true;
+                track("contact_started");
+              }
+            }}
             onBlur={(e) => {
               const name = (e.target as unknown as { name?: string }).name as ContactField;
               if (FIELDS.includes(name)) validateField(name);

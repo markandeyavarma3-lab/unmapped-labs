@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef } from "react";
 import Lenis from "lenis";
+import { track } from "@vercel/analytics";
 
 /** Stable getter — Lenis is created after mount and lives outside React state. */
 const LenisContext = createContext<() => Lenis | null>(() => null);
@@ -75,6 +76,10 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       const a = (e.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
       if (!a) return;
       const url = new URL(a.href, location.href);
+      // Measurement: every way into a conversation, and where on the page it was clicked.
+      const from = a.closest("header") ? "header" : a.closest("footer") ? "footer" : (a.closest("section[id]")?.id ?? location.pathname);
+      if (url.hash === "#contact") track("contact_cta_click", { from });
+      else if (url.protocol === "mailto:") track("email_click", { from });
       if (url.pathname !== location.pathname || !url.hash) return;
       if (scrollToHash(url.hash, lenisRef.current)) e.preventDefault();
     };
