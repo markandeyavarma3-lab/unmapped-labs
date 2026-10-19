@@ -25,8 +25,8 @@ export function LogoMark({ className, title }: { className?: string; title?: str
         </g>
       </g>
       {/* the path out of the known grid */}
-      <path d="M12 21L21 12L26.6 6.4" stroke="var(--logo-accent, #0d5c57)" strokeWidth="1.9" strokeLinecap="round" />
-      <circle cx="28.4" cy="4.6" r="2.3" fill="var(--logo-accent, #0d5c57)" />
+      <path d="M12 21L21 12L26.6 6.4" stroke="var(--logo-accent, #f2c230)" strokeWidth="1.9" strokeLinecap="round" />
+      <circle cx="28.4" cy="4.6" r="2.3" fill="var(--logo-accent, #f2c230)" />
     </svg>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { work } from "@/content/site-content";
 import { Arrow } from "@/components/ui/Arrow";
 import { CtaBand } from "@/components/ui/CtaBand";
+import { Page } from "@/components/motion/Page";
 
 /** Every project is known at build time. */
 export const instant = false;
@@ -32,14 +33,14 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
   const next = work.cases[(i + 1) % work.cases.length];
 
   return (
-    <main id="main" tabIndex={-1}>
+    <Page>
       <article>
         <header className="container-site pt-[clamp(2.5rem,2rem+4vw,5rem)] pb-14">
           <Link href="/work" className="link-underline inline-block py-1 text-sm text-[color:var(--color-fg-2)]">
             ← All work
           </Link>
           <p className="label mt-8 flex flex-wrap gap-x-3 gap-y-1">
-            <span className="text-[color:var(--color-cyan)]">{cs.kind}</span>
+            <span className="text-[color:var(--color-accent)]">{cs.kind}</span>
             <span aria-hidden className="text-[color:var(--color-fg-3)]">·</span>
             <span className="text-[color:var(--color-fg-3)]">{cs.sector}</span>
           </p>
@@ -50,7 +51,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
               <div key={f.label}>
                 <dt className="sr-only">{f.label}</dt>
                 <dd>
-                  <span className="serif block text-[2.4rem] leading-none tabular-nums">{f.value}</span>
+                  <span className="display block text-[2.4rem] leading-none tabular-nums">{f.value}</span>
                   <span className="mt-2 block text-sm text-[color:var(--color-fg-3)]">{f.label}</span>
                 </dd>
               </div>
@@ -61,19 +62,19 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
         <div className="container-site grid gap-14 border-t border-[color:var(--color-line)] pt-14 pb-[var(--section-y)] lg:grid-cols-12">
           <div className="flex flex-col gap-12 lg:col-span-7">
             <section aria-labelledby="problem">
-              <h2 id="problem" className="label text-[color:var(--color-cyan)]">The problem</h2>
+              <h2 id="problem" className="label text-[color:var(--color-accent)]">The problem</h2>
               <p className="mt-4 text-[1.1875rem] leading-relaxed">{cs.problem}</p>
             </section>
             <section aria-labelledby="insight">
-              <h2 id="insight" className="label text-[color:var(--color-cyan)]">What we noticed</h2>
+              <h2 id="insight" className="label text-[color:var(--color-accent)]">What we noticed</h2>
               <p className="mt-4 text-[1.1875rem] leading-relaxed">{cs.insight}</p>
             </section>
             <section aria-labelledby="built">
-              <h2 id="built" className="label text-[color:var(--color-cyan)]">What we built</h2>
+              <h2 id="built" className="label text-[color:var(--color-accent)]">What we built</h2>
               <ul className="mt-5 flex flex-col gap-4">
                 {cs.built.map((b) => (
                   <li key={b} className="flex gap-4 text-[1.0625rem] leading-relaxed text-[color:var(--color-fg-2)]">
-                    <span aria-hidden className="text-[color:var(--color-cyan)]">—</span>
+                    <span aria-hidden className="text-[color:var(--color-accent)]">—</span>
                     {b}
                   </li>
                 ))}
@@ -81,7 +82,7 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
             </section>
             <section aria-labelledby="outcome" className="card p-7">
               <h2 id="outcome" className="label text-[color:var(--color-good)]">Outcome</h2>
-              <p className="serif mt-4 text-[1.5rem] leading-snug">{cs.outcome}</p>
+              <p className="display mt-4 text-[1.5rem] leading-snug">{cs.outcome}</p>
             </section>
           </div>
 
@@ -116,13 +117,13 @@ export default async function CaseStudyPage({ params }: PageProps<"/work/[slug]"
         <nav aria-label="More work" className="container-site border-t border-[color:var(--color-line)] py-10">
           <Link href={`/work/${next.slug}`} className="group inline-block">
             <span className="label text-[color:var(--color-fg-3)]">Next project</span>
-            <span className="serif mt-2 flex items-center gap-3 text-[2rem]">
+            <span className="display mt-2 flex items-center gap-3 text-[2rem]">
               {next.name} <Arrow className="arrow transition-transform group-hover:translate-x-1" />
             </span>
           </Link>
         </nav>
       </article>
       <CtaBand />
-    </main>
+    </Page>
   );
 }

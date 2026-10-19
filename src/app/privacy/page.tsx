@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { site } from "@/config/site";
 import { PageHeader } from "@/components/ui/Headings";
+import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -42,12 +43,12 @@ const sections: { h: string; p: string[] }[] = [
 
 export default function PrivacyPage() {
   return (
-    <main id="main" tabIndex={-1}>
+    <Page>
       <PageHeader label="Privacy" title="What happens to what you send us." intro="Last updated: 16 October 2026" />
       <div className="container-site max-w-[52rem] pb-[var(--section-y)]">
         {sections.map((s) => (
           <section key={s.h} className="border-t border-[color:var(--color-line)] py-8">
-            <h2 className="serif text-[1.6rem]">{s.h}</h2>
+            <h2 className="display text-[1.6rem]">{s.h}</h2>
             {s.p.map((t) => (
               <p key={t} className="mt-3 text-[1.0625rem] leading-relaxed text-[color:var(--color-fg-2)]">
                 {t}
@@ -56,6 +57,6 @@ export default function PrivacyPage() {
           </section>
         ))}
       </div>
-    </main>
+    </Page>
   );
 }

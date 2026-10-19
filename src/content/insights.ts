@@ -1,4 +1,5 @@
 import type { FixType, Source } from "./site-content";
+import type { PhotoKey } from "./photos";
 
 /**
  * Industry cases: problems large operations really have, written up the way
@@ -256,3 +257,22 @@ export const cases: IndustryCase[] = [
 ];
 
 export const getCase = (slug: string) => cases.find((c) => c.slug === slug) ?? null;
+
+/** A photograph for each case's card and header (see photos.ts for credits). */
+export const casePhotos: Record<string, PhotoKey> = {
+  "harvest-waiting-in-the-heat": "mandi",
+  "some-rows-drown-others-dry": "harvest",
+  "pumps-burning-power": "canal",
+  "boxes-buried-in-the-yard": "port",
+  "beds-free-up-too-late": "hospitalWard",
+  "everyone-arrives-at-nine": "hospitalQueue",
+  "air-that-leaks-away": "factory",
+  "a-bill-set-by-fifteen-minutes": "teaFactory",
+};
+
+export const industryPhotos: Record<Industry, PhotoKey> = {
+  agriculture: "harvest",
+  logistics: "port",
+  healthcare: "hospitalQueue",
+  industry: "factory",
+};

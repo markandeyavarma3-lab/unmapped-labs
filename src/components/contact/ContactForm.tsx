@@ -90,7 +90,7 @@ export function ContactForm() {
   }
 
   const input =
-    "w-full border-b border-[color:var(--color-line-strong)] bg-transparent py-3 text-[1.0625rem] text-[color:var(--color-fg)] placeholder:text-[color:var(--color-fg-3)] transition-colors duration-[var(--duration-hover)] hover:border-[color:var(--color-fg-3)] focus:border-[color:var(--color-cyan)] focus:outline-none aria-[invalid=true]:border-[color:var(--color-red)]";
+    "w-full border-b border-[color:var(--color-line-strong)] bg-transparent py-3 text-[1.0625rem] text-[color:var(--color-fg)] placeholder:text-[color:var(--color-fg-3)] transition-colors duration-[var(--duration-hover)] hover:border-[color:var(--color-fg-3)] focus:border-[color:var(--color-accent)] focus:outline-none aria-[invalid=true]:border-[color:var(--color-red)]";
 
   // A render helper, not a component: a component declared here would remount
   // its inputs on every render and wipe what the visitor typed.
@@ -123,12 +123,12 @@ export function ContactForm() {
             role="status"
           >
             <span aria-hidden className="block h-3 w-3 rounded-full bg-[color:var(--color-good)]" />
-            <h2 className="serif text-[2rem]">Message received.</h2>
+            <h2 className="display text-[2rem]">Message received.</h2>
             <p className="max-w-[28rem] leading-relaxed text-[color:var(--color-fg-2)]">Thank you — it reached our inbox. Here's what happens next:</p>
             <ol className="flex max-w-[28rem] flex-col gap-2 text-[15px] leading-relaxed text-[color:var(--color-fg)]">
               {contact.next.map((n, i) => (
                 <li key={n} className="flex gap-3">
-                  <span className="label mt-0.5 tabular-nums text-[color:var(--color-cyan)]">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="label mt-0.5 tabular-nums text-[color:var(--color-accent)]">{String(i + 1).padStart(2, "0")}</span>
                   {n}
                 </li>
               ))}

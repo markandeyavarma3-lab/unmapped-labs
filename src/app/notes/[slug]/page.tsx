@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { formatNoteDate, getNote, getNotes } from "@/lib/notes";
 import { NoteCover } from "@/components/notes/NoteCover";
 import { CtaBand } from "@/components/ui/CtaBand";
+import { Page } from "@/components/motion/Page";
 
 /**
  * Cache Components requires at least one param at build time. With no notes
@@ -36,14 +37,14 @@ export default async function NotePage({ params }: PageProps<"/notes/[slug]">) {
   const { default: Body } = (await import(`@/content/notes/${slug}.mdx`)) as { default: React.ComponentType };
 
   return (
-    <main id="main" tabIndex={-1}>
+    <Page>
       <article>
         <header className="container-site max-w-[52rem] pt-[clamp(2.5rem,2rem+4vw,5rem)]">
           <Link href="/insights#notes" className="link-underline inline-block py-1 text-sm text-[color:var(--color-fg-2)]">
             ← Field notes
           </Link>
           <p className="label mt-8 flex flex-wrap gap-x-3 gap-y-1 text-[color:var(--color-fg-3)]">
-            <span className="text-[color:var(--color-cyan)]">{note.category}</span>
+            <span className="text-[color:var(--color-accent)]">{note.category}</span>
             <span aria-hidden>·</span>
             <time dateTime={note.date}>{formatNoteDate(note.date)}</time>
             <span aria-hidden>·</span>
@@ -60,6 +61,6 @@ export default async function NotePage({ params }: PageProps<"/notes/[slug]">) {
         </div>
       </article>
       <CtaBand />
-    </main>
+    </Page>
   );
 }

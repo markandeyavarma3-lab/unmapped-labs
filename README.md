@@ -1,8 +1,9 @@
 # Unmapped Labs — website
 
-An operations-research and problem-solving startup in India. The site is a calm,
-editorial, multi-page site: what we do, how we work, written industry cases
-with simple figures, field notes, and a contact form.
+An operations-research and problem-solving startup in India. The site uses a
+"blueprint" design — deep navy, survey-yellow, grotesk + mono type — across
+several pages: a home page with an interactive bottleneck simulator, services,
+written industry cases with figures and sources, field notes, and a contact form.
 
 Live: **https://www.unmappedlabs.in**
 
@@ -26,9 +27,11 @@ Requires Node 20+.
 | Concern | Choice |
 |---|---|
 | Framework | Next.js 16 (App Router, Cache Components); every page is prerendered |
-| Styling | Tailwind CSS v4, tokens and component classes in `src/app/globals.css` |
-| Type | Newsreader (headings), Geist (text), via `next/font` |
-| Figures | Plain SVG components, no chart library |
+| Styling | Tailwind CSS v4, tokens and component classes in `src/app/globals.css` (`.paper` flips a section to light) |
+| Type | Geist (headings, text) and Geist Mono (labels), via `next/font` |
+| Figures | Plain SVG components and one canvas simulator, no chart library |
+| Motion | `MotionRoot` (reveals, scroll progress `--p`, Lenis smooth wheel scroll), React `<ViewTransition>` page transitions; all off with reduced motion |
+| Photos | Wikimedia Commons, open licences, credited on every image (`src/content/photos.ts`) |
 | Content | TypeScript content files + MDX field notes |
 | Contact | Next route handler + Resend |
 | Analytics | Vercel Analytics (with contact-funnel events) + Speed Insights |
@@ -37,7 +40,7 @@ Requires Node 20+.
 
 | Route | What it is |
 |---|---|
-| `/` | Hero with the bottleneck figure, problems we solve, how we work, work, featured insights, principles |
+| `/` | Blueprint hero, pinned photo gallery of sites, bottleneck simulator, pinned "how we work" story, sourced figures, work, insights, principles |
 | `/services` | The on-site diagnostic, the four kinds of fix, how engagements run |
 | `/work`, `/work/[slug]` | Our own projects |
 | `/insights`, `/insights/[slug]` | Eight researched industry cases (agriculture, logistics, healthcare, industry) and field notes |
@@ -54,10 +57,14 @@ src/
   content/
     site-content.ts         page copy, services, approach, work, testimonials  ← edit here
     insights.ts             the industry cases and their figures  ← edit here
+    photos.ts               photographs and their credits  ← replace with our own
     notes/*.mdx             field notes (files starting with "_" never publish)
   components/
     layout/                 header, footer, click tracking
-    ui/                     headings, CTA band, flow diagram, before/after chart
+    home/                   hero drawing, site gallery, pinned story
+    sim/                    the bottleneck simulator and its scenarios
+    motion/                 MotionRoot, CountUp, Page (view transition)
+    ui/                     headings, CTA band, photos, before/after chart
     cards/                  case and work cards
     contact/ContactForm.tsx
     notes/NoteCover.tsx     procedural contour cover
@@ -122,7 +129,8 @@ it's best effort. Move it to a shared store (e.g. Upstash) if abuse appears.
 - Real HTML throughout; figures have text alternatives.
 - Skip link, visible focus rings, the mobile menu traps focus, closes on
   Escape and returns focus.
-- Colours meet WCAG AA contrast; no motion beyond small hover transitions.
+- Colours meet WCAG AA contrast. With `prefers-reduced-motion`, nothing animates,
+  pinned sections become plain lists/strips, and the simulator starts paused.
 - axe-core (WCAG 2 A/AA + best practice): no violations on any page at 390px
   and 1440px; no horizontal overflow.
 

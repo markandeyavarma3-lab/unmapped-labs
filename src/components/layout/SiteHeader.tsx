@@ -42,7 +42,7 @@ export function SiteHeader() {
   const current = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-[var(--z-header)] border-b border-[color:var(--color-line)] bg-[color:var(--color-ink)]/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-[var(--z-header)] border-b border-[color:var(--color-line)] bg-[color:var(--color-ink)]/[0.97]" style={{ viewTransitionName: "site-header" }}>
       <div className="container-site flex h-[var(--header-h)] items-center justify-between gap-6">
         <Link href="/" className="-m-2 p-2 text-[color:var(--color-fg)]" aria-label="Unmapped Labs — home">
           <Logo />
@@ -54,12 +54,13 @@ export function SiteHeader() {
               key={n.href}
               href={n.href}
               aria-current={current(n.href) ? "page" : undefined}
-              className={`rounded px-3 py-2 text-[15px] transition-colors hover:text-[color:var(--color-fg)] ${current(n.href) ? "font-medium text-[color:var(--color-fg)]" : "text-[color:var(--color-fg-2)]"}`}
+              className={`label relative rounded px-3 py-2 transition-colors hover:text-[color:var(--color-fg)] ${current(n.href) ? "text-[color:var(--color-fg)]" : "text-[color:var(--color-fg-2)]"}`}
             >
               {n.label}
+              {current(n.href) && <span aria-hidden className="absolute inset-x-3 -bottom-[13px] h-[2px] bg-[color:var(--color-accent)]" />}
             </Link>
           ))}
-          <Link href="/contact" className="btn btn-primary ml-3 min-h-[2.5rem] px-4 py-2 text-[15px]">
+          <Link href="/contact" className="btn btn-primary ml-4 min-h-[2.5rem] px-4 py-2">
             Start a conversation
           </Link>
         </nav>
@@ -88,7 +89,7 @@ export function SiteHeader() {
       >
         <nav aria-label="Main" className="container-site flex flex-col py-4">
           {nav.map((n) => (
-            <Link key={n.href} href={n.href} aria-current={current(n.href) ? "page" : undefined} className="border-b border-[color:var(--color-line)] py-4 text-lg">
+            <Link key={n.href} href={n.href} aria-current={current(n.href) ? "page" : undefined} className="display border-b border-[color:var(--color-line)] py-4 text-2xl">
               {n.label}
             </Link>
           ))}

@@ -5,6 +5,8 @@ import { cases } from "@/content/insights";
 import { PageHeader, SectionHead } from "@/components/ui/Headings";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { Arrow } from "@/components/ui/Arrow";
+import { photos } from "@/content/photos";
+import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -15,14 +17,14 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   const [diagnostic, ...fixes] = services.items;
   return (
-    <main id="main" tabIndex={-1}>
-      <PageHeader label={services.label} title={services.heading} intro={services.intro} />
+    <Page>
+      <PageHeader label={services.label} title={services.heading} intro={services.intro} photo={photos.factory} />
 
       {/* Always first: the diagnostic */}
-      <section aria-labelledby="diagnostic" className="container-site pb-[var(--section-y)]">
-        <article className="card grid gap-8 p-8 sm:p-10 lg:grid-cols-12">
+      <section aria-labelledby="diagnostic" className="container-site py-[var(--section-y)]">
+        <article data-reveal="" className="card ticks grid gap-8 p-8 sm:p-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <p className="label text-[color:var(--color-cyan)]">Always first</p>
+            <p className="label text-[color:var(--color-accent)]">Always first</p>
             <h2 id="diagnostic" className="h2 mt-4">
               {diagnostic.title}
             </h2>
@@ -33,7 +35,7 @@ export default function ServicesPage() {
             <ul className="mt-4 flex flex-col gap-3">
               {diagnostic.deliverables.map((d) => (
                 <li key={d} className="flex gap-3 border-b border-[color:var(--color-line)] pb-3">
-                  <span aria-hidden className="text-[color:var(--color-cyan)]">—</span>
+                  <span aria-hidden className="text-[color:var(--color-accent)]">—</span>
                   {d}
                 </li>
               ))}
@@ -51,7 +53,7 @@ export default function ServicesPage() {
               const examples = cases.filter((c) => c.fixType === sv.fix);
               return (
                 <article key={sv.index} className="card flex flex-col p-7 sm:p-8">
-                  <p className="label text-[color:var(--color-cyan)]">{sv.fix && fixLabels[sv.fix]}</p>
+                  <p className="label text-[color:var(--color-accent)]">{sv.fix && fixLabels[sv.fix]}</p>
                   <h3 className="h3 mt-3">{sv.title}</h3>
                   <p className="mt-3 leading-relaxed text-[color:var(--color-fg-2)]">{sv.body}</p>
                   <ul className="mt-5 flex flex-wrap gap-2">
@@ -83,7 +85,7 @@ export default function ServicesPage() {
       </section>
 
       {/* How we engage */}
-      <section id="engage" aria-labelledby="engage-heading" className="section border-t border-[color:var(--color-line)] bg-[color:var(--color-ink-3)]">
+      <section id="engage" aria-labelledby="engage-heading" className="paper section">
         <div className="container-site">
           <SectionHead id="engage-heading" label={engagements.label} title={engagements.heading} intro={engagements.intro} />
           <ol className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -91,7 +93,7 @@ export default function ServicesPage() {
               <li key={st.index} className="card flex flex-col p-6">
                 <p className="label tabular-nums text-[color:var(--color-fg-3)]">Step {st.index}</p>
                 <h3 className="h3 mt-3 text-[1.25rem]">{st.title}</h3>
-                <p className="mt-1 text-sm font-medium text-[color:var(--color-cyan)]">{st.time}</p>
+                <p className="mt-1 text-sm font-medium text-[color:var(--color-accent)]">{st.time}</p>
                 <p className="mt-4 text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{st.body}</p>
               </li>
             ))}
@@ -103,6 +105,6 @@ export default function ServicesPage() {
       </section>
 
       <CtaBand />
-    </main>
+    </Page>
   );
 }

@@ -3,6 +3,7 @@ import { contact } from "@/content/site-content";
 import { site } from "@/config/site";
 import { PageHeader } from "@/components/ui/Headings";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -12,9 +13,9 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main id="main" tabIndex={-1}>
+    <Page>
       <PageHeader label={contact.label} title={contact.heading} intro={contact.body} />
-      <div className="container-site grid gap-12 pb-[var(--section-y)] lg:grid-cols-12">
+      <div className="container-site grid gap-12 py-[var(--section-y)] lg:grid-cols-12">
         <div className="lg:col-span-7">
           <ContactForm />
         </div>
@@ -24,7 +25,7 @@ export default function ContactPage() {
             <ol className="mt-4 flex flex-col">
               {contact.next.map((n, i) => (
                 <li key={n} className="flex gap-4 border-t border-[color:var(--color-line)] py-4">
-                  <span className="serif text-xl text-[color:var(--color-fg-3)] tabular-nums">{i + 1}</span>
+                  <span className="label pt-1 text-[color:var(--color-accent)] tabular-nums">0{i + 1}</span>
                   <span className="text-[15px] leading-relaxed">{n}</span>
                 </li>
               ))}
@@ -38,6 +39,6 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
-    </main>
+    </Page>
   );
 }

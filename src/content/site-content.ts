@@ -3,12 +3,16 @@
  * wording changes never require touching layout code.
  */
 
+import type { PhotoKey } from "./photos";
+
 export const hero = {
-  eyebrow: "Operations research & problem solving · India",
+  eyebrow: "Operations research · Problem solving · India",
   heading: "See how it really runs. Then fix what's broken.",
+  /** The heading, broken into the lines that rise in on load. */
+  lines: ["See how it", "really runs.", "Then fix", "what's broken."],
   body: "We come to your site, study how the work actually happens, and find the real cause of what's slowing it down. Then we fix it — with software, hardware, a better process or better data — building it ourselves or bringing in the right people.",
   primaryCta: { label: "Start a conversation", href: "/contact" },
-  secondaryCta: { label: "How we work", href: "/#how-we-work" },
+  secondaryCta: { label: "Try the simulator", href: "/#simulator" },
   proof: [
     { value: "On site", label: "We study the work where it happens" },
     { value: "Measured", label: "Before and after, in numbers" },
@@ -27,6 +31,53 @@ export const problems = {
     { title: "Decisions without data", body: "Plenty of records, but no clear picture of what is actually happening, or when." },
   ],
 };
+
+/** The pinned gallery on the home page: the kinds of place we work in. */
+export const sites: { label: string; photo: PhotoKey; title: string; body: string; caseSlug: string }[] = [
+  {
+    label: "Ports & yards",
+    photo: "port",
+    title: "Boxes buried in the yard",
+    body: "Trucks queue at the gate while cranes dig for containers stacked under others.",
+    caseSlug: "boxes-buried-in-the-yard",
+  },
+  {
+    label: "Farms & packhouses",
+    photo: "harvest",
+    title: "Harvest waiting in the heat",
+    body: "Picked produce sits in the sun because the packhouse can't take it fast enough.",
+    caseSlug: "harvest-waiting-in-the-heat",
+  },
+  {
+    label: "Hospitals",
+    photo: "hospitalQueue",
+    title: "Everyone arrives at nine",
+    body: "One registration counter sets the pace of the whole morning for every department behind it.",
+    caseSlug: "everyone-arrives-at-nine",
+  },
+  {
+    label: "Plants & workshops",
+    photo: "factory",
+    title: "Air that leaks away",
+    body: "Compressed air, motors and pumps quietly waste energy nobody is measuring.",
+    caseSlug: "air-that-leaks-away",
+  },
+  {
+    label: "Water & irrigation",
+    photo: "canal",
+    title: "Some rows drown, others dry",
+    body: "The same water, delivered unevenly: pressure differences and clogging decide which crops get it.",
+    caseSlug: "some-rows-drown-others-dry",
+  },
+];
+
+/** Industry figures for the numbers band — each one is sourced on its case page. */
+export const figures: { value: string; label: string; caseSlug: string }[] = [
+  { value: "25–30%", label: "typical efficiency of a farm pump set; good ones reach 35–60%", caseSlug: "pumps-burning-power" },
+  { value: "20–30%", label: "of compressor output lost to leaks in plants without a leak programme", caseSlug: "air-that-leaks-away" },
+  { value: "75%", label: "of container moves unproductive, at worst, in one terminal study", caseSlug: "boxes-buried-in-the-yard" },
+  { value: "11% → 38%", label: "before-noon discharges at one hospital after a process change", caseSlug: "beds-free-up-too-late" },
+];
 
 export type Stage = {
   index: string;

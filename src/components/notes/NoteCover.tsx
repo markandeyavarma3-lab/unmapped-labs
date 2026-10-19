@@ -25,12 +25,12 @@ export function NoteCover({ slug, label, className }: { slug: string; label?: st
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className={className} aria-hidden preserveAspectRatio="xMidYMid slice">
       <rect width={W} height={H} fill="var(--color-ink)" />
-      <path d={minor} fill="none" stroke="#8a8f86" strokeOpacity="0.25" />
-      <path d={major} fill="none" stroke="#8a8f86" strokeOpacity="0.55" strokeWidth="1.2" />
-      <circle cx={px} cy={py} r="16" fill="none" stroke="var(--color-cyan)" strokeOpacity="0.5" />
-      <circle cx={px} cy={py} r="3.5" fill="var(--color-cyan)" />
+      <path d={minor} fill="none" stroke="var(--color-blueprint)" strokeOpacity="0.25" />
+      <path d={major} fill="none" stroke="var(--color-blueprint)" strokeOpacity="0.55" strokeWidth="1.2" />
+      <circle cx={px} cy={py} r="16" fill="none" stroke="var(--color-accent)" strokeOpacity="0.5" />
+      <circle cx={px} cy={py} r="3.5" fill="var(--color-accent)" />
       {label && (
-        <text x="20" y={H - 20} fill="#5e646b" fontFamily="var(--font-mono)" fontSize="11" letterSpacing="1.5">
+        <text x="20" y={H - 20} fill="var(--color-fg-3)" fontFamily="var(--font-mono)" fontSize="11" letterSpacing="1.5">
           {label}
         </text>
       )}
