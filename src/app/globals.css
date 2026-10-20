@@ -1,30 +1,31 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
-   Design tokens — "blueprint": deep navy, thin survey lines, one
-   signal colour (survey yellow). Tailwind utilities come from @theme;
+   Design tokens — black and white, with one signal colour (survey
+   yellow) used sparingly: the optimum point, the call to action. Tailwind utilities come from @theme;
    raw CSS uses var(--*). A `.paper` section flips to light by
    redefining the same tokens, so every component works on both.
    ------------------------------------------------------------------ */
 @theme {
   /* Colour */
-  --color-ink: #0a1626; /* the page */
-  --color-ink-2: #0f2036; /* cards and fields */
-  --color-ink-3: #0c1a2d; /* quiet bands */
-  --color-line: #1d3352;
-  --color-line-strong: #2e4b72;
-  --color-fg: #eef2f6;
-  --color-fg-2: #b6c2d1;
-  --color-fg-3: #8a9bb0; /* ≥ 4.5:1 on ink, for small text */
+  --color-ink: #070707; /* the page */
+  --color-ink-2: #101010; /* cards and fields */
+  --color-ink-3: #0b0b0b; /* quiet bands */
+  --color-line: #222222;
+  --color-line-strong: #3a3a3a;
+  --color-fg: #f4f4f0;
+  --color-fg-2: #b5b5af;
+  --color-fg-3: #8a8a84; /* ≥ 4.5:1 on ink, for small text */
   --color-accent: #f2c230; /* survey yellow: lines, the finding, the CTA */
-  --color-blueprint: #5b8fd6; /* drawing lines */
+  --color-blueprint: #8c8c86; /* drawing lines */
   --color-red: #ff7a5c; /* the problem, in figures */
   --color-good: #5ed39b; /* the result, in figures */
-  --color-on-accent: #0a1626;
+  --color-on-accent: #070707;
 
   /* Type */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-wide: var(--font-archivo), var(--font-geist-sans), sans-serif;
 
   --text-label: 0.72rem;
   --text-label--letter-spacing: 0.1em;
@@ -57,7 +58,7 @@
   --z-content: 10;
   --z-header: 50;
   --z-menu: 60;
-  --grid-line: color-mix(in srgb, var(--color-blueprint) 11%, transparent);
+  --grid-line: color-mix(in srgb, var(--color-fg) 4%, transparent);
 
   color-scheme: dark;
   background: var(--color-ink);
@@ -66,16 +67,16 @@
 
 /* A light section: same tokens, paper values. */
 .paper {
-  --color-ink: #efece3;
-  --color-ink-2: #f8f6f0;
-  --color-ink-3: #e6e2d6;
-  --color-line: #d3cdbd;
-  --color-line-strong: #b3ab95;
-  --color-fg: #0a1626;
-  --color-fg-2: #36465c;
-  --color-fg-3: #56657a;
+  --color-ink: #f2f1ec;
+  --color-ink-2: #fafaf7;
+  --color-ink-3: #e8e7e1;
+  --color-line: #d6d5cf;
+  --color-line-strong: #b4b3ac;
+  --color-fg: #0b0b0b;
+  --color-fg-2: #3d3d3a;
+  --color-fg-3: #5c5c58;
   --color-accent: #8a6400; /* yellow is unreadable on paper; a deep ochre carries the role */
-  --color-blueprint: #2d5b9a;
+  --color-blueprint: #6b6b66;
   --color-red: #b23c1f;
   --color-good: #1f7a4a;
   --color-on-accent: #ffffff;
@@ -135,10 +136,11 @@ html.lenis body {
 
   /* Mono label above headings and in metadata */
   .label {
-    font-family: var(--font-mono);
-    font-size: var(--text-label);
-    font-weight: 500;
-    letter-spacing: var(--text-label--letter-spacing);
+    font-family: var(--font-wide);
+    font-stretch: 125%;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     line-height: 1.45;
   }
@@ -210,10 +212,11 @@ html.lenis body {
     gap: 0.7rem;
     min-height: 3rem;
     padding: 0.8rem 1.35rem;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
+    font-family: var(--font-wide);
+    font-stretch: 125%;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     border-radius: 2px;
     white-space: nowrap;
@@ -396,6 +399,34 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
   .motion-only {
     display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .motion-static {
+    display: none;
+  }
+}
+
+/* Hero optimum curve: draws itself, then the tangent and label appear */
+@media (prefers-reduced-motion: no-preference) {
+  .opt-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: opt-draw 1.6s var(--ease-out-quart) 0.2s forwards;
+  }
+  .opt-after {
+    opacity: 0;
+    animation: opt-show 0.8s ease-out 3.1s forwards;
+  }
+}
+@keyframes opt-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes opt-show {
+  to {
+    opacity: 1;
   }
 }
 

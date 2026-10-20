@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { site, socials } from "@/config/site";
-import { approach, figures, hero, notes as notesCopy, principles, testimonials, work } from "@/content/site-content";
+import { approach, figures, hero, notes as notesCopy, principles, purpose, testimonials, work } from "@/content/site-content";
 import { cases } from "@/content/insights";
 import { getNotes, formatNoteDate } from "@/lib/notes";
 import { Page } from "@/components/motion/Page";
@@ -10,7 +10,7 @@ import { CtaBand } from "@/components/ui/CtaBand";
 import { Arrow } from "@/components/ui/Arrow";
 import { WorkCard } from "@/components/cards/WorkCard";
 import { CaseCard } from "@/components/cards/CaseCard";
-import { HeroBlueprint } from "@/components/home/HeroBlueprint";
+import { OptimumCurve } from "@/components/home/OptimumCurve";
 import { SiteGallery } from "@/components/home/SiteGallery";
 import { PinnedStory } from "@/components/home/PinnedStory";
 import { BottleneckSim } from "@/components/sim/BottleneckSim";
@@ -39,26 +39,26 @@ export default async function Home() {
 
   return (
     <Page>
-      {/* Hero */}
-      <section aria-labelledby="hero-heading" className="bp-grid relative flex min-h-[calc(100svh-var(--header-h))] flex-col overflow-hidden">
-        <div className="container-site grid flex-1 items-center gap-12 py-[clamp(3rem,2rem+5vw,6rem)] lg:grid-cols-12">
+      {/* Hero: the headline and the optimum curve, on black */}
+      <section aria-labelledby="hero-heading" className="relative flex min-h-[calc(100svh-var(--header-h))] flex-col overflow-hidden">
+        <div className="container-site grid flex-1 items-center gap-10 py-[clamp(2.5rem,1.5rem+3vw,4.5rem)] lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <p className="label text-[color:var(--color-accent)]" data-reveal="fade">
+            <p className="label text-[color:var(--color-fg-3)]" data-reveal="fade">
               {hero.eyebrow}
             </p>
-            <h1 id="hero-heading" className="h-display rise mt-6">
+            <h1 id="hero-heading" className="h-display rise mt-6 lg:text-[clamp(3rem,1rem+5vw,5.9rem)]">
               {hero.lines.map((l, i) => (
                 <span key={l}>
-                  <span style={{ ["--i" as string]: i }} className={i >= 2 ? "text-[color:var(--color-accent)]" : undefined}>
+                  <span style={{ ["--i" as string]: i }} className={i >= 2 ? "text-[color:var(--color-fg-2)]" : undefined}>
                     {l}
                   </span>
                 </span>
               ))}
             </h1>
-            <p className="lead mt-8 max-w-[36rem]" data-reveal="" style={{ ["--d" as string]: 4 }}>
+            <p className="lead mt-7 max-w-[36rem]" data-reveal="" style={{ ["--d" as string]: 4 }}>
               {hero.body}
             </p>
-            <div className="mt-10 flex flex-wrap gap-3" data-reveal="" style={{ ["--d" as string]: 5 }}>
+            <div className="mt-9 flex flex-wrap gap-3" data-reveal="" style={{ ["--d" as string]: 5 }}>
               <Link href={site.bookingUrl} className="btn btn-primary">
                 Book a free 30-min call <Arrow className="btn-arrow" />
               </Link>
@@ -67,13 +67,31 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <div className="lg:col-span-5" data-reveal="fade" style={{ ["--d" as string]: 3 }}>
-            <div className="card bg-[color:var(--color-ink)] p-3 sm:p-5">
-              <HeroBlueprint />
-            </div>
+          <div className="lg:col-span-5">
+            <OptimumCurve />
           </div>
         </div>
+      </section>
 
+      {/* Purpose, in one sentence */}
+      <section aria-labelledby="purpose-heading" className="border-t border-[color:var(--color-line)]">
+        <div className="container-site py-[var(--section-y)]">
+          <p id="purpose-heading" className="label text-[color:var(--color-accent)]" data-reveal="fade">
+            {purpose.label}
+          </p>
+          <p className="display mt-8 max-w-[22ch] text-[clamp(2rem,1.2rem+3.4vw,4.4rem)] leading-[1.05] tracking-[-0.04em]" data-reveal="">
+            {purpose.statement}
+          </p>
+          <ul className="mt-14 grid gap-px overflow-hidden border border-[color:var(--color-line)] bg-[color:var(--color-line)] md:grid-cols-3">
+            {purpose.ways.map((w, i) => (
+              <li key={w.title} className="bg-[color:var(--color-ink)] p-7" data-reveal="" style={{ ["--d" as string]: i }}>
+                <p className="label text-[color:var(--color-fg-3)] tabular-nums">0{i + 1}</p>
+                <p className="display mt-4 text-[1.5rem]">{w.title}</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{w.body}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <SiteGallery />

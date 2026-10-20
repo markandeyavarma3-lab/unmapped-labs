@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/config/site";
@@ -11,6 +11,8 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], display: "swap" });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], display: "swap" });
+/** Archivo with its width axis: set expanded (font-stretch: 125%) for the wordmark, labels and buttons. */
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], display: "swap", axes: ["wdth"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -39,13 +41,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a1626",
+  themeColor: "#070707",
   colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} antialiased`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         {/* Mark that JavaScript runs before anything paints, so reveal styles never hide content without it. */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />

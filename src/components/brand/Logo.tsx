@@ -16,12 +16,7 @@ export function LogoMark({ className, title }: { className?: string; title?: str
 }
 
 export function Wordmark({ className }: { className?: string }) {
-  return (
-    <span className={className}>
-      <span className="font-semibold tracking-[-0.05em]">unmapped</span>
-      <span className="font-normal tracking-[-0.04em] opacity-60"> labs</span>
-    </span>
-  );
+  return <span className={`font-[family-name:var(--font-wide)] font-semibold tracking-[0.14em] [font-stretch:125%] ${className ?? ""}`}>UNMAPPED LABS</span>;
 }
 
 /**
@@ -30,12 +25,12 @@ export function Wordmark({ className }: { className?: string }) {
  */
 export function Logo({ className, tagline = "show" }: { className?: string; tagline?: "show" | "hide-sm" | "none" }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
-      <LogoMark className="h-[26px] w-[26px] shrink-0" />
+    <span className={`inline-flex items-center gap-3 ${className ?? ""}`}>
+      <LogoMark className="h-[28px] w-[28px] shrink-0" />
       <span className="flex flex-col">
-        <Wordmark className="text-[19px] leading-none" />
+        <Wordmark className="text-[15px] leading-none" />
         {tagline !== "none" && (
-          <span className={`mt-[6px] text-[8.5px] leading-none font-medium tracking-[0.32em] text-[color:var(--color-fg-3)] uppercase ${tagline === "hide-sm" ? "hidden sm:block" : ""}`}>{site.tagline.replace(/\.$/, "")}</span>
+          <span className={`mt-[6px] text-[8px] leading-none font-medium tracking-[0.36em] text-[color:var(--color-fg-3)] uppercase ${tagline === "hide-sm" ? "hidden sm:block" : ""}`}>{site.tagline.replace(/\.$/, "")}</span>
         )}
       </span>
     </span>

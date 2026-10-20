@@ -32,6 +32,17 @@ export const problems = {
   ],
 };
 
+/** Why we exist, in the founder's terms: more output for the same input, or the same output for less. */
+export const purpose = {
+  label: "Our purpose",
+  statement: "Every operation has more in it. We find what's holding it back, and remove it.",
+  ways: [
+    { title: "More output", body: "The same people, machines and hours produce more — because the step holding everything back is fixed." },
+    { title: "Less time and cost", body: "The same output for less: less waiting, less energy, less material, less manual work." },
+    { title: "Problems, fixed", body: "Something keeps breaking or slowing down? Bring it to us. We find the real cause and fix it." },
+  ],
+};
+
 /** The pinned gallery on the home page: the kinds of place we work in. */
 export const sites: { label: string; photos: [PhotoKey, PhotoKey]; title: string; body: string; caseSlug: string }[] = [
   {
