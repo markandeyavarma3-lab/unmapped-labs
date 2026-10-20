@@ -1,16 +1,16 @@
 import { site } from "@/config/site";
 
 /**
- * The mark: a U drawn as two contour lines, like a valley on a survey map,
- * with a point at its lowest spot — the place nobody had measured yet.
- * Thick strokes so it stays clear down to a 16px favicon.
+ * The mark: a valley drawn as two contour lines — the inner one shorter, as
+ * on a survey map — with a point at the lowest spot, the place nobody had
+ * measured yet. Thick, rounded strokes so it stays clear down to 16px.
  */
 export function LogoMark({ className, title }: { className?: string; title?: string }) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" className={className} role={title ? "img" : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
-      <path d="M7.5 3V26a16.5 16.5 0 0 0 33 0V3" stroke="currentColor" strokeWidth="5" />
-      <path d="M15.5 3V26a8.5 8.5 0 0 0 17 0V3" stroke="currentColor" strokeWidth="5" />
-      <circle cx="24" cy="26" r="3.6" fill="var(--logo-accent, #f2c230)" />
+    <svg viewBox="0 0 48 48" fill="none" strokeLinecap="round" className={className} role={title ? "img" : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
+      <path d="M6 4V25a18 18 0 0 0 36 0V4" stroke="currentColor" strokeWidth="4.8" />
+      <path d="M15 13V25a9 9 0 0 0 18 0V13" stroke="currentColor" strokeWidth="4.8" />
+      <circle cx="24" cy="25" r="3.8" fill="var(--logo-accent, #f2c230)" />
     </svg>
   );
 }
@@ -35,7 +35,7 @@ export function Logo({ className, tagline = "show" }: { className?: string; tagl
       <span className="flex flex-col">
         <Wordmark className="text-[19px] leading-none" />
         {tagline !== "none" && (
-          <span className={`mt-[5px] font-mono text-[8.5px] leading-none tracking-[0.16em] text-[color:var(--color-fg-3)] uppercase ${tagline === "hide-sm" ? "hidden sm:block" : ""}`}>{site.tagline.replace(/\.$/, "")}</span>
+          <span className={`mt-[6px] text-[8.5px] leading-none font-medium tracking-[0.32em] text-[color:var(--color-fg-3)] uppercase ${tagline === "hide-sm" ? "hidden sm:block" : ""}`}>{site.tagline.replace(/\.$/, "")}</span>
         )}
       </span>
     </span>

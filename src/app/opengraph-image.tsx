@@ -15,15 +15,15 @@ export default async function Image() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
             <svg width="56" height="56" viewBox="0 0 48 48" fill="none">
-              <path d="M7.5 3V26a16.5 16.5 0 0 0 33 0V3" stroke="#eef2f6" strokeWidth="5" />
-              <path d="M15.5 3V26a8.5 8.5 0 0 0 17 0V3" stroke="#eef2f6" strokeWidth="5" />
-              <circle cx="24" cy="26" r="3.6" fill="#f2c230" />
+              <path d="M6 4V25a18 18 0 0 0 36 0V4" stroke="#eef2f6" strokeWidth="4.8" strokeLinecap="round" />
+              <path d="M15 13V25a9 9 0 0 0 18 0V13" stroke="#eef2f6" strokeWidth="4.8" strokeLinecap="round" />
+              <circle cx="24" cy="25" r="3.8" fill="#f2c230" />
             </svg>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", fontSize: 40, fontWeight: 600, color: "#eef2f6", letterSpacing: -2, lineHeight: 1 }}>
                 unmapped<span style={{ color: "#8a9bb0", marginLeft: 10, fontWeight: 400 }}>labs</span>
               </div>
-              <div style={{ display: "flex", fontSize: 15, color: "#8a9bb0", letterSpacing: 4 }}>MAPPING THE UNKNOWN</div>
+              <div style={{ display: "flex", fontSize: 14, fontWeight: 500, color: "#8a9bb0", letterSpacing: 4.5 }}>MAPPING THE UNKNOWN</div>
             </div>
           </div>
           <div style={{ display: "flex", fontSize: 18, color: "#f2c230", letterSpacing: 3 }}>OPERATIONS RESEARCH · INDIA</div>
