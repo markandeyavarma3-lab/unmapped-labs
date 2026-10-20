@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
-import { LogoMark } from "@/components/brand/Logo";
+import { Logo } from "@/components/brand/Logo";
 import { nav, site, socials } from "@/config/site";
 
 async function CopyrightYear() {
@@ -13,13 +13,11 @@ const linkCls = "link-underline inline-block py-1.5 text-[15px] text-[color:var(
 
 export function SiteFooter() {
   return (
-    <footer className="bp-grid border-t border-[color:var(--color-line)]">
-      <div className="container-site grid gap-12 pt-20 pb-12 md:grid-cols-12">
+    <footer className="border-t border-[color:var(--color-line)] bg-[color:var(--color-ink-3)]">
+      <div className="container-site grid gap-12 pt-16 pb-12 md:grid-cols-12">
         <div className="md:col-span-5">
-          <p className="display max-w-[22rem] text-[1.6rem] leading-snug">{site.footerLine}</p>
-          <a href={`mailto:${site.email}`} className="link mono mt-6 inline-block py-1 text-[15px]">
-            {site.email}
-          </a>
+          <Logo />
+          <p className="mt-5 max-w-[24rem] text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{site.footerLine}</p>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 gap-8 md:col-span-6 md:col-start-7 md:grid-cols-3">
           <div>
@@ -38,9 +36,14 @@ export function SiteFooter() {
             <p className="label text-[color:var(--color-fg-3)]">Get in touch</p>
             <ul className="mt-4 flex flex-col">
               <li>
-                <Link href="/contact" className={linkCls}>
-                  Contact
-                </Link>
+                <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                  Book a call
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${site.email}`} className={linkCls}>
+                  Email us
+                </a>
               </li>
               {socials.map((s) => (
                 <li key={s.label}>
@@ -63,23 +66,17 @@ export function SiteFooter() {
           </div>
         </nav>
       </div>
-
-      {/* The name, set large, with the mark */}
-      <div className="container-site" aria-hidden>
-        <div className="flex items-end gap-[2vw] border-t border-[color:var(--color-line)] pt-8">
-          <LogoMark className="h-[11vw] max-h-[9rem] w-[11vw] max-w-[9rem] shrink-0" />
-          <p className="display text-[clamp(2rem,9.2vw,11.5rem)] leading-[0.8] tracking-[-0.06em] whitespace-nowrap">
-            Unmapped<span className="text-[color:var(--color-fg-3)]"> Labs</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="container-site label flex flex-col gap-2 py-6 text-[0.65rem] text-[color:var(--color-fg-3)] sm:flex-row sm:justify-between">
+      <div className="container-site flex flex-col gap-2 border-t border-[color:var(--color-line)] py-6 text-[13px] text-[color:var(--color-fg-3)] sm:flex-row sm:justify-between">
         <p>
-          © <CopyrightYear /> {site.name}
+          © <CopyrightYear /> {site.name} · Made in India
         </p>
-        <p>Photographs from Wikimedia Commons, credited on each image</p>
-        <p>Made in India</p>
+        <p>
+          Photographs from{" "}
+          <a href="https://unsplash.com/?utm_source=unmapped_labs&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline decoration-[color:var(--color-line-strong)] underline-offset-2 hover:text-[color:var(--color-fg)]">
+            Unsplash
+          </a>
+          , credited on each image
+        </p>
       </div>
     </footer>
   );

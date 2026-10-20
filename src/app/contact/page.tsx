@@ -20,6 +20,14 @@ export default function ContactPage() {
           <ContactForm />
         </div>
         <div className="flex flex-col gap-10 lg:col-span-4 lg:col-start-9">
+          <div className="card p-6">
+            <h2 className="label text-[color:var(--color-accent)]">Rather talk it through?</h2>
+            <p className="display mt-3 text-[1.5rem] leading-snug">Book a free 30-minute call.</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">Pick a time that suits you. Phone or video — tell us what&apos;s happening and we&apos;ll ask questions.</p>
+            <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-5">
+              Choose a time
+            </a>
+          </div>
           <div>
             <h2 className="label text-[color:var(--color-fg-3)]">What happens next</h2>
             <ol className="mt-4 flex flex-col">

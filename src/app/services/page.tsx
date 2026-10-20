@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { engagements, fixLabels, services } from "@/content/site-content";
+import { engagements, fixLabels, pagePhotos, services } from "@/content/site-content";
 import { cases } from "@/content/insights";
 import { PageHeader, SectionHead } from "@/components/ui/Headings";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { Arrow } from "@/components/ui/Arrow";
-import { photos } from "@/content/photos";
+import { pick } from "@/content/photos";
 import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
@@ -18,11 +18,11 @@ export default function ServicesPage() {
   const [diagnostic, ...fixes] = services.items;
   return (
     <Page>
-      <PageHeader label={services.label} title={services.heading} intro={services.intro} photo={photos.factory} />
+      <PageHeader label={services.label} title={services.heading} intro={services.intro} photos={pick(pagePhotos.services)} />
 
       {/* Always first: the diagnostic */}
       <section aria-labelledby="diagnostic" className="container-site py-[var(--section-y)]">
-        <article data-reveal="" className="card ticks grid gap-8 p-8 sm:p-10 lg:grid-cols-12">
+        <article data-reveal="" className="card grid gap-8 p-8 sm:p-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <p className="label text-[color:var(--color-accent)]">Always first</p>
             <h2 id="diagnostic" className="h2 mt-4">

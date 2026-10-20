@@ -7,7 +7,7 @@ import { CountUp } from "@/components/motion/CountUp";
 export function WorkCard({ cs, level = 3, index = 0 }: { cs: CaseStudy; level?: 2 | 3; index?: number }) {
   const H = level === 2 ? "h2" : "h3";
   return (
-    <article className="card card-link ticks group relative flex h-full flex-col p-7 sm:p-9" data-reveal="" style={{ ["--d" as string]: index }}>
+    <article className="card card-link group relative flex h-full flex-col p-7 sm:p-9" data-reveal="" style={{ ["--d" as string]: index }}>
       <p className="label flex flex-wrap gap-x-3 gap-y-1">
         <span className="text-[color:var(--color-accent)]">{cs.kind}</span>
         <span aria-hidden className="text-[color:var(--color-fg-3)]">/</span>

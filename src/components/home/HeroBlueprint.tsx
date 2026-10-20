@@ -12,7 +12,7 @@ export function HeroBlueprint() {
   return (
     <svg viewBox="0 0 620 420" className="block h-auto w-full" role="img" aria-labelledby="bp-title bp-desc">
       <title id="bp-title">An operation, measured</title>
-      <desc id="bp-desc">Four steps — arrive, wait, handle, leave. Measured on site, waiting takes 3 hours 10 minutes: that step is the constraint.</desc>
+      <desc id="bp-desc">An illustration: four steps — arrive, wait, handle, leave. Waiting takes 3 hours 10 minutes, far longer than anything else: that step is the constraint.</desc>
 
       <g data-draw="" fill="none" strokeLinecap="square">
         {/* dimension line */}
@@ -45,14 +45,14 @@ export function HeroBlueprint() {
         ))}
         <g data-reveal="fade" style={{ ["--d" as string]: 10 }}>
           <text x={X[1] + 84} y={Y - 100} textAnchor="start" fill="var(--color-accent)">
-            CONSTRAINT · 97% BUSY
+            THE CONSTRAINT
           </text>
           <text x={X[1] + 84} y={Y - 76} textAnchor="start" fill="var(--color-fg-3)" fontSize="10">
-            MEASURED ON SITE, 6 DAYS
+            WHERE THE WAIT BUILDS UP
           </text>
         </g>
         <text x={10} y={404} textAnchor="start" fill="var(--color-fg-3)" fontSize="9.5">
-          FIG. 01 — ILLUSTRATIVE
+          ILLUSTRATIVE
         </text>
       </g>
 

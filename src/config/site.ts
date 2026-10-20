@@ -13,6 +13,8 @@ export const site = {
   seoTitle: "Unmapped Labs — Operations Research & Problem-Solving Startup, India",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unmappedlabs.in").replace(/\/$/, ""),
   email: "contact@unmappedlabs.in",
+  /** The free first call, booked straight into the calendar (Cal.com). */
+  bookingUrl: "https://cal.com/markandeya-varma-gottumukkala-q66wwd/free-first-conversation",
   closingLine: "There is always more to map.",
   footerLine: "A research-first problem-solving startup. We go on site, find the real cause, and fix it.",
 } as const;
@@ -26,11 +28,12 @@ export const socials: { label: string; href: string }[] = [
   { label: "X", href: "" },
 ].filter((s) => s.href.length > 0);
 
-/** Primary navigation (the header's call to action goes to /contact). */
+/** Primary navigation (the header's call to action opens the booking page). */
 export const nav = [
   { href: "/services", label: "Services" },
   { href: "/work", label: "Work" },
   { href: "/insights", label: "Insights" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 

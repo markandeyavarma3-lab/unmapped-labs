@@ -386,7 +386,7 @@ export function BottleneckSim() {
   const fmtWait = (m: number) => (m >= 90 ? `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, "0")}` : `${Math.round(m)} min`);
 
   return (
-    <div ref={box} className="card ticks overflow-hidden">
+    <div ref={box} className="card overflow-hidden">
       {/* Scenario picker */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--color-line)] p-3 sm:p-4">
         <div role="group" aria-label="Scenario" className="flex flex-wrap gap-1.5">
@@ -434,13 +434,13 @@ export function BottleneckSim() {
 
       {/* Readouts and controls */}
       <div className="grid border-t border-[color:var(--color-line)] lg:grid-cols-12">
-        <dl className="grid grid-cols-3 border-b border-[color:var(--color-line)] lg:col-span-5 lg:border-r lg:border-b-0">
+        <dl className="grid grid-cols-3 border-b border-[color:var(--color-line)] lg:col-span-4 lg:grid-cols-1 lg:border-r lg:border-b-0">
           {[
             { k: "Average wait", v: fmtWait(stats.wait), note: baseline !== null && anyFix ? `was ${fmtWait(baseline)}` : null, bad: stats.wait > 45 },
             { k: `Waiting at ${s.steps[s.slow].short.toLowerCase()}`, v: String(stats.queue), note: null, bad: stats.queue > 10 },
             { k: `${s.unit} / hour`, v: stats.served ? String(Math.round(stats.served)) : "—", note: null, bad: false },
           ].map((m) => (
-            <div key={m.k} className="border-r border-[color:var(--color-line)] p-4 last:border-r-0 sm:p-5">
+            <div key={m.k} className="border-r border-[color:var(--color-line)] p-4 last:border-r-0 sm:p-5 lg:flex lg:items-baseline lg:justify-between lg:gap-4 lg:border-r-0 lg:border-b lg:last:border-b-0">
               <dt className="label text-[0.62rem] text-[color:var(--color-fg-3)]">{m.k}</dt>
               <dd className={`display mt-2 text-[1.5rem] tabular-nums sm:text-[2rem] ${m.bad ? "text-[color:var(--color-red)]" : "text-[color:var(--color-fg)]"}`}>{m.v}</dd>
               {m.note && <dd className="label mt-1 text-[0.62rem] text-[color:var(--color-fg-3)]">{m.note}</dd>}
@@ -448,7 +448,7 @@ export function BottleneckSim() {
           ))}
         </dl>
 
-        <div className="flex flex-col gap-4 p-4 sm:p-5 lg:col-span-7">
+        <div className="flex flex-col gap-4 p-4 sm:p-5 lg:col-span-8">
           <div className="flex flex-wrap items-center gap-3">
             <span className="label text-[color:var(--color-accent)]">Step 1</span>
             <button type="button" aria-pressed={measured} onClick={() => { setMeasured(true); track("sim_measure", { scenario: s.id }); }} className={`btn min-h-10 py-2 ${measured ? "btn-ghost" : "btn-primary"}`}>

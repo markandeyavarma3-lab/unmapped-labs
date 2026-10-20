@@ -31,7 +31,7 @@ Requires Node 20+.
 | Type | Geist (headings, text) and Geist Mono (labels), via `next/font` |
 | Figures | Plain SVG components and one canvas simulator, no chart library |
 | Motion | `MotionRoot` (reveals, scroll progress `--p`, Lenis smooth wheel scroll), React `<ViewTransition>` page transitions; all off with reduced motion |
-| Photos | Wikimedia Commons, open licences, credited on every image (`src/content/photos.ts`) |
+| Photos | Unsplash (via the official API, Unsplash License), hotlinked from Unsplash's CDN through `src/lib/image-loader.ts` and credited on every image (`src/content/photos.ts`). Cards show two photos that crossfade every 2 s. |
 | Content | TypeScript content files + MDX field notes |
 | Contact | Next route handler + Resend |
 | Analytics | Vercel Analytics (with contact-funnel events) + Speed Insights |
@@ -58,6 +58,7 @@ src/
     site-content.ts         page copy, services, approach, work, testimonials  ← edit here
     insights.ts             the industry cases and their figures  ← edit here
     photos.ts               photographs and their credits  ← replace with our own
+    (site-content.ts)       `founder` (hidden until published), `pagePhotos`, `sites`
     notes/*.mdx             field notes (files starting with "_" never publish)
   components/
     layout/                 header, footer, click tracking
@@ -139,5 +140,7 @@ it's best effort. Move it to a shared store (e.g. Upstash) if abuse appears.
 - The contact rate limit is per-instance (see above).
 - Social links are hidden until real URLs are added.
 - Testimonials are hidden until real quotes are added.
+- The founder section is hidden until `founder.published` is set in `site-content.ts`.
+- The free call is booked on Cal.com (`site.bookingUrl` in `src/config/site.ts`).
 - `three`, `@react-three/fiber` and `lenis` are still in `package.json` but
   unused; remove them with `npm uninstall` when convenient.

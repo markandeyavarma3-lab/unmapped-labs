@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { nav } from "@/config/site";
+import { nav, site } from "@/config/site";
 import { Logo } from "@/components/brand/Logo";
 
 /** Sticky header: logo, four links and the call to action; a simple menu on phones. */
@@ -60,9 +60,9 @@ export function SiteHeader() {
               {current(n.href) && <span aria-hidden className="absolute inset-x-3 -bottom-[13px] h-[2px] bg-[color:var(--color-accent)]" />}
             </Link>
           ))}
-          <Link href="/contact" className="btn btn-primary ml-4 min-h-[2.5rem] px-4 py-2">
-            Start a conversation
-          </Link>
+          <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary ml-4 min-h-[2.5rem] px-4 py-2">
+            Book a call
+          </a>
         </nav>
 
         <button
@@ -93,8 +93,11 @@ export function SiteHeader() {
               {n.label}
             </Link>
           ))}
-          <Link href="/contact" className="btn btn-primary mt-6">
-            Start a conversation
+          <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-6">
+            Book a free call
+          </a>
+          <Link href="/contact" className="btn btn-ghost mt-3">
+            Send a message
           </Link>
         </nav>
       </div>

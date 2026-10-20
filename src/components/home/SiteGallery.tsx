@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { sites } from "@/content/site-content";
-import { photos } from "@/content/photos";
+import { pick } from "@/content/photos";
 import { SitePhoto } from "@/components/ui/SitePhoto";
 import { Arrow } from "@/components/ui/Arrow";
 
@@ -14,7 +14,7 @@ export function SiteGallery() {
       <div className="hscroll-sticky py-[clamp(4rem,3rem+4vw,6rem)]">
         <div className="container-site flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="label text-[color:var(--color-accent)]">[ Where the work is ]</p>
+            <p className="label text-[color:var(--color-accent)]">Where the work is</p>
             <h2 id="sites-heading" className="h2 mt-4 max-w-[16ch]">
               Real places. Real queues.
             </h2>
@@ -26,7 +26,7 @@ export function SiteGallery() {
         <ul className="hscroll-track mt-10 gap-5 px-[var(--gutter)] pb-2 md:gap-8">
           {sites.map((s, i) => (
             <li key={s.caseSlug} className="group w-[84vw] shrink-0 sm:w-[60vw] min-[900px]:w-[min(78vh,62vw)]">
-              <SitePhoto photo={photos[s.photo]} sizes="(min-width: 900px) 62vw, 84vw" className="aspect-[4/3] min-[900px]:aspect-auto min-[900px]:h-[48vh]" />
+              <SitePhoto photos={pick(s.photos)} offset={i} sizes="(min-width: 900px) 62vw, 84vw" className="aspect-[4/3] min-[900px]:aspect-auto min-[900px]:h-[48vh]" />
               <div className="relative mt-5 flex items-start gap-5">
                 <span className="label pt-1.5 text-[color:var(--color-accent)] tabular-nums">{String(i + 1).padStart(2, "0")}</span>
                 <div>

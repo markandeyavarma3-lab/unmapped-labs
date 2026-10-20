@@ -33,8 +33,6 @@ const jsonLd = {
 /** Three cases from different industries for the home page. */
 const featured = ["boxes-buried-in-the-yard", "beds-free-up-too-late", "air-that-leaks-away"].map((s) => cases.find((c) => c.slug === s)!);
 
-const places = ["Container yards", "Packhouses", "Hospitals", "Pump houses", "Warehouses", "Mandis", "Plants", "Cold chains", "Workshops", "Irrigation networks"];
-
 export default async function Home() {
   const latest = (await getNotes())[0];
   const quotes = testimonials.items.filter((t) => t.published);
@@ -42,11 +40,11 @@ export default async function Home() {
   return (
     <Page>
       {/* Hero */}
-      <section aria-labelledby="hero-heading" className="bp-grid relative flex min-h-[calc(100svh-var(--header-h))] flex-col overflow-hidden md:min-h-[calc(100svh-var(--header-h)-2rem)]">
+      <section aria-labelledby="hero-heading" className="bp-grid relative flex min-h-[calc(100svh-var(--header-h))] flex-col overflow-hidden">
         <div className="container-site grid flex-1 items-center gap-12 py-[clamp(3rem,2rem+5vw,6rem)] lg:grid-cols-12">
           <div className="lg:col-span-7">
             <p className="label text-[color:var(--color-accent)]" data-reveal="fade">
-              [ {hero.eyebrow} ]
+              {hero.eyebrow}
             </p>
             <h1 id="hero-heading" className="h-display rise mt-6">
               {hero.lines.map((l, i) => (
@@ -61,38 +59,21 @@ export default async function Home() {
               {hero.body}
             </p>
             <div className="mt-10 flex flex-wrap gap-3" data-reveal="" style={{ ["--d" as string]: 5 }}>
-              <Link href={hero.primaryCta.href} className="btn btn-primary">
-                {hero.primaryCta.label} <Arrow className="btn-arrow" />
-              </Link>
+              <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                Book a free 30-min call <Arrow className="btn-arrow" />
+              </a>
               <Link href={hero.secondaryCta.href} className="btn btn-ghost">
                 {hero.secondaryCta.label} <span aria-hidden>↓</span>
               </Link>
             </div>
           </div>
           <div className="lg:col-span-5" data-reveal="fade" style={{ ["--d" as string]: 3 }}>
-            <div className="card ticks bg-[color:var(--color-ink)] p-3 sm:p-5">
+            <div className="card bg-[color:var(--color-ink)] p-3 sm:p-5">
               <HeroBlueprint />
             </div>
           </div>
         </div>
 
-        {/* Ticker of places */}
-        <div className="border-y border-[color:var(--color-line)] bg-[color:var(--color-ink-3)] py-3">
-          <div className="flex w-max marquee">
-            {[0, 1].map((k) => (
-              <ul key={k} aria-hidden={k === 1} className="label flex shrink-0 items-center text-[color:var(--color-fg-3)]">
-                {places.map((p) => (
-                  <li key={p} className="flex items-center gap-6 pr-6">
-                    {p}
-                    <span aria-hidden className="text-[color:var(--color-accent)]">
-                      ✕
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ))}
-          </div>
-        </div>
       </section>
 
       <SiteGallery />

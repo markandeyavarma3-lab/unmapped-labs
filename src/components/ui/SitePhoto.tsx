@@ -1,52 +1,107 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { Photo } from "@/content/photos";
+import { unsplashHome, type Photo } from "@/content/photos";
 
 /**
- * A credited photograph. It is tinted to the palette until hovered, revealed
- * with a wipe, and drifts slightly as the page scrolls (parallax).
+ * A photo frame that crossfades between its photos every couple of seconds.
+ * It only runs while on screen, pauses while hovered or focused, and stays on
+ * the first photo for visitors who ask for reduced motion. The credit always
+ * names the photo currently showing.
  */
 export function SitePhoto({
-  photo,
+  photos,
   sizes,
   className = "",
   priority = false,
-  parallax = true,
-  caption = true,
-  tint = true,
+  interval = 2000,
+  offset = 0,
+  credit = true,
 }: {
-  photo: Photo;
+  photos: Photo[];
   sizes: string;
   className?: string;
   priority?: boolean;
-  parallax?: boolean;
-  caption?: boolean;
-  tint?: boolean;
+  interval?: number;
+  /** Stagger, in steps of 350ms, so neighbouring frames don't all change at once. */
+  offset?: number;
+  credit?: boolean;
 }) {
-  return (
-    <figure className={`photo ${tint ? "photo-tint" : ""} ${className}`} data-reveal={priority ? undefined : "photo"} data-progress={parallax ? "" : undefined}>
-      <div className="absolute inset-[-8%_0] will-change-transform" style={parallax ? { transform: "translate3d(0, calc((var(--p, 0.5) - 0.5) * -10%), 0)" } : undefined}>
-        <Image src={photo.src} alt={photo.alt} fill sizes={sizes} priority={priority} className="object-cover" />
-      </div>
-      {caption && <PhotoCredit photo={photo} className="absolute right-3 bottom-2 left-3 z-[2]" />}
-    </figure>
-  );
-}
+  const [active, setActive] = useState(0);
+  const ref = useRef<HTMLElement>(null);
+  const paused = useRef(false);
 
-/** Title, author, source and licence — what the Creative Commons licences ask for. */
-export function PhotoCredit({ photo, className = "" }: { photo: Photo; className?: string }) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || photos.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let delay: ReturnType<typeof setTimeout> | undefined;
+    const start = () => {
+      if (timer || delay) return;
+      delay = setTimeout(() => {
+        delay = undefined;
+        timer = setInterval(() => {
+          if (!paused.current) setActive((a) => (a + 1) % photos.length);
+        }, interval);
+      }, offset * 350);
+    };
+    const stop = () => {
+      clearInterval(timer);
+      clearTimeout(delay);
+      timer = delay = undefined;
+    };
+    const io = new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()));
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      stop();
+    };
+  }, [photos.length, interval, offset]);
+
+  const shown = photos[active];
   return (
-    <figcaption className={`label flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[0.62rem] text-white/75 ${className}`}>
-      <span>{photo.place}</span>
-      <span>
-        Photo:{" "}
-        <a href={photo.source} target="_blank" rel="noopener noreferrer" className="-my-1.5 inline-block py-1.5 underline decoration-white/30 underline-offset-2 hover:text-white">
-          {photo.author}
-        </a>
-        ,{" "}
-        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer license" className="-my-1.5 inline-block py-1.5 underline decoration-white/30 underline-offset-2 hover:text-white">
-          {photo.license}
-        </a>
-      </span>
-    </figcaption>
+    <figure
+      ref={ref}
+      className={`photo ${className}`}
+      style={{ backgroundColor: photos[0]?.color }}
+      onMouseEnter={() => (paused.current = true)}
+      onMouseLeave={() => (paused.current = false)}
+      onFocus={() => (paused.current = true)}
+      onBlur={() => (paused.current = false)}
+    >
+      {photos.map((p, i) => (
+        <Image
+          key={p.src}
+          src={p.src}
+          alt={i === active ? p.alt : ""}
+          aria-hidden={i === active ? undefined : true}
+          fill
+          sizes={sizes}
+          priority={priority && i === 0}
+          className="object-cover transition-opacity duration-700 ease-out"
+          style={{ opacity: i === active ? 1 : 0 }}
+        />
+      ))}
+      {photos.length > 1 && (
+        <span aria-hidden className="absolute top-3 right-3 z-[2] flex gap-1">
+          {photos.map((p, i) => (
+            <span key={p.src} className={`h-[3px] w-4 rounded-full transition-colors duration-500 ${i === active ? "bg-white" : "bg-white/35"}`} />
+          ))}
+        </span>
+      )}
+      {credit && shown && (
+        <figcaption className="absolute right-3 bottom-2 z-[2] text-[11px] text-white/70">
+          Photo:{" "}
+          <a href={shown.profile} target="_blank" rel="noopener noreferrer" className="-my-1.5 inline-block py-1.5 underline decoration-white/30 underline-offset-2 hover:text-white">
+            {shown.author}
+          </a>{" "}
+          /{" "}
+          <a href={unsplashHome} target="_blank" rel="noopener noreferrer" className="-my-1.5 inline-block py-1.5 underline decoration-white/30 underline-offset-2 hover:text-white">
+            Unsplash
+          </a>
+        </figcaption>
+      )}
+    </figure>
   );
 }

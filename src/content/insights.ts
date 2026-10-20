@@ -258,21 +258,21 @@ export const cases: IndustryCase[] = [
 
 export const getCase = (slug: string) => cases.find((c) => c.slug === slug) ?? null;
 
-/** A photograph for each case's card and header (see photos.ts for credits). */
-export const casePhotos: Record<string, PhotoKey> = {
-  "harvest-waiting-in-the-heat": "mandi",
-  "some-rows-drown-others-dry": "harvest",
-  "pumps-burning-power": "canal",
-  "boxes-buried-in-the-yard": "port",
-  "beds-free-up-too-late": "hospitalWard",
-  "everyone-arrives-at-nine": "hospitalQueue",
-  "air-that-leaks-away": "factory",
-  "a-bill-set-by-fifteen-minutes": "teaFactory",
+/** Two photographs for each case's card and header (credits in photos.ts). */
+export const casePhotos: Record<string, [PhotoKey, PhotoKey]> = {
+  "harvest-waiting-in-the-heat": ["harvestCarry", "mandiOnions"],
+  "some-rows-drown-others-dry": ["sprinklers", "fieldsGrid"],
+  "pumps-burning-power": ["pumpOutlet", "pumpEngine"],
+  "boxes-buried-in-the-yard": ["yardAerial", "portShip"],
+  "beds-free-up-too-late": ["wardBeds", "nurseComputer"],
+  "everyone-arrives-at-nine": ["waitingHall", "waitingPeople"],
+  "air-that-leaks-away": ["pipesBlue", "pumpsGauges"],
+  "a-bill-set-by-fifteen-minutes": ["substation", "plantAerial"],
 };
 
-export const industryPhotos: Record<Industry, PhotoKey> = {
-  agriculture: "harvest",
-  logistics: "port",
-  healthcare: "hospitalQueue",
-  industry: "factory",
+export const industryPhotos: Record<Industry, [PhotoKey, PhotoKey]> = {
+  agriculture: ["harvestWoman", "paddyPlanting"],
+  logistics: ["truckIndia", "warehouseUnload"],
+  healthcare: ["nurseDesk", "hospitalCrowd"],
+  industry: ["workersHelmet", "lathe"],
 };

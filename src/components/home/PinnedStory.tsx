@@ -72,7 +72,7 @@ export function PinnedStory({ stages }: { stages: Stage[] }) {
             })}
           </ol>
           <div className="lg:col-span-6 lg:col-start-7">
-            <div className="card ticks bp-grid p-3 sm:p-5">
+            <div className="card bp-grid p-3 sm:p-5">
               <StoryDrawing stage={active} />
             </div>
             {pinned && (

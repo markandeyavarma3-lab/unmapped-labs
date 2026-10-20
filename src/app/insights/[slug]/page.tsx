@@ -7,7 +7,7 @@ import { BeforeAfterChart } from "@/components/ui/BeforeAfterChart";
 import { CtaBand } from "@/components/ui/CtaBand";
 import { CaseCard } from "@/components/cards/CaseCard";
 import { SitePhoto } from "@/components/ui/SitePhoto";
-import { photos } from "@/content/photos";
+import { pick } from "@/content/photos";
 import { Page } from "@/components/motion/Page";
 
 /** Every case is known at build time. */
@@ -33,7 +33,7 @@ export default async function CasePage({ params }: PageProps<"/insights/[slug]">
   const { slug } = await params;
   const c = getCase(slug);
   if (!c) notFound();
-  const photo = photos[casePhotos[c.slug]];
+  const casePics = pick(casePhotos[c.slug] ?? []);
   const related = cases.filter((x) => x.slug !== c.slug && (x.industry === c.industry || x.fixType === c.fixType)).slice(0, 3);
   const steps = [
     { id: "problem", label: "The problem", text: c.problem },
@@ -65,7 +65,7 @@ export default async function CasePage({ params }: PageProps<"/insights/[slug]">
                 {c.summary}
               </p>
             </div>
-            {photo && <SitePhoto photo={photo} priority sizes="(min-width: 1024px) 40vw, 100vw" className="ticks aspect-[4/3] lg:col-span-5" />}
+            {casePics.length > 0 && <SitePhoto photos={casePics} priority sizes="(min-width: 1024px) 40vw, 100vw" className="aspect-[4/3] lg:col-span-5" />}
           </div>
         </header>
 
@@ -85,7 +85,7 @@ export default async function CasePage({ params }: PageProps<"/insights/[slug]">
           </ol>
 
           <div className="flex flex-col gap-8 lg:col-span-5 lg:col-start-8">
-            <div className="card ticks bp-grid p-6" data-reveal="">
+            <div className="card bp-grid p-6" data-reveal="">
               <BeforeAfterChart figure={c.figure} />
             </div>
             <div className="border-l-2 border-[color:var(--color-accent)] pl-5">

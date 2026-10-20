@@ -5,7 +5,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/config/site";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { StatusStrip } from "@/components/layout/StatusStrip";
 import { TrackClicks } from "@/components/layout/TrackClicks";
 import { MotionRoot } from "@/components/motion/MotionRoot";
 import "./globals.css";
@@ -53,7 +52,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#main" className="btn btn-primary fixed top-3 left-3 z-[100] -translate-y-24 transition-transform focus:translate-y-0">
           Skip to content
         </a>
-        <StatusStrip />
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />

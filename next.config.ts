@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   pageExtensions: ["ts", "tsx", "mdx"],
+  images: { loader: "custom", loaderFile: "./src/lib/image-loader.ts" },
   turbopack: {
     rules: {
       "*.css": {

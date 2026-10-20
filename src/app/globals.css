@@ -202,31 +202,6 @@ html.lenis body {
     background-position: -1px -1px;
   }
 
-  /* Corner ticks, like registration marks on a drawing */
-  .ticks {
-    position: relative;
-  }
-  .ticks::before,
-  .ticks::after {
-    content: "";
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border-color: var(--color-accent);
-    border-style: solid;
-    pointer-events: none;
-  }
-  .ticks::before {
-    top: -1px;
-    left: -1px;
-    border-width: 1.5px 0 0 1.5px;
-  }
-  .ticks::after {
-    right: -1px;
-    bottom: -1px;
-    border-width: 0 1.5px 1.5px 0;
-  }
-
   /* Buttons */
   .btn {
     display: inline-flex;
@@ -321,28 +296,19 @@ html.lenis body {
     transform: translateX(4px);
   }
 
-  /* Photos: tinted to the palette, full colour on hover/when active */
+  /* Photo frames: natural colour, a soft shade at the foot so credits stay legible */
   .photo {
     position: relative;
     overflow: hidden;
-    background: var(--color-ink-3);
-  }
-  .photo img {
-    filter: grayscale(0.6) brightness(0.85);
-    transition:
-      filter 0.6s var(--ease-out-quart),
-      transform 1.2s var(--ease-out-expo);
   }
   .photo::after {
     content: "";
     position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 50%, rgba(10, 22, 38, 0.8));
+    inset: auto 0 0 0;
+    height: 40%;
+    background: linear-gradient(180deg, transparent, rgba(10, 22, 38, 0.55));
     pointer-events: none;
-  }
-  .group:hover .photo img,
-  .photo[data-active] img {
-    filter: none;
+    z-index: 1;
   }
 
   /* Form fields */
@@ -376,22 +342,9 @@ html.lenis body {
   .js [data-reveal="fade"] {
     transform: none;
   }
-  .js [data-reveal="photo"] {
-    opacity: 1;
-    transform: none;
-    clip-path: inset(18% 0 0 0);
-    transition: clip-path 1.3s var(--ease-out-expo);
-  }
-  .js [data-reveal="photo"] img {
-    transform: scale(1.18);
-  }
   .js [data-reveal][data-in] {
     opacity: 1;
     transform: none;
-    clip-path: inset(0 0 0 0);
-  }
-  .js [data-reveal="photo"][data-in] img {
-    transform: scale(1);
   }
 
   /* Headline lines rise out of a mask */
@@ -430,9 +383,6 @@ html.lenis body {
     stroke-dasharray: none;
   }
 
-  .marquee {
-    animation: marquee 40s linear infinite;
-  }
   .pulse {
     animation: pulse 2.2s var(--ease-out-quart) infinite;
     transform-box: fill-box;
@@ -536,11 +486,6 @@ html.lenis body {
 @keyframes rise {
   to {
     transform: none;
-  }
-}
-@keyframes marquee {
-  to {
-    transform: translate3d(-50%, 0, 0);
   }
 }
 @keyframes pulse {

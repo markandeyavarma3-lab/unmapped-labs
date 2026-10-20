@@ -8,8 +8,9 @@ import { CtaBand } from "@/components/ui/CtaBand";
 import { Arrow } from "@/components/ui/Arrow";
 import { CaseCard } from "@/components/cards/CaseCard";
 import { SitePhoto } from "@/components/ui/SitePhoto";
-import { photos } from "@/content/photos";
+import { pick } from "@/content/photos";
 import { industryPhotos } from "@/content/insights";
+import { pagePhotos } from "@/content/site-content";
 import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default async function InsightsPage() {
   const notes = await getNotes();
   return (
     <Page>
-      <PageHeader label={insightsPage.label} title={insightsPage.heading} intro={insightsPage.intro} photo={photos.canal}>
+      <PageHeader label={insightsPage.label} title={insightsPage.heading} intro={insightsPage.intro} photos={pick(pagePhotos.insights)}>
         <nav aria-label="Industries" className="mt-8 flex flex-wrap gap-2">
           {(Object.keys(industries) as Industry[]).map((k) => (
             <a key={k} href={`#${k}`} className="label rounded-[2px] border border-[color:var(--color-line-strong)] px-3 py-2.5 hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]">
@@ -40,17 +41,23 @@ export default async function InsightsPage() {
         return (
           <section key={k} id={k} aria-labelledby={`${k}-heading`} className="border-t border-[color:var(--color-line)] py-20">
             <div className="container-site grid gap-8 lg:grid-cols-12">
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-4">
                 <h2 id={`${k}-heading`} className="display text-[2.2rem] leading-tight">
                   {industries[k].title}
                 </h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">{industries[k].body}</p>
-                <SitePhoto photo={photos[industryPhotos[k]]} sizes="(min-width: 1024px) 22vw, 100vw" className="mt-6 hidden aspect-[4/5] lg:block" />
+                <SitePhoto photos={pick(industryPhotos[k])} offset={2} sizes="(min-width: 1024px) 30vw, 100vw" className="mt-6 hidden aspect-[4/3] lg:block" />
               </div>
-              <div className="grid gap-6 sm:grid-cols-2 lg:col-span-9 lg:grid-cols-3">
-                {list.map((c, i) => (
-                  <CaseCard key={c.slug} c={c} index={i} />
-                ))}
+              <div className="grid content-start gap-6 sm:grid-cols-2 lg:col-span-8">
+                {list.map((c, i) => {
+                  // An odd card out takes the whole row instead of leaving a gap.
+                  const wide = list.length % 2 === 1 && i === list.length - 1;
+                  return (
+                    <div key={c.slug} className={wide ? "sm:col-span-2" : undefined}>
+                      <CaseCard c={c} index={i} wide={wide} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>

@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { track } from "@vercel/analytics";
 
 /**
- * Measurement: every click that leads to a conversation (a link to /contact
- * or a mailto), and where on the site it came from.
+ * Measurement: every click that leads to a conversation (the booking link,
+ * a link to /contact or a mailto), and where on the site it came from.
  */
 export function TrackClicks() {
   useEffect(() => {
@@ -14,7 +14,8 @@ export function TrackClicks() {
       if (!a) return;
       const url = new URL(a.href, location.href);
       const from = a.closest("header") ? "header" : a.closest("footer") ? "footer" : `${location.pathname}${a.closest("section[id]") ? `#${a.closest("section[id]")!.id}` : ""}`;
-      if (url.origin === location.origin && url.pathname === "/contact") track("contact_cta_click", { from });
+      if (url.hostname === "cal.com") track("booking_click", { from });
+      else if (url.origin === location.origin && url.pathname === "/contact") track("contact_cta_click", { from });
       else if (url.protocol === "mailto:") track("email_click", { from });
     };
     document.addEventListener("click", onClick);

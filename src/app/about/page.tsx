@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { about, approach, principles } from "@/content/site-content";
+import { about, approach, founder, pagePhotos, principles } from "@/content/site-content";
+import { FounderCard } from "@/components/about/FounderCard";
 import { getNotes } from "@/lib/notes";
 import { PageHeader, SectionHead } from "@/components/ui/Headings";
 import { CtaBand } from "@/components/ui/CtaBand";
-import { photos } from "@/content/photos";
+import { pick } from "@/content/photos";
 import { Page } from "@/components/motion/Page";
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default async function AboutPage() {
   ];
   return (
     <Page>
-      <PageHeader label={about.label} title={about.heading} photo={photos.teaFactory} />
+      <PageHeader label={about.label} title={about.heading} photos={pick(pagePhotos.about)} />
 
       <section aria-label="Who we are" className="container-site grid gap-12 py-[var(--section-y)] lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-7">
@@ -34,7 +35,7 @@ export default async function AboutPage() {
             </p>
           ))}
         </div>
-        <dl className="card ticks self-start px-6 py-2 lg:col-span-4 lg:col-start-9">
+        <dl className="card self-start px-6 py-2 lg:col-span-4 lg:col-start-9">
           {status.map((s) => (
             <div key={s.k} className="grid grid-cols-[7.5rem_1fr] gap-4 border-b border-[color:var(--color-line)] py-4 last:border-b-0">
               <dt className="label pt-1 text-[color:var(--color-fg-3)]">{s.k}</dt>
@@ -43,6 +44,17 @@ export default async function AboutPage() {
           ))}
         </dl>
       </section>
+
+      {founder.published && (
+        <section aria-labelledby="founder-heading" className="container-site pb-[var(--section-y)]">
+          <h2 id="founder-heading" className="label text-[color:var(--color-fg-3)]">
+            Who you&apos;ll work with
+          </h2>
+          <div className="mt-6">
+            <FounderCard />
+          </div>
+        </section>
+      )}
 
       <section aria-labelledby="principles-heading" className="paper section">
         <div className="container-site">

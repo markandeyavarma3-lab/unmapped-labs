@@ -33,38 +33,38 @@ export const problems = {
 };
 
 /** The pinned gallery on the home page: the kinds of place we work in. */
-export const sites: { label: string; photo: PhotoKey; title: string; body: string; caseSlug: string }[] = [
+export const sites: { label: string; photos: [PhotoKey, PhotoKey]; title: string; body: string; caseSlug: string }[] = [
   {
     label: "Ports & yards",
-    photo: "port",
+    photos: ["portWide", "truckIndia"],
     title: "Boxes buried in the yard",
     body: "Trucks queue at the gate while cranes dig for containers stacked under others.",
     caseSlug: "boxes-buried-in-the-yard",
   },
   {
     label: "Farms & packhouses",
-    photo: "harvest",
+    photos: ["grainDrying", "mandiStalls"],
     title: "Harvest waiting in the heat",
     body: "Picked produce sits in the sun because the packhouse can't take it fast enough.",
     caseSlug: "harvest-waiting-in-the-heat",
   },
   {
     label: "Hospitals",
-    photo: "hospitalQueue",
+    photos: ["waitingHall", "nurseDesk"],
     title: "Everyone arrives at nine",
     body: "One registration counter sets the pace of the whole morning for every department behind it.",
     caseSlug: "everyone-arrives-at-nine",
   },
   {
     label: "Plants & workshops",
-    photo: "factory",
+    photos: ["pipesBlue", "grinding"],
     title: "Air that leaks away",
     body: "Compressed air, motors and pumps quietly waste energy nobody is measuring.",
     caseSlug: "air-that-leaks-away",
   },
   {
     label: "Water & irrigation",
-    photo: "canal",
+    photos: ["canalAerial", "sprinklers"],
     title: "Some rows drown, others dry",
     body: "The same water, delivered unevenly: pressure differences and clogging decide which crops get it.",
     caseSlug: "some-rows-drown-others-dry",
@@ -337,4 +337,26 @@ export const contact = {
     "Energy & essential infrastructure",
     "Something else",
   ],
+};
+
+/** Two photographs for each page header. */
+export const pagePhotos: Record<"services" | "insights" | "about", [PhotoKey, PhotoKey]> = {
+  services: ["workersPlant", "grinding"],
+  insights: ["fieldsWide", "yardAerial"],
+  about: ["paddyPlanting", "truckGhat"],
+};
+
+/**
+ * The founder. Hidden everywhere until `published` is true — fill in the
+ * details (photo goes in /public/team/), then flip the switch.
+ */
+export const founder = {
+  published: false,
+  name: "",
+  role: "Founder",
+  /** Two or three lines, in your own words. */
+  bio: "",
+  /** e.g. "/team/founder.jpg" */
+  photo: "",
+  linkedin: "",
 };

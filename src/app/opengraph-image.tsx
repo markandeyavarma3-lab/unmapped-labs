@@ -14,17 +14,16 @@ export default async function Image() {
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: "#0a1626", backgroundImage: grid, backgroundSize: "60px 60px", padding: 80 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <svg width="52" height="52" viewBox="0 0 33 33" fill="none">
-              <path d="M21 3H3V30H30V12" stroke="#eef2f6" strokeWidth="1.7" />
-              <path d="M12 3V30M21 12V30M3 12H21M3 21H30" stroke="#eef2f6" strokeOpacity="0.5" strokeWidth="1.7" />
-              <path d="M12 21L21 12L26.6 6.4" stroke="#f2c230" strokeWidth="1.9" strokeLinecap="round" />
-              <circle cx="28.4" cy="4.6" r="2.3" fill="#f2c230" />
+            <svg width="56" height="56" viewBox="0 0 48 48" fill="none">
+              <path d="M7.5 3V26a16.5 16.5 0 0 0 33 0V3" stroke="#eef2f6" strokeWidth="5" />
+              <path d="M15.5 3V26a8.5 8.5 0 0 0 17 0V3" stroke="#eef2f6" strokeWidth="5" />
+              <circle cx="24" cy="26" r="3.6" fill="#f2c230" />
             </svg>
-            <div style={{ display: "flex", fontSize: 34, color: "#eef2f6", letterSpacing: -1 }}>
-              Unmapped<span style={{ color: "#8a9bb0", marginLeft: 10 }}>Labs</span>
+            <div style={{ display: "flex", fontSize: 40, fontWeight: 600, color: "#eef2f6", letterSpacing: -2 }}>
+              unmapped<span style={{ color: "#8a9bb0", marginLeft: 10, fontWeight: 400 }}>labs</span>
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 18, color: "#f2c230", letterSpacing: 3 }}>[ OPERATIONS RESEARCH · INDIA ]</div>
+          <div style={{ display: "flex", fontSize: 18, color: "#f2c230", letterSpacing: 3 }}>OPERATIONS RESEARCH · INDIA</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", fontSize: 92, lineHeight: 1, color: "#eef2f6", letterSpacing: -4 }}>
           <div style={{ display: "flex" }}>See how it really runs.</div>
