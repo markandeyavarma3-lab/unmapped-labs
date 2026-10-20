@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { contact } from "@/content/site-content";
 import { site } from "@/config/site";
@@ -24,9 +25,9 @@ export default function ContactPage() {
             <h2 className="label text-[color:var(--color-accent)]">Rather talk it through?</h2>
             <p className="display mt-3 text-[1.5rem] leading-snug">Book a free 30-minute call.</p>
             <p className="mt-2 text-[15px] leading-relaxed text-[color:var(--color-fg-2)]">Pick a time that suits you. Phone or video — tell us what&apos;s happening and we&apos;ll ask questions.</p>
-            <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-5">
+            <Link href={site.bookingUrl} className="btn btn-primary mt-5">
               Choose a time
-            </a>
+            </Link>
           </div>
           <div>
             <h2 className="label text-[color:var(--color-fg-3)]">What happens next</h2>

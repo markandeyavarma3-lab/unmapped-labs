@@ -59,9 +59,9 @@ export default async function Home() {
               {hero.body}
             </p>
             <div className="mt-10 flex flex-wrap gap-3" data-reveal="" style={{ ["--d" as string]: 5 }}>
-              <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+              <Link href={site.bookingUrl} className="btn btn-primary">
                 Book a free 30-min call <Arrow className="btn-arrow" />
-              </a>
+              </Link>
               <Link href={hero.secondaryCta.href} className="btn btn-ghost">
                 {hero.secondaryCta.label} <span aria-hidden>↓</span>
               </Link>

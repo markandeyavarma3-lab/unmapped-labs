@@ -36,9 +36,9 @@ export function SiteFooter() {
             <p className="label text-[color:var(--color-fg-3)]">Get in touch</p>
             <ul className="mt-4 flex flex-col">
               <li>
-                <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                <Link href={site.bookingUrl} className={linkCls}>
                   Book a call
-                </a>
+                </Link>
               </li>
               <li>
                 <a href={`mailto:${site.email}`} className={linkCls}>

@@ -14,7 +14,7 @@ export function TrackClicks() {
       if (!a) return;
       const url = new URL(a.href, location.href);
       const from = a.closest("header") ? "header" : a.closest("footer") ? "footer" : `${location.pathname}${a.closest("section[id]") ? `#${a.closest("section[id]")!.id}` : ""}`;
-      if (url.hostname === "cal.com") track("booking_click", { from });
+      if (url.origin === location.origin && url.pathname === "/book") track("booking_click", { from });
       else if (url.origin === location.origin && url.pathname === "/contact") track("contact_cta_click", { from });
       else if (url.protocol === "mailto:") track("email_click", { from });
     };

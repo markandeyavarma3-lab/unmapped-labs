@@ -13,8 +13,10 @@ export const site = {
   seoTitle: "Unmapped Labs — Operations Research & Problem-Solving Startup, India",
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.unmappedlabs.in").replace(/\/$/, ""),
   email: "contact@unmappedlabs.in",
-  /** The free first call, booked straight into the calendar (Cal.com). */
-  bookingUrl: "https://cal.com/markandeya-varma-gottumukkala-q66wwd/free-first-conversation",
+  /** The free first call: booked on our own /book page, which embeds Cal.com. */
+  bookingUrl: "/book",
+  /** The Cal.com event (username/event-slug) shown on /book. */
+  calLink: "markandeya-varma-gottumukkala-q66wwd/30min",
   closingLine: "There is always more to map.",
   footerLine: "A research-first problem-solving startup. We go on site, find the real cause, and fix it.",
 } as const;

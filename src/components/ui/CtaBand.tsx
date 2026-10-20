@@ -16,9 +16,9 @@ export function CtaBand({ title = "Have something worth fixing?", body = "Book a
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-3" data-reveal="fade">
-          <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn bg-[#0a1626] text-[#f2c230] hover:bg-[#13294a]">
+          <Link href={site.bookingUrl} className="btn bg-[#0a1626] text-[#f2c230] hover:bg-[#13294a]">
             Book a free call <Arrow className="btn-arrow" />
-          </a>
+          </Link>
           <Link href="/contact" className="btn border border-[#0a1626]/40 text-[#0a1626] hover:border-[#0a1626]">
             Send a message
           </Link>

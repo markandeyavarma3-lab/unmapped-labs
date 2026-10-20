@@ -60,9 +60,9 @@ export function SiteHeader() {
               {current(n.href) && <span aria-hidden className="absolute inset-x-3 -bottom-[13px] h-[2px] bg-[color:var(--color-accent)]" />}
             </Link>
           ))}
-          <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary ml-4 min-h-[2.5rem] px-4 py-2">
+          <Link href={site.bookingUrl} className="btn btn-primary ml-4 min-h-[2.5rem] px-4 py-2">
             Book a call
-          </a>
+          </Link>
         </nav>
 
         <button
@@ -93,9 +93,9 @@ export function SiteHeader() {
               {n.label}
             </Link>
           ))}
-          <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-6">
+          <Link href={site.bookingUrl} className="btn btn-primary mt-6">
             Book a free call
-          </a>
+          </Link>
           <Link href="/contact" className="btn btn-ghost mt-3">
             Send a message
           </Link>
