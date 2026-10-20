@@ -351,12 +351,12 @@ export const pagePhotos: Record<"services" | "insights" | "about", [PhotoKey, Ph
  * details (photo goes in /public/team/), then flip the switch.
  */
 export const founder = {
-  published: false,
-  name: "",
+  published: true,
+  name: "Markandeya Varma Gottumukkala",
   role: "Founder",
   /** Two or three lines, in your own words. */
-  bio: "",
-  /** e.g. "/team/founder.jpg" */
+  bio: "I started Unmapped Labs to fix operational problems properly: go on site, measure what really happens, find the cause, then build what the problem actually needs. I built FlowMatch, which turns KSB's pump catalogue into a two-field search so dealers can match a farmer's borewell in seconds, and Deal Lens, a research platform that identifies who trades two decades of India's bulk and block deals.",
+  /** e.g. "/team/founder.jpg" — until then a monogram is shown. */
   photo: "",
   linkedin: "",
 };

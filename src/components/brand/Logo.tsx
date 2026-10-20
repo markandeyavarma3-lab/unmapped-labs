@@ -1,3 +1,5 @@
+import { site } from "@/config/site";
+
 /**
  * The mark: a U drawn as two contour lines, like a valley on a survey map,
  * with a point at its lowest spot — the place nobody had measured yet.
@@ -22,11 +24,20 @@ export function Wordmark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ className }: { className?: string }) {
+/**
+ * Mark + name, with the tagline set small beneath the name.
+ * `tagline="hide-sm"` drops the tagline on narrow screens.
+ */
+export function Logo({ className, tagline = "show" }: { className?: string; tagline?: "show" | "hide-sm" | "none" }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
-      <LogoMark className="h-[24px] w-[24px] shrink-0" />
-      <Wordmark className="text-[19px] leading-none" />
+      <LogoMark className="h-[26px] w-[26px] shrink-0" />
+      <span className="flex flex-col">
+        <Wordmark className="text-[19px] leading-none" />
+        {tagline !== "none" && (
+          <span className={`mt-[5px] font-mono text-[8.5px] leading-none tracking-[0.16em] text-[color:var(--color-fg-3)] uppercase ${tagline === "hide-sm" ? "hidden sm:block" : ""}`}>{site.tagline.replace(/\.$/, "")}</span>
+        )}
+      </span>
     </span>
   );
 }

@@ -140,7 +140,8 @@ it's best effort. Move it to a shared store (e.g. Upstash) if abuse appears.
 - The contact rate limit is per-instance (see above).
 - Social links are hidden until real URLs are added.
 - Testimonials are hidden until real quotes are added.
-- The founder section is hidden until `founder.published` is set in `site-content.ts`.
+- Founder details live in `founder` in `site-content.ts`; add a photo at `/public/team/` and a LinkedIn URL there.
+- Logo files (PNG/JPG, with the tagline) are in `public/brand/` and download from `/brand/<file>`.
 - The free call is booked on Cal.com (`site.bookingUrl` in `src/config/site.ts`).
 - `three`, `@react-three/fiber` and `lenis` are still in `package.json` but
   unused; remove them with `npm uninstall` when convenient.

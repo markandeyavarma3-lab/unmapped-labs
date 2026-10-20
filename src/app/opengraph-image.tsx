@@ -19,8 +19,11 @@ export default async function Image() {
               <path d="M15.5 3V26a8.5 8.5 0 0 0 17 0V3" stroke="#eef2f6" strokeWidth="5" />
               <circle cx="24" cy="26" r="3.6" fill="#f2c230" />
             </svg>
-            <div style={{ display: "flex", fontSize: 40, fontWeight: 600, color: "#eef2f6", letterSpacing: -2 }}>
-              unmapped<span style={{ color: "#8a9bb0", marginLeft: 10, fontWeight: 400 }}>labs</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", fontSize: 40, fontWeight: 600, color: "#eef2f6", letterSpacing: -2, lineHeight: 1 }}>
+                unmapped<span style={{ color: "#8a9bb0", marginLeft: 10, fontWeight: 400 }}>labs</span>
+              </div>
+              <div style={{ display: "flex", fontSize: 15, color: "#8a9bb0", letterSpacing: 4 }}>MAPPING THE UNKNOWN</div>
             </div>
           </div>
           <div style={{ display: "flex", fontSize: 18, color: "#f2c230", letterSpacing: 3 }}>OPERATIONS RESEARCH · INDIA</div>
